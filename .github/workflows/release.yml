@@ -63,7 +63,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          NDK_TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+          NDK_TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
           SRC="src_ext/dxls.c"
           OUT_DIR="app/src/main/assets/dxls"
           mkdir -p "$OUT_DIR"
