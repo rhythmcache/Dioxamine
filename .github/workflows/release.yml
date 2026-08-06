@@ -31,7 +31,7 @@ jobs:
 
   build:
     needs: extract-version
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         build_type: [debug, release]
