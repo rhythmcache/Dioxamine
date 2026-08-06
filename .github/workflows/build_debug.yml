@@ -1,0 +1,129 @@
+name: Build Native Libs + App
+
+on:
+  workflow_dispatch:
+
+env:
+  API_LEVEL: 21
+  NDK_VERSION: "27.2.12479018"   # latest stable NDK as of writing; bump if needed
+  ROBOLECTRIC_JAR_URL: "https://repo1.maven.org/maven2/org/robolectric/android-all/17-robolectric-15733970/android-all-17-robolectric-15733970.jar"
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: |
+          sdkmanager --install "ndk;${NDK_VERSION}"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Verify NDK toolchain
+        run: |
+          echo "NDK Home: $ANDROID_NDK_HOME"
+          ls "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt"
+
+      - name: Compile dxls.c for all 4 architectures
+        run: |
+          set -euo pipefail
+
+          NDK_TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+          SRC="src_ext/dxls.c"
+          OUT_DIR="app/src/main/assets/dxls"
+          mkdir -p "$OUT_DIR"
+
+          ARCHES=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+          CLANGS=(
+            "aarch64-linux-android${API_LEVEL}-clang"
+            "armv7a-linux-androideabi${API_LEVEL}-clang"
+            "i686-linux-android${API_LEVEL}-clang"
+            "x86_64-linux-android${API_LEVEL}-clang"
+          )
+
+          for i in "${!ARCHES[@]}"; do
+            ARCH="${ARCHES[$i]}"
+            CLANG="${CLANGS[$i]}"
+            echo "Building for $ARCH using $CLANG"
+            "$NDK_TOOLCHAIN/$CLANG" \
+              -O2 -fPIE -pie \
+              -o "dxls-${ARCH}" \
+              "$SRC"
+            cp "dxls-${ARCH}" "$OUT_DIR/dxls-${ARCH}"
+          done
+
+          echo "Built binaries:"
+          ls -la "$OUT_DIR"
+
+      - name: Download Robolectric android-all jar (compile-time Android stubs)
+        run: |
+          mkdir -p .tools
+          curl -L -o .tools/android-all-17-robolectric-15733970.jar "$ROBOLECTRIC_JAR_URL"
+
+      - name: Compile PkgDump.java to class file
+        run: |
+          mkdir -p .build/classes
+          javac \
+            -cp .tools/android-all-17-robolectric-15733970.jar \
+            -d .build/classes \
+            src_ext/PkgDump.java
+
+      - name: Convert classes to dex using d8
+        env:
+          SKIP_JDK_VERSION_CHECK: "1"
+        run: |
+          set -euo pipefail
+          D8="$ANDROID_SDK_ROOT/build-tools"/*/d8
+          D8_BIN=$(ls $D8 | tail -n1)
+          echo "Using d8: $D8_BIN"
+
+          find .build/classes -name "*.class" > .build/class-list.txt
+
+          "$D8_BIN" \
+            --output .build \
+            --min-api "$API_LEVEL" \
+            @.build/class-list.txt
+
+          ls -la .build
+
+      - name: Rename dex to pkg-dump.jar and move to assets
+        run: |
+          set -euo pipefail
+          OUT_DIR="app/src/main/assets"
+          mkdir -p "$OUT_DIR"
+          cp .build/classes.dex "$OUT_DIR/pkg-dump.jar"
+          ls -la "$OUT_DIR"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Assemble debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Locate built APK
+        run: find app/build/outputs/apk -name "*.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload native binaries + pkg-dump.jar as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dxls-native-and-pkgdump
+          path: |
+            app/src/main/assets/dxls/*
+            app/src/main/assets/pkg-dump.jar

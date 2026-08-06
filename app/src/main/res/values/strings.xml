@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dioxamine</string>
+
+    <!-- Navigation Tabs -->
+    <string name="tab_adb">ADB</string>
+    <string name="tab_scrcpy">scrcpy</string>
+    <string name="tab_fastboot">Fastboot</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- ADB Tab -->
+    <string name="adb_subtab_builtin">Built-in</string>
+    <string name="adb_subtab_adb_shell">ADB Shell</string>
+    <string name="adb_subtab_plugins">Plugins</string>
+    
+    <string name="adb_shell_title">ADB Shell support</string>
+    <string name="feature_coming_soon">This feature is coming soon.</string>
+
+    <string name="no_devices_connected">No devices connected</string>
+    <plurals name="connected_devices_count">
+        <item quantity="one">%1$d device connected</item>
+        <item quantity="other">%1$d devices connected</item>
+    </plurals>
+    <string name="cd_add_device">Add Device</string>
+    <string name="cd_expand_collapse">Expand or collapse</string>
+    <string name="no_devices_added_hint">No devices added yet. Tap \'+\' to connect to a device.</string>
+    
+    <string name="dialog_add_tcp_title">Add TCP Device</string>
+    <string name="label_ip_address">IP address</string>
+    <string name="label_port">Port</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_cancel">Cancel</string>
+
+    <string name="status_connected">Connected</string>
+    <string name="status_connected_version">Connected &#8226; Android %1$s</string>
+    <string name="status_connected_api">Connected (API %1$d)</string>
+    <string name="status_connected_version_api">Connected &#8226; Android %1$s (API %2$d)</string>
+    <string name="status_connecting">Connecting...</string>
+    <string name="cd_remove">Remove</string>
+
+    <string name="action_device_info_title">Device Information</string>
+    <string name="action_device_info_desc">View detailed specs, version, battery, CPU info, resolution, uptime, and installed packages.</string>
+    <string name="dialog_device_info_title">Device Information</string>
+    <string name="btn_close">Close</string>
+    <string name="cd_open_details">Open details</string>
+    <string name="action_device_model">Device Model</string>
+    <string name="action_android_version">Android Version</string>
+    <string name="action_battery_info">Battery Info</string>
+    <string name="action_serial_number">Serial Number</string>
+    <string name="action_cpu_info">CPU Info</string>
+    <string name="action_uptime">Uptime</string>
+    <string name="action_screen_resolution">Screen Resolution</string>
+    <string name="action_installed_packages">Installed Packages Count</string>
+    <string name="connect_device_warning">Connect to a device to use these actions.</string>
+
+    <string name="cd_refresh">Refresh</string>
+    <string name="cd_collapse">Collapse</string>
+    <string name="cd_expand">Expand</string>
+    <string name="status_running_command">Running command...</string>
+    <string name="tap_refresh_hint">Tap refresh to execute</string>
+
+    <string name="plugins_title">Custom Plugins</string>
+    <string name="plugins_description">Load ADB plugins written by yourself or other developers.</string>
+    <string name="plugins_coming_soon">Writing your own plugins - coming soon.</string>
+
+    <!-- Fastboot Tab -->
+    <string name="fastboot_title">Fastboot support</string>
+    <string name="fastboot_no_device_status">USB Detector Active &#8226; No Fastboot Device Connected</string>
+
+    <!-- Scrcpy Tab -->
+    <string name="scrcpy_no_device_title">No Device Selected</string>
+    <string name="scrcpy_no_device_desc">Connect and select a device from the top connector bar to configure and start scrcpy screen mirroring.</string>
+    <string name="scrcpy_invalid_config_prefix">Invalid Config:\n</string>
+    <string name="scrcpy_mirroring_idle">Mirroring Idle</string>
+    <string name="scrcpy_title">scrcpy Screen Mirroring</string>
+    <string name="scrcpy_target">Target: %1$s</string>
+    <string name="scrcpy_target_version">Target: %1$s &#8226; Android %2$s</string>
+    <string name="scrcpy_start_mirroring">Start Mirroring</string>
+    <string name="scrcpy_stop_mirroring">Stop Mirroring</string>
+    <string name="scrcpy_tab_configurator">Configurator</string>
+    <string name="scrcpy_tab_logs">Logs</string>
+    <string name="scrcpy_logs_empty">No scrcpy logs yet.</string>
+
+    <string name="section_video_source">Video Source</string>
+    <string name="video_source_screen">Screen</string>
+    <string name="video_source_camera">Camera</string>
+
+    <string name="section_camera">Camera</string>
+    <string name="camera_facing_back">Back</string>
+    <string name="camera_facing_front">Front</string>
+    <string name="camera_facing_external">External</string>
+    <string name="camera_high_speed_title">High Speed Mode</string>
+    <string name="camera_high_speed_subtitle">120+ FPS capture (needs device support)</string>
+    <string name="label_high_speed_fps">High Speed FPS</string>
+    <string name="label_fps_format">%1$d FPS</string>
+    <string name="label_high_speed_res">High Speed Resolution</string>
+    <string name="res_720p">720p</string>
+    <string name="res_1080p">1080p</string>
+    <string name="res_480p">480p</string>
+    <string name="res_auto">Auto</string>
+
+    <string name="section_video">Video</string>
+    <string name="label_resolution">Max Size</string>
+    <string name="label_add_chip">+ Add</string>
+    <string name="dialog_add_max_size_title">Add Custom Max Size</string>
+    <string name="dialog_add_max_size_msg">Enter maximum size in pixels (e.g. 1440 or 2160):</string>
+    <string name="dialog_add_fps_title">Add Custom Frame Rate</string>
+    <string name="dialog_add_fps_msg">Enter frame rate in FPS (e.g. 90 or 144):</string>
+    <string name="dialog_add_bitrate_title">Add Custom Bitrate</string>
+    <string name="dialog_add_bitrate_msg">Enter bitrate in Mbps (e.g. 16 or 25):</string>
+    <string name="btn_add">Add</string>
+
+    <string name="settings_scrcpy_title">scrcpy</string>
+    <string name="settings_scrcpy_subtitle">Configure scrcpy mirroring options</string>
+    <string name="settings_scrcpy_allow_custom_title">Allow custom values in configurations</string>
+    <string name="settings_scrcpy_allow_custom_subtitle">Enable adding custom max size, frame rate, and bitrate options</string>
+    <string name="camera_discovering">Discovering camera capabilities...</string>
+    <string name="label_frame_rate">Frame Rate</string>
+    <string name="label_bitrate">Bitrate</string>
+    <string name="label_mbps_format">%1$d Mbps</string>
+    <string name="label_codec">Codec</string>
+    <string name="codec_h264">H.264</string>
+    <string name="codec_h265">H.265</string>
+    <string name="codec_av1">AV1</string>
+    <string name="label_orientation">Orientation</string>
+    <string name="orient_normal">Normal</string>
+    <string name="orient_90">90°</string>
+    <string name="orient_180">180°</string>
+    <string name="orient_270">270°</string>
+    <string name="orient_flip_0">Flip H</string>
+    <string name="orient_flip_90">Flip 90°</string>
+    <string name="orient_flip_180">Flip 180°</string>
+    <string name="orient_flip_270">Flip 270°</string>
+
+    <string name="section_audio">Audio</string>
+    <string name="audio_enable_title">Enable Audio</string>
+    <string name="audio_enable_subtitle_ok">Stream device audio</string>
+    <string name="audio_enable_subtitle_req">Requires Android 11+ (API 30). Device is API %1$d.</string>
+    <string name="label_audio_source">Source</string>
+    <string name="audio_source_device">Device Audio</string>
+    <string name="audio_source_mic">Microphone</string>
+    <string name="label_audio_format">Format</string>
+    <string name="codec_opus">Opus</string>
+    <string name="codec_aac">AAC</string>
+    <string name="codec_flac">FLAC</string>
+    <string name="audio_dup_title">Don\'t Mute Device</string>
+    <string name="audio_dup_subtitle_ok">Keep device speakers active</string>
+    <string name="audio_dup_subtitle_req">Requires Android 13+ (API 33)</string>
+
+    <string name="section_display">Display &amp; Controls</string>
+    <string name="display_screen_off_title">Turn Screen Off</string>
+    <string name="display_screen_off_subtitle">Keep device screen dark while mirroring</string>
+    <string name="display_floating_nav_title">Floating Navigation Bar</string>
+    <string name="display_floating_nav_subtitle">Show vertical Back, Home, and Recents buttons over screen</string>
+    <string name="display_bind_volume_title">Forward Volume Buttons</string>
+    <string name="display_bind_volume_subtitle">Bind hardware volume buttons to the mirrored device</string>
+
+    <string name="cd_toggle_torch">Toggle Torch</string>
+    <string name="cd_toggle_fullscreen">Toggle Fullscreen</string>
+    <string name="cd_stop_mirroring">Stop Mirroring</string>
+    <string name="cd_nav_back">Back</string>
+    <string name="cd_nav_home">Home</string>
+    <string name="cd_nav_recents">Recents</string>
+
+    <!-- Settings Tab -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_key_title">ADB Authentication Key</string>
+    <string name="settings_key_desc">Manage the RSA key pair used to authorize this app with devices.</string>
+    <string name="settings_fingerprint_label">Fingerprint:</string>
+    <string name="settings_no_key">No key generated yet.</string>
+    <string name="settings_btn_regen_key">Regenerate Authorization Key</string>
+    <string name="settings_btn_load_custom_key">Load Custom Key</string>
+    <string name="dialog_regen_key_title">Regenerate Key?</string>
+    <string name="dialog_regen_key_msg">This will delete the current ADB key pair and generate a new one. You\'ll need to re-authorize on all previously trusted devices.</string>
+    <string name="btn_regenerate">Regenerate</string>
+
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_system_default">System Default</string>
+    <string name="settings_language_english">English</string>
+
+    <string name="settings_theme_title">Theme</string>
+    <string name="theme_system">Device Default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED</string>
+
+    <string name="settings_logs_title">App Logs</string>
+    <string name="settings_logs_subtitle">Export or clear persistent application logs</string>
+    <string name="settings_enable_logging_title">Enable Logging</string>
+    <string name="settings_enable_logging_subtitle">Record internal log events to memory and disk</string>
+    <string name="settings_btn_export_all_logs">Export Logs</string>
+    <string name="settings_btn_clear_logs">Clear Logs</string>
+    <string name="dialog_clear_logs_title">Clear All Logs?</string>
+    <string name="dialog_clear_logs_msg">This will permanently delete all persisted log files from disk and clear current in-memory logs.</string>
+    <string name="btn_clear">Clear</string>
+    <string name="msg_logs_cleared">All log files and memory buffers cleared.</string>
+    <string name="msg_logs_exported">Logs exported successfully.</string>
+
+    <!-- ViewModel State / Error Messages -->
+    <string name="msg_new_key_generated">New key generated.</string>
+    <string name="msg_custom_key_loaded">Custom key loaded.</string>
+    <string name="err_usb_connection_lost">USB connection lost. Please reconnect.</string>
+    <string name="err_connection_lost">Connection lost: %1$s</string>
+    <string name="err_connection_failed">Connection failed</string>
+    <string name="err_usb_connection_failed">USB connection failed</string>
+    <string name="err_failed_prefix">Failed: %1$s</string>
+    <string name="err_shell_format">Error (%1$d): %2$s</string>
+    <string name="err_command_timed_out">Command timed out - device may be disconnected</string>
+
+    <!-- File Manager -->
+    <string name="file_manager_title">Device File Manager</string>
+    <string name="file_manager_subtitle">Browse, view, upload, download, and manage files on connected device</string>
+    <string name="file_manager_empty">Directory is empty</string>
+    <string name="file_manager_parent_dir">..</string>
+    <string name="file_manager_search_hint">Search in current folder…</string>
+    <string name="file_manager_write_denied">Cannot write to this directory (Permission Denied)</string>
+    <string name="file_manager_action_properties">View Properties</string>
+    <string name="file_manager_action_download">Download (Pull)</string>
+    <string name="file_manager_action_rename">Rename / Move</string>
+    <string name="file_manager_action_delete">Delete</string>
+    <string name="file_manager_properties_title">File Properties</string>
+    <string name="file_manager_new_folder">New Folder</string>
+    <string name="file_manager_create_folder_title">Create New Folder</string>
+    <string name="file_manager_create_folder_msg">Enter new folder name:</string>
+    <string name="file_manager_rename_title">Rename Item</string>
+    <string name="file_manager_rename_msg">Enter new path or name:</string>
+    <string name="file_manager_delete_title">Delete Item?</string>
+    <string name="file_manager_delete_msg">Are you sure you want to delete "%1$s"? This action cannot be undone.</string>
+    <string name="file_manager_downloading_folder">Downloading folder…</string>
+
+    <!-- Adb / Device Connect / Modes -->
+    <string name="err_invalid_ip_format">Invalid IPv4 address format</string>
+    <string name="err_invalid_port_range">Port must be between 1 and 65535</string>
+    <string name="mode_sideload">Sideload Mode</string>
+    <string name="mode_recovery">Recovery Mode</string>
+    <string name="mode_rescue">Rescue Mode</string>
+    <string name="status_connected_mode">Connected [%1$s]</string>
+    <string name="status_connected_recovery_version_api">Connected [Recovery Mode &#8226; Android %1$s (API %2$d)]</string>
+    <string name="status_connected_recovery_version">Connected [Recovery Mode &#8226; Android %1$s]</string>
+    <string name="status_connected_recovery_api">Connected [Recovery Mode &#8226; API %1$d]</string>
+    <string name="sideload_description">Device is in sideload mode. Pick an OTA zip to flash.</string>
+    <string name="btn_choose_file">Choose File</string>
+    <string name="btn_starting">Starting...</string>
+    <string name="btn_sideload">Sideload</string>
+    <string name="msg_flash_complete">Flash complete</string>
+    <string name="btn_done">Done</string>
+    <string name="btn_try_again">Try Again</string>
+    <string name="btn_wipe_userdata">Wipe Userdata</string>
+    <string name="dialog_wipe_userdata_title">Wipe userdata?</string>
+    <string name="dialog_wipe_userdata_msg">This will erase all user data on the device. This cannot be undone.</string>
+    <string name="btn_wipe">Wipe</string>
+
+    <!-- Scrcpy Additions -->
+    <string name="dialog_add_audio_bitrate_title">Add Custom Audio Bitrate</string>
+    <string name="dialog_add_audio_bitrate_msg">Enter custom audio bitrate in Kbps (e.g. 192, 256, 320):</string>
+    <string name="scrcpy_mirroring_failed">Mirroring Failed</string>
+    <string name="btn_dismiss">Dismiss</string>
+    <string name="label_audio_bitrate">Audio Bitrate</string>
+    <string name="codec_raw_pcm">RAW (PCM)</string>
+    <string name="err_invalid_positive_number">Please enter a valid positive number</string>
+    <string name="scrcpy_mode_not_supported">Scrcpy is not supported in %1$s mode</string>
+    <string name="scrcpy_mode_not_supported_desc">Screen mirroring requires standard ADB mode and is unavailable while the connected device is in %1$s mode.</string>
+    <string name="scrcpy_server_start_failed">Scrcpy server failed to start on target device. Check permissions or device compatibility.</string>
+    <string name="scrcpy_server_terminated">Scrcpy server process terminated unexpectedly on target device.</string>
+
+    <!-- File Manager Additions -->
+    <string name="file_manager_push_file">Push File</string>
+    <string name="file_manager_upload_failed">Upload failed for %1$s: %2$s</string>
+    <string name="file_manager_download_success">Downloaded %1$s successfully</string>
+    <string name="file_manager_download_failed">Download failed: %1$s</string>
+    <string name="file_manager_folder_download_unsupported">Folder downloading is not supported via single file save</string>
+    <string name="file_manager_prop_name">Name</string>
+    <string name="file_manager_prop_path">Path</string>
+    <string name="file_manager_prop_type">Type</string>
+    <string name="file_manager_prop_link_target">Link Target</string>
+    <string name="file_manager_prop_size">Size</string>
+    <string name="file_manager_prop_mode">Mode</string>
+    <string name="file_manager_prop_type_symlink">Symlink (%1$s)</string>
+    <string name="file_manager_prop_type_dir">Directory</string>
+    <string name="file_manager_prop_type_file">File</string>
+    <string name="file_manager_retry">Retry</string>
+    <string name="file_manager_create">Create</string>
+    <string name="file_manager_rename">Rename</string>
+
+    <!-- Package Manager -->
+    <string name="pkg_manager_title">Package Manager</string>
+    <string name="pkg_manager_subtitle">Manage installed apps, pull APKs/APKS, enable/disable or install packages</string>
+    <string name="pkg_manager_search_hint">Search apps by name or package…</string>
+    <string name="pkg_manager_filter_all">All Apps</string>
+    <string name="pkg_manager_filter_user">User Apps</string>
+    <string name="pkg_manager_filter_system">System Apps</string>
+    <string name="pkg_manager_filter_disabled">Disabled Apps</string>
+    <string name="pkg_manager_action_enable">Enable app</string>
+    <string name="pkg_manager_action_disable">Disable app</string>
+    <string name="pkg_manager_action_pull">Pull app (Extract APK)</string>
+    <string name="pkg_manager_action_uninstall">Uninstall app</string>
+    <string name="pkg_manager_action_force_stop">Force stop</string>
+    <string name="pkg_manager_force_stop_success">%1$s force stopped</string>
+    <string name="pkg_manager_action_info">App info</string>
+    <string name="pkg_manager_install_apks">Install APKs</string>
+    <string name="pkg_manager_installing">Installing package on device…</string>
+    <string name="pkg_manager_install_success">Package installed successfully</string>
+    <string name="pkg_manager_install_failed">Installation failed: %1$s</string>
+    <string name="pkg_manager_pulling">Pulling package…</string>
+    <string name="pkg_manager_pull_success">Pulled %1$s successfully</string>
+    <string name="pkg_manager_pull_failed">Pull failed: %1$s</string>
+    <string name="pkg_manager_uninstall_confirm_title">Uninstall App?</string>
+    <string name="pkg_manager_uninstall_confirm_msg">Are you sure you want to uninstall %1$s (%2$s) from target device?</string>
+    <string name="pkg_manager_uninstall_success">%1$s uninstalled successfully</string>
+    <string name="pkg_manager_uninstall_failed">Uninstall failed: %1$s</string>
+    <string name="pkg_manager_disable_success">%1$s disabled</string>
+    <string name="pkg_manager_enable_success">%1$s enabled</string>
+    <string name="settings_btn_export_key">Export authentication key</string>
+    <string name="msg_key_exported">ADB authentication key exported successfully</string>
+    <string name="pkg_manager_empty">No packages found</string>
+
+    <!-- ADB Reboot Options Strings -->
+    <string name="adb_reboot_tile_title">Reboot Options</string>
+    <string name="adb_reboot_tile_desc">Reboot to system, bootloader, recovery, fastboot, or power off</string>
+    <string name="adb_reboot_system_title">Reboot System</string>
+    <string name="adb_reboot_system_desc">Normal reboot into the Android OS</string>
+    <string name="adb_reboot_bootloader_title">Reboot to Bootloader</string>
+    <string name="adb_reboot_bootloader_desc">Reboot into bootloader / fastboot mode</string>
+    <string name="adb_reboot_recovery_title">Reboot to Recovery</string>
+    <string name="adb_reboot_recovery_desc">Reboot into recovery mode</string>
+    <string name="adb_reboot_fastboot_title">Reboot to Fastboot</string>
+    <string name="adb_reboot_fastboot_desc">Reboot into fastbootd (userspace fastboot)</string>
+    <string name="adb_reboot_shutdown_title">Shutdown</string>
+    <string name="adb_reboot_shutdown_desc">Power off the device</string>
+    <string name="adb_reboot_executing">Executing %1$s…</string>
+
+    <!-- ADB Screenshot Strings -->
+    <string name="adb_screenshot_tile_title">Screenshot</string>
+    <string name="adb_screenshot_tile_desc">Capture device screen and view or save the image</string>
+    <string name="adb_screenshot_take_btn">Take Screenshot</string>
+    <string name="adb_screenshot_capturing">Capturing screenshot…</string>
+    <string name="adb_screenshot_save_btn">Save Screenshot</string>
+    <string name="adb_screenshot_saved">Screenshot saved successfully</string>
+    <string name="adb_screenshot_failed">Failed to capture screenshot: %1$s</string>
+    <string name="adb_screenshot_empty">Tap \'Take Screenshot\' to capture the display of the connected device.</string>
+
+    <!-- Fastboot Tab Strings -->
+    <string name="fastboot_tab_actions">Actions</string>
+    <string name="fastboot_tab_shell">Shell</string>
+    <string name="fastboot_connected">Connected</string>
+    <string name="fastboot_detected_not_connected">Detected &#8212; not connected</string>
+    <string name="fastboot_retry">Retry</string>
+    <string name="fastboot_disconnect">Disconnect</string>
+    <string name="fastboot_no_device_warning">No fastboot device connected. Connect a device in fastboot mode to use these actions.</string>
+    <string name="fastboot_tile_reboot_title">Reboot</string>
+    <string name="fastboot_tile_reboot_desc">Reboot into system, bootloader, recovery, or fastbootd</string>
+    <string name="fastboot_tile_flash_title">Flash Image</string>
+    <string name="fastboot_tile_flash_desc">Choose an image via file picker and flash it to a partition</string>
+    <string name="fastboot_tile_boot_title">Boot Image</string>
+    <string name="fastboot_tile_boot_desc">Stage and boot an image without flashing it</string>
+    <string name="fastboot_tile_lock_title">Lock State</string>
+    <string name="fastboot_tile_lock_desc">Unlock or lock the bootloader</string>
+    <string name="fastboot_tile_vars_title">Device Variables</string>
+    <string name="fastboot_tile_vars_desc">Read bootloader variables via getvar</string>
+    <string name="fastboot_log_title">Log</string>
+    <string name="fastboot_clear_log">Clear log</string>
+    <string name="fastboot_shell_hint">Type a command below, or tap help.</string>
+
+    <string name="fastboot_reboot_title">Reboot</string>
+    <string name="fastboot_reboot_system_title">Reboot System</string>
+    <string name="fastboot_reboot_system_desc">Normal reboot into the OS</string>
+    <string name="fastboot_reboot_bootloader_title">Reboot to Bootloader</string>
+    <string name="fastboot_reboot_bootloader_desc">Reboot back into the bootloader</string>
+    <string name="fastboot_reboot_recovery_title">Reboot to Recovery</string>
+    <string name="fastboot_reboot_recovery_desc">Reboot into recovery mode</string>
+    <string name="fastboot_reboot_fastboot_title">Reboot to Fastboot</string>
+    <string name="fastboot_reboot_fastboot_desc">Reboot into fastbootd (userspace fastboot)</string>
+    <string name="fastboot_continue_boot_title">Continue Boot</string>
+    <string name="fastboot_continue_boot_desc">Resume normal boot from bootloader without rebooting</string>
+    <string name="fastboot_shutdown_title">Shutdown</string>
+    <string name="fastboot_shutdown_desc">Power off the device</string>
+    <string name="fastboot_lock_title">Bootloader Lock State</string>
+    <string name="fastboot_lock_warning">Unlocking or locking the bootloader may wipe user data on the device.</string>
+    <string name="fastboot_unlock_bootloader_title">Unlock Bootloader</string>
+    <string name="fastboot_lock_bootloader_title">Lock Bootloader</string>
+    <string name="fastboot_unlock_critical_title">Unlock Critical</string>
+    <string name="fastboot_lock_critical_title">Lock Critical</string>
+    <string name="fastboot_check_unlock_title">Check Unlock Ability</string>
+
+    <string name="fastboot_vars_title">Device Variables</string>
+    <string name="fastboot_vars_desc">Read a specific bootloader variable, or fetch all of them at once.</string>
+    <string name="fastboot_var_name_label">Variable name (e.g. product, version-bootloader)</string>
+    <string name="fastboot_btn_get_all">Get All</string>
+    <string name="fastboot_btn_get_var">Get Variable</string>
+
+    <string name="fastboot_working_placeholder">Working...</string>
+    <string name="fastboot_op_in_progress">Operation in progress...</string>
+    <string name="fastboot_op_done">%1$s Done</string>
+    <string name="fastboot_op_failed">%1$s Failed</string>
+    <string name="fastboot_flash_title">Flash Image</string>
+    <string name="fastboot_flash_desc">Select an image file to flash to a partition on the device. The partition name is pre-filled from the file name but can be edited.</string>
+    <string name="fastboot_choose_image">Choose Image</string>
+    <string name="fastboot_no_file_selected">No file selected</string>
+    <string name="fastboot_dialog_flash_partition_title">Flash to partition</string>
+    <string name="fastboot_dialog_flash_partition_msg">Enter the partition name to flash \"%1$s\" to.</string>
+    <string name="fastboot_partition_name_label">Partition name</string>
+    <string name="fastboot_btn_flash">Flash</string>
+    <string name="fastboot_btn_cancel">Cancel</string>
+    <string name="fastboot_boot_title">Boot Image</string>
+    <string name="fastboot_boot_desc">Stages an image on the device and boots it once, without flashing it to any partition.</string>
+    <string name="fastboot_choose_image_and_boot">Choose Image and Boot</string>
+
+    <string name="fastboot_shell_placeholder">reboot, getvar product, flash boot, help ...</string>
+    <string name="fastboot_raw_path_warning_title">Raw path detected</string>
+    <string name="fastboot_raw_path_warning_msg">\"%1$s\" isn\'t supported &#8212; this app can\'t read arbitrary file paths. Use the attach button to pick the file instead.</string>
+    <string name="fastboot_proceed_anyway">Proceed anyway</string>
+
+    <!-- Remote Control Strings -->
+    <string name="remote_control_title">Remote Control</string>
+    <string name="remote_control_desc">Simulate physical remote for standard Android and Android TV devices</string>
+    <string name="remote_mode_auto">Auto Detect</string>
+    <string name="remote_mode_tv">Android TV</string>
+    <string name="remote_mode_standard">Standard Android</string>
+    <string name="remote_detected_tv">Android TV Detected</string>
+    <string name="remote_detected_standard">Standard Android</string>
+    <string name="remote_section_navigation">Navigation Pad</string>
+    <string name="remote_section_system">System &amp; Playback</string>
+    <string name="remote_section_tv_controls">TV Controls</string>
+    <string name="remote_section_text_input">Text Input Injection</string>
+    <string name="remote_btn_send_text">Send Text</string>
+    <string name="remote_text_placeholder">Type text to send to active field...</string>
+    <string name="remote_tv_guide">Guide</string>
+    <string name="remote_tv_input">Source</string>
+    <string name="remote_tv_ch_up">Ch +</string>
+    <string name="remote_tv_ch_down">Ch -</string>
+    <string name="remote_tv_search">Search</string>
+
+    <!-- Daemon Control & Connection Strings -->
+    <string name="daemon_dialog_title">Daemon Response</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_restart">Restart</string>
+    <string name="cd_daemon_options">Daemon options</string>
+    <string name="action_switch_tcpip">Switch to TCP/IP</string>
+    <string name="action_root_daemon">Root Daemon</string>
+    <string name="action_unroot_daemon">Unroot Daemon</string>
+    <string name="dialog_tcpip_title">Restart adbd on TCP/IP</string>
+    <string name="dialog_tcpip_msg">Enter port for wireless ADB:</string>
+    <string name="cd_pair_qr">Pair with QR code</string>
+    <string name="cd_close">Close</string>
+
+    <!-- Discovery Sheet Strings -->
+    <string name="discovery_title">Discover devices</string>
+    <string name="discovery_searching">Searching for devices with wireless debugging enabled…</string>
+    <string name="discovery_no_devices_found">No devices found yet</string>
+    <string name="discovery_network_hint">Make sure wireless debugging is on and both devices share a network</string>
+    <string name="discovery_btn_manual_entry">Enter connection info manually</string>
+    <string name="discovery_conn_type">Connection type</string>
+    <string name="discovery_plain_tcp">Plain TCP (legacy, port 5555)</string>
+    <string name="discovery_wireless_tls">Wireless debugging (TLS)</string>
+    <string name="discovery_connect_tcp">Connect over TCP</string>
+    <string name="discovery_wireless_debugging">Wireless debugging</string>
+    <string name="discovery_pair_first_hint">If this device hasn\'t been paired yet, pair it first.</string>
+    <string name="discovery_pair_with_code">Pair with code</string>
+    <string name="discovery_connect_already_paired">Connect (already paired)</string>
+    <string name="discovery_connect_tls">Connect (TLS)</string>
+    <string name="discovery_paired_success_connecting">Paired successfully! Connecting to the discovered wireless debugging endpoint…</string>
+    <string name="discovery_pair_instead">Pair instead</string>
+    <string name="discovery_pair_device">Pair device</string>
+    <string name="discovery_pairing_port">Pairing port</string>
+    <string name="discovery_pairing_code">Pairing code</string>
+    <string name="discovery_btn_pair">Pair</string>
+
+    <!-- QR Code Pairing Strings -->
+    <string name="qr_starting_server">Starting pairing server…</string>
+    <string name="cd_qr_code">Pairing QR code</string>
+    <string name="qr_instruction">On your device, go to Settings &gt; Developer options &gt; Wireless debugging &gt; Pair device with QR code, then scan this.</string>
+    <string name="qr_wifi_hint">Both devices must be on the same Wi-Fi network.</string>
+    <string name="qr_paired_success">Paired successfully</string>
+    <string name="qr_connecting">Connecting…</string>
+    <string name="qr_waiting_discoverable">Waiting for device to become discoverable…</string>
+    <string name="qr_pairing_failed">Pairing failed</string>
+
+    <!-- About Section Strings -->
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_desc">App information, social links, and repository</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_source_code">Source Code</string>
+    <string name="cd_github">GitHub</string>
+    <string name="cd_telegram">Telegram</string>
+</resources>
