@@ -140,6 +140,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Assemble ${{ matrix.build_type }} APK
+        shell: bash
         env:
           KEYSTORE_PATH: ${{ matrix.build_type == 'release' && format('{0}/release.keystore', runner.temp) || '' }}
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
