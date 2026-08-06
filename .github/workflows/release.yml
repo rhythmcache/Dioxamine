@@ -140,16 +140,17 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Assemble ${{ matrix.build_type }} APK
-        shell: bash
         env:
           KEYSTORE_PATH: ${{ matrix.build_type == 'release' && format('{0}/release.keystore', runner.temp) || '' }}
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          BUILD_TYPE="${{ matrix.build_type }}"
-          TASK="assemble${BUILD_TYPE^}"
-          ./gradlew "$TASK" --no-daemon
+          if [ "${{ matrix.build_type }}" = "release" ]; then
+            ./gradlew assembleRelease --no-daemon
+          else
+            ./gradlew assembleDebug --no-daemon
+          fi
 
       - name: Locate and rename built APK
         id: locate
@@ -184,6 +185,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Download release APK
         uses: actions/download-artifact@v4
         with:
