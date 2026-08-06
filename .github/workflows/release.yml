@@ -1,4 +1,4 @@
-name: Release
+name: Build Native Libs + App
 
 on:
   workflow_dispatch:
@@ -141,12 +141,13 @@ jobs:
 
       - name: Assemble ${{ matrix.build_type }} APK
         env:
-          KEYSTORE_PATH: ${{ matrix.build_type == 'release' && format('{0}/release.keystore', runner.temp) || '' }}
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
           if [ "${{ matrix.build_type }}" = "release" ]; then
+            export KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
             ./gradlew assembleRelease --no-daemon
           else
             ./gradlew assembleDebug --no-daemon
