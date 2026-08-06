@@ -4,7 +4,7 @@
   <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_512.png" alt="Dioxamine Logo" width="160" height="160" />
 </p>
 
-Dioxamine is simple application using which you can manage, control, and mirror other Android devices directly from your phone.
+Dioxamine lets you send ADB commands, mirror and control Android devices, manage files and apps, and use Fastboot—all from your phone via USB OTG or Wireless ADB.
 
 > [!WARNING]
 > Dioxamine is currently in an early alpha stage and under active development. Expect bugs, incomplete features, and sudden updates. Use at your own risk.
