@@ -210,7 +210,7 @@ class ScrcpyAudioDecoder {
                                     // Use direct ByteBuffer write to avoid array allocation
                                     audioTrack?.write(outputBuffer, bufferInfo.size, AudioTrack.WRITE_BLOCKING)
                                 }
-                                mc.releaseOutputBuffer(outIndex, false)
+                                runCatching { mc.releaseOutputBuffer(outIndex, false) }
                                 outIndex = mc.dequeueOutputBuffer(bufferInfo, 0)
                             }
                             outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {

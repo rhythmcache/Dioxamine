@@ -131,18 +131,18 @@ class ScrcpySession(
                 delay(300)
 
                 AppLogger.i(TAG_CLIENT, "Step 3: Connecting to video socket (1st connection)...")
-                videoStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 10, 150)
+                videoStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 25, 200)
                 val currentVideoStream = videoStream ?: throw Exception("Failed to connect to scrcpy video socket after retries")
                 videoSocketConnected = true
 
                 if (config.audioEnabled) {
                     AppLogger.i(TAG_CLIENT, "Step 3.5: Connecting to audio socket (2nd connection)...")
-                    audioStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 10, 150)
+                    audioStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 25, 200)
                 }
 
                 if (config.controlEnabled) {
                     AppLogger.i(TAG_CLIENT, "Step 3.7: Connecting to control socket (3rd connection)...")
-                    controlStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 10, 150)
+                    controlStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 25, 200)
                 }
 
                 val currentAudioStream = audioStream
