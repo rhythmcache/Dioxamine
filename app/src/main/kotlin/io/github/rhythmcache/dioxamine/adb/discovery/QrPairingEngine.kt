@@ -61,7 +61,7 @@ class QrPairingEngine(
         engineJob = scope.launch(Dispatchers.IO) {
             try {
                 val identity = buildPairingIdentity(keyProvider)
-                val ourPeerInfo = PeerInfoBuilder.forOurPublicKey(identity.keyPair.public as RSAPublicKey)
+                val ourPeerInfo = PeerInfoBuilder.forOurKeyProvider(keyProvider)
 
                 val password = randomPassword()
                 val targetServiceName = randomServiceName()
