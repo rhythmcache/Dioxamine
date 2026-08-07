@@ -29,8 +29,36 @@ jobs:
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "Extracted versionName=$VERSION_NAME versionCode=$VERSION_CODE"
 
+  build-scrcpy-server:
+    runs-on: ubuntu-latest
+    env:
+      GRADLE: gradle  # use native gradle instead of ./gradlew in scripts
+    steps:
+      - name: Checkout scrcpy repo
+        uses: actions/checkout@v4
+        with:
+          repository: Genymobile/scrcpy
+          path: scrcpy-src
+          ref: 2926c06   # v4.1 release commit
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build scrcpy-server
+        working-directory: scrcpy-src
+        run: release/build_server.sh
+
+      - name: Upload scrcpy-server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrcpy-server
+          path: scrcpy-src/release/work/build-server/server/scrcpy-server
+
   build:
-    needs: extract-version
+    needs: [extract-version, build-scrcpy-server]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -129,6 +157,20 @@ jobs:
           cp .build/classes.dex "$OUT_DIR/pkg-dump.jar"
           ls -la "$OUT_DIR"
 
+      - name: Download scrcpy-server artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: scrcpy-server
+          path: .build/scrcpy-server-download/
+
+      - name: Move scrcpy-server to assets as scrcpy-server.jar
+        run: |
+          set -euo pipefail
+          OUT_DIR="app/src/main/assets"
+          mkdir -p "$OUT_DIR"
+          cp .build/scrcpy-server-download/scrcpy-server "$OUT_DIR/scrcpy-server.jar"
+          ls -la "$OUT_DIR"
+
       - name: Decode keystore
         if: matrix.build_type == 'release'
         run: |
@@ -172,13 +214,14 @@ jobs:
           name: app-${{ matrix.build_type }}-apk
           path: ${{ steps.locate.outputs.apk_path }}
 
-      - name: Upload native binaries + pkg-dump.jar as artifact
+      - name: Upload native binaries + pkg-dump.jar + scrcpy-server.jar as artifact
         uses: actions/upload-artifact@v4
         with:
           name: dxls-native-and-pkgdump-${{ matrix.build_type }}
           path: |
             app/src/main/assets/dxls/*
             app/src/main/assets/pkg-dump.jar
+            app/src/main/assets/scrcpy-server.jar
 
   release:
     needs: [extract-version, build]
