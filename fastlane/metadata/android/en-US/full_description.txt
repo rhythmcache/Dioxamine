@@ -1,0 +1,24 @@
+Dioxamine is a powerful mobile administration utility that enables you to issue ADB commands, mirror and remotely control target Android devices with low-latency touch and audio streaming, manage remote files and installed packages, and perform Fastboot operations—all directly from your Android phone or tablet via USB OTG or Wireless ADB.
+
+<b>Connection Modes</b>
+• <b>USB OTG:</b> Connect two Android devices directly using a USB OTG adapter cable.
+• <b>Wireless ADB:</b> Connect over Wi-Fi or portable hotspot with automatic mDNS discovery, QR code scanning, or port and pairing code input.
+
+<b>ADB Device Management</b>
+• <b>Device Information & Specs:</b> Real-time display of CPU architecture, temperature, RAM usage, battery status, and OS build details.
+• <b>File Manager:</b> Browse, upload, download, search, and delete files on the target device's internal storage.
+• <b>Package Manager:</b> View system and user applications, install APKs, uninstall apps, enable/disable packages, clear app data, and extract APK binaries.
+• <b>Terminal Shell:</b> Full interactive ADB shell with command history, auto-completion, and command execution.
+• <b>Screen Capture & Power Controls:</b> Take instant screenshots and reboot target devices into System, Bootloader, Recovery, Fastbootd, or perform firmware sideloading and rescue commands.
+
+<b>Scrcpy Screen Mirroring & Touch Control</b>
+• <b>Real-Time Mirroring & Touch:</b> Mirror the target device display with low latency and interactive touch control over Wi-Fi or USB OTG.
+• <b>Audio Forwarding:</b> Stream target device audio directly alongside video.
+• <b>Display Customization:</b> Adjust maximum resolution, FPS limits, bitrate, and video codec settings.
+• <b>Power-Saving Mode:</b> Keep the target device screen dark while mirroring and controlling to preserve battery life.
+• <b>Navigation Controls:</b> Floating overlay bar for Home/Back/Recents actions and physical volume button forwarding.
+
+<b>Fastboot Tools</b>
+• <b>Image Flashing:</b> Flash boot, recovery, system, vendor, userdata, init_boot, and other partition image files via USB OTG.
+• <b>Bootloader Controls:</b> Lock and unlock target device bootloader state.
+• <b>Fastboot Terminal:</b> Interactive terminal environment for issuing raw Fastboot protocol commands.

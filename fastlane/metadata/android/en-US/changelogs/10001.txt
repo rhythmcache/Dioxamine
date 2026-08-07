@@ -1,0 +1,5 @@
+Release notes for 0.0.2-alpha:
+• Fixed Scrcpy first-attempt connection issues by increasing connection timeout and retry delays.
+• Redesigned File Manager backend (dxls) to execute once as a persistent socket daemon, eliminating repeated execution overhead on directory navigation.
+• Enhanced security & storage hygiene: helper binary automatically deletes itself from disk upon execution while staying active in memory.
+• Improved Android compatibility and updated adbKt dependency to v1.0.5.

@@ -1,0 +1,1 @@
+ADB commands, screen mirroring, file manager & Fastboot via USB OTG or Wi-Fi
