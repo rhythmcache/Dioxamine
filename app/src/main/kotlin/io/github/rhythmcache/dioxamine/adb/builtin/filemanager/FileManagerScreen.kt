@@ -37,6 +37,7 @@ import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import io.github.rhythmcache.dioxamine.core.Constants
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -85,46 +86,89 @@ fun FileManagerScreen(
     var activeDialog by remember { mutableStateOf(ActiveDialog.NONE) }
     var dialogInputValue by remember { mutableStateOf("") }
     var isOperating by remember { mutableStateOf(false) }
-    var dxlsPushed by remember { mutableStateOf(false) }
+    var dxlsDaemonStarted by remember { mutableStateOf(false) }
 
     var pendingDownloadFile by remember { mutableStateOf<RemoteFileItem?>(null) }
 
-    fun ensureNativeBinary(onReady: () -> Unit) {
-        if (client == null) return
-        if (dxlsPushed) {
-            onReady()
-            return
+    DisposableEffect(Unit) {
+        onDispose {
+            if (client != null) {
+                vm.viewModelScope.launch(Dispatchers.IO) {
+                    runCatching {
+                        val shutdownStream = client.open("localabstract:dxls")
+                        val req = JSONObject().put("cmd", "shutdown").toString() + "\n"
+                        shutdownStream.write(req.toByteArray(Charsets.UTF_8))
+                        shutdownStream.close()
+                    }
+                }
+            }
         }
+    }
+
+    fun ensureNativeDaemon(onReady: () -> Unit) {
+        if (client == null) return
 
         coroutineScope.launch(Dispatchers.IO) {
             runCatching {
-                val abiStream = client.open("shell:getprop ro.product.cpu.abi")
-                val buf = ByteArray(128)
-                val n = abiStream.read(buf)
-                val rawAbi = if (n > 0) String(buf, 0, n, Charsets.UTF_8).trim() else "arm64-v8a"
-                abiStream.close()
-
-                val abi = when {
-                    rawAbi.startsWith("arm64") || rawAbi.contains("aarch64") -> "arm64-v8a"
-                    rawAbi.startsWith("arm") || rawAbi.contains("v7a") -> "armeabi-v7a"
-                    rawAbi.contains("x86_64") -> "x86_64"
-                    rawAbi.contains("x86") -> "x86"
-                    else -> "arm64-v8a"
+                var daemonReady = false
+                try {
+                    val pingStream = client.open("localabstract:dxls")
+                    pingStream.close()
+                    daemonReady = true
+                } catch (_: Exception) {
                 }
 
-                val assetPath = "dxls/dxls-$abi"
-                context.assets.open(assetPath).use { input ->
-                    client.sync.push(input, "${Constants.DEVICE_TMP_DIR}/dxls", mode = 493) // 493 = octal 0755
+                if (!daemonReady) {
+                    val abiStream = client.open("shell:getprop ro.product.cpu.abi")
+                    val buf = ByteArray(128)
+                    val n = abiStream.read(buf)
+                    val rawAbi = if (n > 0) String(buf, 0, n, Charsets.UTF_8).trim() else "arm64-v8a"
+                    abiStream.close()
+
+                    val abi = when {
+                        rawAbi.startsWith("arm64") || rawAbi.contains("aarch64") -> "arm64-v8a"
+                        rawAbi.startsWith("arm") || rawAbi.contains("v7a") -> "armeabi-v7a"
+                        rawAbi.contains("x86_64") -> "x86_64"
+                        rawAbi.contains("x86") -> "x86"
+                        else -> "arm64-v8a"
+                    }
+
+                    val assetPath = "dxls/dxls-$abi"
+                    context.assets.open(assetPath).use { input ->
+                        client.sync.push(input, "${Constants.DEVICE_TMP_DIR}/dxls", mode = 493) // 493 = octal 0755
+                    }
+
+                    val chmodStream = client.open("shell:chmod 755 ${Constants.DEVICE_TMP_DIR}/dxls")
+                    chmodStream.close()
+
+                    vm.viewModelScope.launch(Dispatchers.IO) {
+                        runCatching {
+                            val daemonExecStream = client.open("shell:${Constants.DEVICE_TMP_DIR}/dxls")
+                            val buf = ByteArray(1024)
+                            while (daemonExecStream.read(buf) != -1) { }
+                            daemonExecStream.close()
+                        }
+                    }
+
+                    for (i in 1..10) {
+                        kotlinx.coroutines.delay(100)
+                        try {
+                            val testStream = client.open("localabstract:dxls")
+                            testStream.close()
+                            daemonReady = true
+                            break
+                        } catch (_: Exception) {
+                        }
+                    }
                 }
 
-                val chmodStream = client.open("shell:chmod 755 ${Constants.DEVICE_TMP_DIR}/dxls")
-                chmodStream.close()
-                dxlsPushed = true
+                dxlsDaemonStarted = daemonReady
+                if (!daemonReady) throw Exception("Failed to connect to dxls socket server @dxls")
             }.onSuccess {
                 withContext(Dispatchers.Main) { onReady() }
             }.onFailure { err ->
                 withContext(Dispatchers.Main) {
-                    errorMessage = "Failed to push dxls native binary: ${err.message}"
+                    errorMessage = "Failed to start dxls daemon: ${err.message}"
                     isLoading = false
                 }
             }
@@ -136,19 +180,23 @@ fun FileManagerScreen(
         isLoading = true
         errorMessage = null
 
-        ensureNativeBinary {
+        ensureNativeDaemon {
             coroutineScope.launch(Dispatchers.IO) {
                 runCatching {
                     val cleanPath = targetPath.trimEnd('/')
                     val cmdPath = if (cleanPath.isEmpty()) "/" else cleanPath
 
-                    val stream = client.open("shell:${Constants.DEVICE_TMP_DIR}/dxls '$cmdPath'")
+                    val stream = client.open("localabstract:dxls")
+                    val jsonReq = JSONObject().put("cmd", "list").put("path", cmdPath).toString() + "\n"
+                    stream.write(jsonReq.toByteArray(Charsets.UTF_8))
+
                     val buf = ByteArray(16384)
                     val sb = StringBuilder()
                     while (true) {
                         val n = stream.read(buf)
                         if (n == -1) break
                         sb.append(String(buf, 0, n, Charsets.UTF_8))
+                        if (sb.contains("\"type\":\"done\"")) break
                     }
                     stream.close()
 
