@@ -98,13 +98,20 @@ class QrPairingEngine(
                 if (foundName == targetServiceName || foundName.contains(targetServiceName) || foundName.startsWith("studio-")) {
                     if (pairingAttempted.get()) return
                     runCatching {
+                        @Suppress("DEPRECATION")
                         nsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
                             override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) {
                                 AppLogger.e("QrPairingEngine", "Failed to resolve pairing service $foundName: code=$errorCode")
                             }
 
                             override fun onServiceResolved(info: NsdServiceInfo) {
-                                val hostStr = info.host?.hostAddress ?: return
+                                @Suppress("DEPRECATION")
+                                val hostAddr = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                    info.hostAddresses.firstOrNull()
+                                } else {
+                                    info.host
+                                }
+                                val hostStr = hostAddr?.hostAddress ?: return
                                 val portNum = info.port
                                 val cleanHost = hostStr.removePrefix("/").split("%")[0]
 

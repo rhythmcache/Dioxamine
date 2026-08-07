@@ -221,9 +221,6 @@ class ScrcpyAudioDecoder {
                                 recreateAudioTrack(newSampleRate, newChannelCount)
                                 outIndex = mc.dequeueOutputBuffer(bufferInfo, 0)
                             }
-                            outIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
-                                outIndex = mc.dequeueOutputBuffer(bufferInfo, 0)
-                            }
                             else -> {
                                 break
                             }

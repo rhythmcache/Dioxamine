@@ -227,9 +227,6 @@ class ScrcpyDecoder(
                     AppLogger.i(TAG, "drainOutput: format changed to ${mc.outputFormat}")
                     outIndex = mc.dequeueOutputBuffer(bufferInfo, 0)
                 }
-                outIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
-                    outIndex = mc.dequeueOutputBuffer(bufferInfo, 0)
-                }
                 else -> break
             }
         }

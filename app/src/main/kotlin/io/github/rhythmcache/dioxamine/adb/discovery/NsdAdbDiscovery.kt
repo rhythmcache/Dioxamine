@@ -129,7 +129,13 @@ class NsdAdbDiscovery(private val context: Context) {
             }
 
             override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-                val hostStr = serviceInfo.host?.hostAddress
+                @Suppress("DEPRECATION")
+                val hostAddr = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    serviceInfo.hostAddresses.firstOrNull()
+                } else {
+                    serviceInfo.host
+                }
+                val hostStr = hostAddr?.hostAddress
                 if (hostStr != null) {
                     val cleanHost = hostStr.removePrefix("/").split("%")[0]
                     val key = "${serviceInfo.serviceName}|${type.serviceType}"
@@ -145,6 +151,7 @@ class NsdAdbDiscovery(private val context: Context) {
         }
 
         runCatching {
+            @Suppress("DEPRECATION")
             nsdManager.resolveService(service, resolveListener)
         }.onFailure { e ->
             AppLogger.e("NsdAdbDiscovery", "Exception calling resolveService for ${service.serviceName}", e)
