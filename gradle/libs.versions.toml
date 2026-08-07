@@ -17,6 +17,7 @@ qrose             = "1.1.2"
 appcompat         = "1.7.1"
 datastore         = "1.1.3"
 ktlint            = "12.1.2"
+robolectricAndroidAll = "17-robolectric-15733970"
 
 [libraries]
 androidx-datastore-preferences           = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
@@ -42,6 +43,7 @@ adb-kt                                   = { group = "com.github.rhythmcache", n
 fastboot-kt                              = { group = "com.github.rhythmcache", name = "fastboot-kt", version.ref = "fastbootKt" }
 qrose                                    = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 junit                                    = { group = "junit", name = "junit", version.ref = "junit" }
+robolectric-android-all                  = { group = "org.robolectric", name = "android-all", version.ref = "robolectricAndroidAll" }
 
 [plugins]
 android-application  = { id = "com.android.application", version.ref = "agp" }
