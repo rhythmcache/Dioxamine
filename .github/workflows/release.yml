@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  NDK_VERSION: "27.2.12479018"
+  NDK_VERSION: "29.0.14206865"
 
 jobs:
   extract-version:
