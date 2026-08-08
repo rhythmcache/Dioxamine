@@ -7,7 +7,7 @@ public class ActivityThread {
         return null;
     }
 
-    public Context getSystemContext() {
+    public ContextImpl getSystemContext() {
         return null;
     }
 }
