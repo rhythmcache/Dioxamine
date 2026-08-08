@@ -1,6 +1,7 @@
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import org.gradle.process.ExecOperations
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.File
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -39,10 +40,13 @@ android {
         versionCode = 10001
         versionName = "0.0.2-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         vectorDrawables {
             useSupportLibrary = true
         }
+
         val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
+
         buildConfigField("String", "APP_NAME", "\"Dioxamine\"")
         buildConfigField("String", "AUTHOR", "\"rhythmcache\"")
         buildConfigField("String", "COPYRIGHT_YEAR", "\"$currentYear\"")
@@ -66,8 +70,12 @@ android {
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
+
         debug {
             isMinifyEnabled = false
         }
@@ -87,6 +95,11 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 }
 
@@ -112,35 +125,85 @@ dependencies {
     implementation(libs.adb.kt)
     implementation(libs.fastboot.kt)
     implementation(libs.qrose)
+
     testImplementation(libs.junit)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
-//
+// -----------------------------------------------------------------------------
 // Native / external asset generation
-//   - scrcpy-server.jar  <- built from the "scrcpy" git submodule at repo root
-//   - pkg-dump.jar       <- PkgDump.java compiled+dexed against Robolectric's
-//                           android-all stub jar (resolved via a detached
-//                           configuration, kept off the app's real classpath)
-//   - dxls-<abi>         <- dxls.c cross-compiled for 4 ABIs via the NDK
-// All three are wired to run before preBuild so `./gradlew assembleDebug`
-// (or assembleRelease) regenerates them automatically.
 //
+//   - scrcpy-server.jar <- built from the "scrcpy" git submodule
+//   - pkg-dump.jar      <- PkgDump.java compiled against compileSdk android.jar
+//                         plus hidden-API stubs, then dexed with d8
+//   - dxls-<abi>        <- dxls.c cross-compiled for 4 ABIs via the NDK
+//
+// All three are wired to run before preBuild.
+// -----------------------------------------------------------------------------
 
-val androidComponents = extensions.getByType<ApplicationAndroidComponentsExtension>()
+val androidComponents =
+    extensions.getByType<ApplicationAndroidComponentsExtension>()
+
 val scrcpyDir = rootProject.file("scrcpy")
 val assetsDir = layout.projectDirectory.dir("src/main/assets")
 
-// Detached configuration just to resolve the Robolectric jar's path.
-// Not added to compileOnly/implementation, so it never touches the app's
-// real compile/runtime classpath.
-val robolectricJar = configurations.create("robolectricJar")
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
 
-dependencies {
-    robolectricJar(libs.robolectric.android.all)
+fun isWindows(): Boolean = System.getProperty("os.name").lowercase().contains("win")
+
+/**
+ * Find android.jar for the requested compileSdk.
+ *
+ * compileSdk = 37 can use:
+ *
+ *   platforms/android-37/
+ *   platforms/android-37.0/
+ *   platforms/android-37.1/
+ *   platforms/android-37.2/
+ *
+ * The directory must actually contain android.jar.
+ *
+ * Exact android-37 is preferred when available.
+ */
+fun findAndroidJar(
+    sdkDir: File,
+    compileSdk: Int?,
+): File {
+    val sdk = compileSdk ?: error("compileSdk is not set")
+    val platformsDir = sdkDir.resolve("platforms")
+
+    val candidates =
+        platformsDir
+            .listFiles()
+            ?.asSequence()
+            ?.filter { file ->
+                file.isDirectory &&
+                    file.name.matches(
+                        Regex("""android-$sdk(\..*)?"""),
+                    ) &&
+                    file.resolve("android.jar").isFile
+            }
+            ?.sortedWith(
+                compareBy<File> {
+                    if (it.name == "android-$sdk") 0 else 1
+                }.thenBy { it.name },
+            )
+            ?.toList()
+            .orEmpty()
+
+    return candidates
+        .firstOrNull()
+        ?.resolve("android.jar")
+        ?: error(
+            "Android platform $sdk with android.jar not found in $platformsDir",
+        )
 }
 
+// -----------------------------------------------------------------------------
 // Build scrcpy-server.jar from the submodule.
+// -----------------------------------------------------------------------------
 
 val buildScrcpyServer =
     tasks.register<GradleBuild>("buildScrcpyServer") {
@@ -154,55 +217,246 @@ val buildScrcpyServer =
                 scrcpyDir.resolve(
                     "server/build/outputs/apk/release/server-release-unsigned.apk",
                 )
+
             if (!built.exists()) {
                 error("Expected built APK not found at $built")
             }
 
-            val dest = assetsDir.file("scrcpy-server.jar").asFile
+            val dest =
+                assetsDir.file("scrcpy-server.jar").asFile
+
             dest.parentFile.mkdirs()
             built.copyTo(dest, overwrite = true)
+
             logger.lifecycle("scrcpy-server.jar -> $dest")
         }
     }
 
+// -----------------------------------------------------------------------------
 // Compile PkgDump.java -> dex -> pkg-dump.jar
-val pkgDumpClassesDir = layout.buildDirectory.dir("pkgdump-classes")
-val pkgDumpDexDir = layout.buildDirectory.dir("pkgdump-dex")
+//
+// Compiled against:
+//   - compileSdk android.jar
+//   - hand-written hidden API stubs
+//
+// javac is invoked through the same JDK that Gradle itself is running on.
+// -----------------------------------------------------------------------------
 
-val compilePkgDumpJava =
-    tasks.register<JavaExec>("compilePkgDumpJava") {
-        // We invoke javac directly instead of via JavaCompile task type to keep
-        // full control over classpath (Robolectric jar) without it becoming
-        // part of the module's normal source set compilation.
+val pkgDumpStubClassesDir =
+    layout.buildDirectory.dir("pkgdump-stub-classes")
+
+val pkgDumpClassesDir =
+    layout.buildDirectory.dir("pkgdump-classes")
+
+val pkgDumpDexDir =
+    layout.buildDirectory.dir("pkgdump-dex")
+
+// -----------------------------------------------------------------------------
+// Compile hidden API stubs.
+//
+// IMPORTANT:
+// This intentionally uses Gradle's own JVM rather than JavaToolchainService.
+// That means it does NOT try to locate/provision another JDK.
+// -----------------------------------------------------------------------------
+
+val compilePkgDumpStub =
+    tasks.register<JavaExec>("compilePkgDumpStub") {
+
+        // Use javac from the same JDK running Gradle.
         mainClass.set("com.sun.tools.javac.Main")
-        classpath = files(org.gradle.internal.jvm.Jvm.current().toolsJar ?: files())
+        classpath =
+            files(
+                org.gradle.internal.jvm.Jvm.current().toolsJar ?: files(),
+            )
 
         doFirst {
-            val classesDir = pkgDumpClassesDir.get().asFile.apply { mkdirs() }
-            val roboJar = robolectricJar.singleFile
-            val src = rootProject.file("src_ext/PkgDump.java")
+            val classesDir =
+                pkgDumpStubClassesDir
+                    .get()
+                    .asFile
+                    .apply { mkdirs() }
+
+            val sdkDir =
+                androidComponents
+                    .sdkComponents
+                    .sdkDirectory
+                    .get()
+                    .asFile
+
+            val androidJar =
+                findAndroidJar(
+                    sdkDir,
+                    android.compileSdk,
+                )
+
+            val stubRoot =
+                rootProject.file("src_ext/stub")
+
+            val stubSources =
+                stubRoot
+                    .walkTopDown()
+                    .filter {
+                        it.isFile && it.extension == "java"
+                    }
+                    .map {
+                        it.absolutePath
+                    }
+                    .toList()
+
+            if (stubSources.isEmpty()) {
+                error("No stub sources found under $stubRoot")
+            }
 
             args =
                 listOf(
-                    "--release", "17",
-                    "-cp", roboJar.absolutePath,
-                    "-d", classesDir.absolutePath,
+                    "--release",
+                    "17",
+                    "-cp",
+                    androidJar.absolutePath,
+                    "-d",
+                    classesDir.absolutePath,
+                ) + stubSources
+        }
+    }
+
+// -----------------------------------------------------------------------------
+// Package hidden API stubs into a jar.
+// -----------------------------------------------------------------------------
+
+val jarPkgDumpStub =
+    tasks.register<Exec>("jarPkgDumpStub") {
+        dependsOn(compilePkgDumpStub)
+
+        val stubJarFile =
+            layout.buildDirectory.file("pkgdump-stub.jar")
+
+        doFirst {
+            val classesDir =
+                pkgDumpStubClassesDir
+                    .get()
+                    .asFile
+
+            val javaHome =
+                File(System.getProperty("java.home"))
+
+            val jarExe =
+                javaHome
+                    .resolve("bin")
+                    .resolve(
+                        if (isWindows()) "jar.exe" else "jar",
+                    )
+
+            if (!jarExe.exists()) {
+                error("jar executable not found at $jarExe")
+            }
+
+            val out =
+                stubJarFile
+                    .get()
+                    .asFile
+
+            out.parentFile.mkdirs()
+
+            commandLine(
+                jarExe.absolutePath,
+                "cf",
+                out.absolutePath,
+                "-C",
+                classesDir.absolutePath,
+                ".",
+            )
+        }
+    }
+
+// -----------------------------------------------------------------------------
+// Compile PkgDump.java.
+//
+// Uses the same android.jar lookup as compilePkgDumpStub.
+// -----------------------------------------------------------------------------
+
+val compilePkgDumpJava =
+    tasks.register<JavaExec>("compilePkgDumpJava") {
+        dependsOn(jarPkgDumpStub)
+
+        // Same JDK as Gradle.
+        mainClass.set("com.sun.tools.javac.Main")
+        classpath =
+            files(
+                org.gradle.internal.jvm.Jvm.current().toolsJar ?: files(),
+            )
+
+        doFirst {
+            val classesDir =
+                pkgDumpClassesDir
+                    .get()
+                    .asFile
+                    .apply { mkdirs() }
+
+            val sdkDir =
+                androidComponents
+                    .sdkComponents
+                    .sdkDirectory
+                    .get()
+                    .asFile
+
+            val androidJar =
+                findAndroidJar(
+                    sdkDir,
+                    android.compileSdk,
+                )
+
+            val stubJar =
+                layout.buildDirectory
+                    .file("pkgdump-stub.jar")
+                    .get()
+                    .asFile
+
+            val src =
+                rootProject.file("src_ext/PkgDump.java")
+
+            args =
+                listOf(
+                    "--release",
+                    "17",
+                    "-cp",
+                    "${androidJar.absolutePath}${File.pathSeparator}${stubJar.absolutePath}",
+                    "-d",
+                    classesDir.absolutePath,
                     src.absolutePath,
                 )
         }
     }
 
+// -----------------------------------------------------------------------------
+// Dex PkgDump.class using d8.
+// -----------------------------------------------------------------------------
+
 val dexPkgDump =
     tasks.register<Exec>("dexPkgDump") {
         dependsOn(compilePkgDumpJava)
 
-        environment("SKIP_JDK_VERSION_CHECK", "1")
-
         doFirst {
-            val classesDir = pkgDumpClassesDir.get().asFile
-            val dexOutDir = pkgDumpDexDir.get().asFile.apply { mkdirs() }
-            val sdkDir = androidComponents.sdkComponents.sdkDirectory.get().asFile
-            val d8Name = if (System.getProperty("os.name").lowercase().contains("win")) "d8.bat" else "d8"
+            val classesDir =
+                pkgDumpClassesDir
+                    .get()
+                    .asFile
+
+            val dexOutDir =
+                pkgDumpDexDir
+                    .get()
+                    .asFile
+                    .apply { mkdirs() }
+
+            val sdkDir =
+                androidComponents
+                    .sdkComponents
+                    .sdkDirectory
+                    .get()
+                    .asFile
+
+            val d8Name =
+                if (isWindows()) "d8.bat" else "d8"
+
             val d8 =
                 sdkDir
                     .resolve("build-tools")
@@ -211,24 +465,47 @@ val dexPkgDump =
                     ?.sortedDescending()
                     ?.map { it.resolve(d8Name) }
                     ?.firstOrNull { it.exists() }
-                    ?: error("d8 not found under $sdkDir/build-tools")
+                    ?: error(
+                        "d8 not found under $sdkDir/build-tools",
+                    )
 
             val classFiles =
-                classesDir.walkTopDown()
-                    .filter { it.isFile && it.extension == "class" }
-                    .map { it.absolutePath }
+                classesDir
+                    .walkTopDown()
+                    .filter {
+                        it.isFile && it.extension == "class"
+                    }
+                    .map {
+                        it.absolutePath
+                    }
                     .toList()
 
             commandLine(
-                listOf(d8.absolutePath, "--output", dexOutDir.absolutePath, "--min-api", "21") + classFiles,
+                listOf(
+                    d8.absolutePath,
+                    "--output",
+                    dexOutDir.absolutePath,
+                    "--min-api",
+                    "21",
+                ) + classFiles,
             )
         }
 
         doLast {
-            val dexOut = pkgDumpDexDir.get().file("classes.dex").asFile
-            val dest = assetsDir.file("pkg-dump.jar").asFile
+            val dexOut =
+                pkgDumpDexDir
+                    .get()
+                    .file("classes.dex")
+                    .asFile
+
+            val dest =
+                assetsDir
+                    .file("pkg-dump.jar")
+                    .asFile
+
             dest.parentFile.mkdirs()
             dexOut.copyTo(dest, overwrite = true)
+
             logger.lifecycle("pkg-dump.jar -> $dest")
         }
     }
@@ -238,47 +515,87 @@ val buildPkgDumpJar =
         dependsOn(dexPkgDump)
     }
 
-// Compile dxls.c for all 4 ABIs using the NDK toolchain
+// -----------------------------------------------------------------------------
+// Compile dxls.c for all 4 ABIs using the NDK toolchain.
+// -----------------------------------------------------------------------------
+
 val buildDxlsNative =
     tasks.register("buildDxlsNative") {
-        val execOps = project.objects.newInstance<InjectedExecOps>().execOperations
+        val execOps =
+            project.objects
+                .newInstance<InjectedExecOps>()
+                .execOperations
 
         doLast {
             val ndkPath = android.ndkPath
-            val sdkDir = androidComponents.sdkComponents.sdkDirectory.get().asFile
 
-            // OS prefix used both for locating env-provided NDKs (host tag dir name)
-            // and as a fallback match if the prebuilt/ listing is ambiguous. We only
-            // match on OS family here, never on arch, since custom/vendor NDK builds
-            // can use a different arch token than the usual "x86_64".
-            val osName = System.getProperty("os.name").lowercase()
+            val sdkDir =
+                androidComponents
+                    .sdkComponents
+                    .sdkDirectory
+                    .get()
+                    .asFile
+
+            val osName =
+                System.getProperty("os.name")
+                    .lowercase()
+
             val osPrefix =
                 when {
-                    osName.contains("win") -> "windows"
-                    osName.contains("mac") || osName.contains("darwin") -> "darwin"
-                    else -> "linux"
+                    osName.contains("win") ->
+                        "windows"
+
+                    osName.contains("mac") ||
+                        osName.contains("darwin") ->
+                        "darwin"
+
+                    else ->
+                        "linux"
                 }
 
             fun ndkFromSdk(): File? {
-                val ndkParent = sdkDir.resolve("ndk")
-                return ndkParent.listFiles()?.filter { it.isDirectory }?.sortedDescending()?.firstOrNull()
-                    ?: sdkDir.resolve("ndk-bundle").takeIf { it.exists() }
+                val ndkParent =
+                    sdkDir.resolve("ndk")
+
+                return ndkParent
+                    .listFiles()
+                    ?.filter { it.isDirectory }
+                    ?.sortedDescending()
+                    ?.firstOrNull()
+                    ?: sdkDir
+                        .resolve("ndk-bundle")
+                        .takeIf { it.exists() }
             }
 
             fun ndkFromEnv(): File? {
-                val envVars = listOf("ANDROID_NDK_HOME", "ANDROID_NDK_ROOT", "ANDROID_NDK")
+                val envVars =
+                    listOf(
+                        "ANDROID_NDK_HOME",
+                        "ANDROID_NDK_ROOT",
+                        "ANDROID_NDK",
+                    )
+
                 for (name in envVars) {
-                    val value = System.getenv(name)
+                    val value =
+                        System.getenv(name)
+
                     if (!value.isNullOrBlank()) {
                         val dir = File(value)
+
                         if (dir.exists()) {
-                            logger.lifecycle("Using NDK path from env var $name: $dir")
+                            logger.lifecycle(
+                                "Using NDK path from env var $name: $dir",
+                            )
+
                             return dir
                         } else {
-                            logger.warn("Env var $name is set to '$value' but that path does not exist")
+                            logger.warn(
+                                "Env var $name is set to '$value' but that path does not exist",
+                            )
                         }
                     }
                 }
+
                 return null
             }
 
@@ -288,35 +605,55 @@ val buildDxlsNative =
                     ?: ndkFromEnv()
                     ?: error(
                         "Could not locate the Android NDK. Checked android.ndkPath, " +
-                            "$sdkDir/ndk (and ndk-bundle), and env vars ANDROID_NDK_HOME/ANDROID_NDK_ROOT/ANDROID_NDK.",
+                            "$sdkDir/ndk (and ndk-bundle), and env vars " +
+                            "ANDROID_NDK_HOME/ANDROID_NDK_ROOT/ANDROID_NDK.",
                     )
 
-            val prebuiltDir = ndkDir.resolve("toolchains/llvm/prebuilt")
+            val prebuiltDir =
+                ndkDir.resolve(
+                    "toolchains/llvm/prebuilt",
+                )
 
-            // Normal case pick the (usually single) host tag directory under prebuilt/
-            // e.g. windows-x86_64, linux-x86_64, darwin-x86_64. If that listing is
-            // missing/empty/ambiguous manually construct/match the path using only
-            // the OS prefix (windows*/linux*/darwin*), ignoring the arch suffix, since
-            // custom NDK builds may not use "x86_64" for the host arch token.
-            val hostDirs = prebuiltDir.listFiles()?.filter { it.isDirectory }.orEmpty()
+            val hostDirs =
+                prebuiltDir
+                    .listFiles()
+                    ?.filter { it.isDirectory }
+                    .orEmpty()
+
             val toolchainHost =
-                hostDirs.firstOrNull { it.name.lowercase().startsWith(osPrefix) }
+                hostDirs.firstOrNull {
+                    it.name
+                        .lowercase()
+                        .startsWith(osPrefix)
+                }
                     ?: hostDirs.firstOrNull()
                     ?: error(
-                        "No LLVM toolchain directory found under $prebuiltDir for OS prefix '$osPrefix'. " +
-                            "Verify NDK path: $ndkDir",
+                        "No LLVM toolchain directory found under $prebuiltDir " +
+                            "for OS prefix '$osPrefix'. Verify NDK path: $ndkDir",
                     )
-            val toolchainBin = toolchainHost.resolve("bin")
 
-            val src = rootProject.file("src_ext/dxls.c")
-            val outDir = assetsDir.dir("dxls").asFile.apply { mkdirs() }
+            val toolchainBin =
+                toolchainHost.resolve("bin")
+
+            val src =
+                rootProject.file("src_ext/dxls.c")
+
+            val outDir =
+                assetsDir
+                    .dir("dxls")
+                    .asFile
+                    .apply { mkdirs() }
 
             val targets =
                 mapOf(
-                    "arm64-v8a" to "aarch64-linux-android21-clang",
-                    "armeabi-v7a" to "armv7a-linux-androideabi21-clang",
-                    "x86" to "i686-linux-android21-clang",
-                    "x86_64" to "x86_64-linux-android21-clang",
+                    "arm64-v8a" to
+                        "aarch64-linux-android21-clang",
+                    "armeabi-v7a" to
+                        "armv7a-linux-androideabi21-clang",
+                    "x86" to
+                        "i686-linux-android21-clang",
+                    "x86_64" to
+                        "x86_64-linux-android21-clang",
                 )
 
             targets.forEach { (arch, clang) ->
@@ -329,7 +666,10 @@ val buildDxlsNative =
                         toolchainHost.resolve("$clang.exe"),
                         toolchainHost.resolve(clang),
                     ).firstOrNull { it.exists() }
-                        ?: error("Compiler '$clang' not found under $toolchainHost or $toolchainBin")
+                        ?: error(
+                            "Compiler '$clang' not found under " +
+                                "$toolchainHost or $toolchainBin",
+                        )
 
                 execOps.exec {
                     commandLine(
@@ -338,15 +678,26 @@ val buildDxlsNative =
                         "-fPIE",
                         "-pie",
                         "-o",
-                        outDir.resolve("dxls-$arch").absolutePath,
+                        outDir
+                            .resolve("dxls-$arch")
+                            .absolutePath,
                         src.absolutePath,
                     )
                 }
-                logger.lifecycle("dxls-$arch built")
+
+                logger.lifecycle("$arch dxls built")
             }
         }
     }
 
+// -----------------------------------------------------------------------------
+// Hook everything into preBuild.
+// -----------------------------------------------------------------------------
+
 tasks.named("preBuild") {
-    dependsOn(buildScrcpyServer, buildPkgDumpJar, buildDxlsNative)
+    dependsOn(
+        buildScrcpyServer,
+        buildPkgDumpJar,
+        buildDxlsNative,
+    )
 }
