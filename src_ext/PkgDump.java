@@ -12,11 +12,13 @@ import android.os.Looper;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.util.List;
 
 public class PkgDump {
 
     static final int ICON_SIZE = 48;
+    static final String SELF_PATH = "/data/local/tmp/pkg-dump.jar";
 
     static byte[] renderIconPng(Drawable d) {
         if (d == null) return new byte[0];
@@ -34,7 +36,21 @@ public class PkgDump {
         }
     }
 
+    static void selfDestruct() {
+        try {
+            File self = new File(SELF_PATH);
+            if (self.exists()) {
+                self.delete();
+            }
+        } catch (Exception e) {
+            // continue even if delete fails 
+            // already deleted, race with something else touching the file
+        }
+    }
+
     public static void main(String[] args) throws Exception {
+        selfDestruct();
+
         if (Looper.myLooper() == null) {
             Looper.prepareMainLooper();
         }
