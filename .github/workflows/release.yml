@@ -152,11 +152,29 @@ jobs:
 
           echo "TAG=$TAG" >> "$GITHUB_ENV"
 
+      - name: Read changelog for version code
+        id: changelog
+        env:
+          VERSION_CODE: ${{ needs.extract-version.outputs.version_code }}
+        run: |
+          set -euo pipefail
+
+          CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${VERSION_CODE}.txt"
+
+          {
+            echo "body<<CHANGELOG_EOF"
+            if [ -f "$CHANGELOG_FILE" ]; then
+              cat "$CHANGELOG_FILE"
+            fi
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG }}
           name: Dioxamine v${{ needs.extract-version.outputs.version_name }}
+          body: ${{ steps.changelog.outputs.body }}
           files: |
             release-apk/*.apk
             debug-apk/*.apk
