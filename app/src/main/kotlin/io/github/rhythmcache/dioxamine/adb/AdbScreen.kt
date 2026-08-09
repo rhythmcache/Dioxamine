@@ -28,6 +28,12 @@ import io.github.rhythmcache.dioxamine.adb.discovery.QrPairingScreen
 import io.github.rhythmcache.dioxamine.adb.shell.ShellScreen
 import io.github.rhythmcache.dioxamine.core.*
 import io.github.rhythmcache.adb.AdbDeviceMode
+import io.github.rhythmcache.dioxamine.plugin.PluginDialogGate
+import io.github.rhythmcache.dioxamine.plugin.PluginPermissionGate
+import io.github.rhythmcache.dioxamine.plugin.PluginRepository
+import io.github.rhythmcache.dioxamine.plugin.PluginRunnerScreen
+import io.github.rhythmcache.dioxamine.plugin.PluginSafBridge
+import io.github.rhythmcache.dioxamine.plugin.PluginsTab
 
 private fun parseIpAndPort(input: String): Pair<String, String?> {
     val trimmed = input.trim()
@@ -53,8 +59,15 @@ private fun isValidPort(portStr: String): Boolean {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdbScreen(vm: AdbViewModel) {
+fun AdbScreen(
+    vm: AdbViewModel,
+    pluginRepo: PluginRepository,
+    permissionGate: PluginPermissionGate,
+    dialogGate: PluginDialogGate,
+    safBridge: PluginSafBridge,
+) {
     var subTab by remember { mutableStateOf(0) }
+    var activePluginId by remember { mutableStateOf<String?>(null) }
     val activeConn = vm.devices[vm.activeDeviceId]
     val mode = activeConn?.mode ?: AdbDeviceMode.UNKNOWN
 
@@ -71,27 +84,44 @@ fun AdbScreen(vm: AdbViewModel) {
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        DeviceConnectorCard(vm)
+    if (activePluginId != null) {
+        PluginRunnerScreen(
+            pluginId = activePluginId!!,
+            vm = vm,
+            repo = pluginRepo,
+            permissionGate = permissionGate,
+            dialogGate = dialogGate,
+            safBridge = safBridge,
+            onBack = { activePluginId = null }
+        )
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            DeviceConnectorCard(vm)
 
-        when (mode) {
-            AdbDeviceMode.SIDELOAD -> {
-                SideloadFlashScreen(vm)
-            }
-            AdbDeviceMode.RESCUE -> {
-                RescueScreen(vm)
-            }
-            else -> {
-                PrimaryTabRow(selectedTabIndex = subTab) {
-                    Tab(selected = subTab == 0, onClick = { subTab = 0 }, text = { Text(stringResource(R.string.adb_subtab_builtin)) })
-                    Tab(selected = subTab == 1, onClick = { subTab = 1 }, text = { Text(stringResource(R.string.adb_subtab_adb_shell)) })
-                    Tab(selected = subTab == 2, onClick = { subTab = 2 }, text = { Text(stringResource(R.string.adb_subtab_plugins)) })
+            when (mode) {
+                AdbDeviceMode.SIDELOAD -> {
+                    SideloadFlashScreen(vm)
                 }
+                AdbDeviceMode.RESCUE -> {
+                    RescueScreen(vm)
+                }
+                else -> {
+                    PrimaryTabRow(selectedTabIndex = subTab) {
+                        Tab(selected = subTab == 0, onClick = { subTab = 0 }, text = { Text(stringResource(R.string.adb_subtab_builtin)) })
+                        Tab(selected = subTab == 1, onClick = { subTab = 1 }, text = { Text(stringResource(R.string.adb_subtab_adb_shell)) })
+                        Tab(selected = subTab == 2, onClick = { subTab = 2 }, text = { Text(stringResource(R.string.adb_subtab_plugins)) })
+                    }
 
-                when (subTab) {
-                    0 -> BuiltInActionsTab(vm)
-                    1 -> ShellScreen(vm)
-                    2 -> PluginsTab()
+                    when (subTab) {
+                        0 -> BuiltInActionsTab(vm)
+                        1 -> ShellScreen(vm)
+                        2 -> PluginsTab(
+                            repo = pluginRepo,
+                            onOpenPlugin = { pluginId ->
+                                activePluginId = pluginId
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -432,30 +462,7 @@ fun DeviceRow(conn: DeviceConnection, vm: AdbViewModel) {
 
 
 
-@Composable
-fun PluginsTab() {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(Icons.Filled.Extension, contentDescription = null, modifier = Modifier.size(48.dp))
-        Spacer(Modifier.height(12.dp))
-        Text(stringResource(R.string.plugins_title), style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            stringResource(R.string.plugins_description),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            stringResource(R.string.plugins_coming_soon),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
+
 
 @Composable
 fun SideloadFlashScreen(vm: AdbViewModel) {

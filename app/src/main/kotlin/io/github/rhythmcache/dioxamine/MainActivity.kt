@@ -95,6 +95,16 @@ fun DioxamineApp(keyDir: File) {
     })
     val fastbootVm: FastbootViewModel = viewModel()
 
+    val coroutineScope = rememberCoroutineScope()
+    val pluginRepo = remember { io.github.rhythmcache.dioxamine.plugin.PluginRepository(context.applicationContext, coroutineScope) }
+    val permissionGate = remember { io.github.rhythmcache.dioxamine.plugin.PluginPermissionGate() }
+    val dialogGate = remember { io.github.rhythmcache.dioxamine.plugin.PluginDialogGate() }
+    val safBridge = remember { io.github.rhythmcache.dioxamine.plugin.PluginSafBridge(context.applicationContext) }
+
+    io.github.rhythmcache.dioxamine.plugin.PluginPermissionDialogHost(permissionGate)
+    io.github.rhythmcache.dioxamine.plugin.PluginDialogHost(dialogGate)
+    io.github.rhythmcache.dioxamine.plugin.PluginSafLauncherHost(safBridge)
+
     ListenForUsbDevices(vm)
     ListenForFastbootDevices(fastbootVm)
 
@@ -143,7 +153,7 @@ fun DioxamineApp(keyDir: File) {
                        else Modifier.padding(padding).fillMaxSize()
         ) {
             when (selectedTab) {
-                Tab.ADB -> AdbScreen(vm)
+                Tab.ADB -> AdbScreen(vm, pluginRepo, permissionGate, dialogGate, safBridge)
                 Tab.SCRCPY -> ScrcpyScreen(vm, onFullScreenChange = { isScrcpyFullScreen = it })
                 Tab.FASTBOOT -> FastbootScreen(fastbootVm)
                 Tab.SETTINGS -> SettingsScreen(vm)

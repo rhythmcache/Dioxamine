@@ -62,6 +62,37 @@
     <string name="plugins_title">Custom Plugins</string>
     <string name="plugins_description">Load ADB plugins written by yourself or other developers.</string>
     <string name="plugins_coming_soon">Writing your own plugins - coming soon.</string>
+    <string name="plugins_no_plugins">No plugins installed</string>
+    <string name="plugins_cd_install">Install plugin</string>
+    <string name="plugins_msg_installed">Installed %1$s</string>
+    <string name="plugins_msg_updated">Updated %1$s to %2$s</string>
+    <string name="plugins_msg_rejected">Installed version is newer or the same</string>
+    <string name="plugins_msg_error">Install failed: %1$s</string>
+
+    <!-- Plugin Permission Dialog Strings -->
+    <string name="btn_allow">Allow</string>
+    <string name="btn_deny">Deny</string>
+    <string name="plugin_perm_dialog_title">%1$s wants permission</string>
+    <string name="plugin_perm_shell">Run shell commands on the connected device</string>
+    <string name="plugin_perm_push">Upload files to the connected device</string>
+    <string name="plugin_perm_pull">Download files from the connected device</string>
+    <string name="plugin_perm_install">Install packages on the connected device</string>
+    <string name="plugin_perm_forward">Create network port forwards to/from the connected device</string>
+    <string name="plugin_perm_reverse">Create reverse port mappings from the connected device to this device</string>
+    <string name="plugin_dialog_attribution">Plugin: %1$s</string>
+    <string name="plugin_runner_not_found">Plugin not found</string>
+    <string name="plugin_menu_info">Info</string>
+    <string name="plugin_menu_uninstall">Uninstall</string>
+    <string name="plugin_info_title">Plugin Details</string>
+    <string name="plugin_info_id">ID: %1$s</string>
+    <string name="plugin_info_version">Version: %1$s</string>
+    <string name="plugin_info_author">Author: %1$s</string>
+    <string name="plugin_info_entry">Entry: %1$s</string>
+    <string name="plugin_info_permissions">Permissions: %1$s</string>
+    <string name="plugin_uninstall_title">Uninstall Plugin</string>
+    <string name="plugin_uninstall_confirm">Are you sure you want to uninstall \"%1$s\"?</string>
+    <string name="plugin_msg_uninstalled">Plugin \"%1$s\" uninstalled</string>
+    <string name="cd_more_options">More options</string>
 
     <!-- Fastboot Tab -->
     <string name="fastboot_title">Fastboot support</string>

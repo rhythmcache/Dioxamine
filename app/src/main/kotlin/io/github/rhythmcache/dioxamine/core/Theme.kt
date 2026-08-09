@@ -5,6 +5,8 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import io.github.rhythmcache.dioxamine.R
@@ -26,6 +28,8 @@ private fun ColorScheme.toAmoledScheme(): ColorScheme = copy(
     surfaceContainerHigh = Color(0xFF1A1A1A),
     surfaceContainerHighest = Color(0xFF262626)
 )
+
+val LocalDarkTheme = staticCompositionLocalOf { false }
 
 @Composable
 fun DioxamineTheme(
@@ -54,8 +58,10 @@ fun DioxamineTheme(
         baseColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        content = content
-    )
+    CompositionLocalProvider(LocalDarkTheme provides darkTheme) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            content = content
+        )
+    }
 }
