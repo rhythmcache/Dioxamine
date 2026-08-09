@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.charset.CodingErrorAction
 
 /**
  * Lifecycle states for a shell session.
@@ -31,6 +34,12 @@ class ShellSession {
     private var readerJob: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    private val utf8Decoder = Charsets.UTF_8.newDecoder().apply {
+        onMalformedInput(CodingErrorAction.REPLACE)
+        onUnmappableCharacter(CodingErrorAction.REPLACE)
+    }
+    private var leftoverBytes: ByteArray = ByteArray(0)
+
     private val _output = MutableSharedFlow<String>(extraBufferCapacity = 128)
     /** Raw text chunks as they arrive from the device. */
     val output: SharedFlow<String> = _output
@@ -42,6 +51,34 @@ class ShellSession {
     private val _errorMessage = MutableStateFlow<String?>(null)
     /** Human-readable error detail when [state] is [ShellSessionState.ERROR]. */
     val errorMessage: StateFlow<String?> = _errorMessage
+
+    private fun decodeChunk(chunk: ByteArray): String {
+        val combined = if (leftoverBytes.isEmpty()) chunk else leftoverBytes + chunk
+        val input = ByteBuffer.wrap(combined)
+        val output = CharBuffer.allocate(combined.size)
+
+        utf8Decoder.decode(input, output, false)
+
+        leftoverBytes = if (input.hasRemaining()) {
+            ByteArray(input.remaining()).also { input.get(it) }
+        } else {
+            ByteArray(0)
+        }
+
+        output.flip()
+        return output.toString()
+    }
+
+    private fun flushLeftoverBytes(): String {
+        if (leftoverBytes.isEmpty()) return ""
+        val input = ByteBuffer.wrap(leftoverBytes)
+        val output = CharBuffer.allocate(leftoverBytes.size)
+        utf8Decoder.decode(input, output, true)
+        utf8Decoder.flush(output)
+        leftoverBytes = ByteArray(0)
+        output.flip()
+        return output.toString()
+    }
 
     /**
      * Open an interactive shell on [client].
@@ -57,6 +94,9 @@ class ShellSession {
 
         readerJob = scope.launch {
             try {
+                utf8Decoder.reset()
+                leftoverBytes = ByteArray(0)
+
                 val s = client.open("shell:")
                 stream = s
                 _state.value = ShellSessionState.ACTIVE
@@ -64,9 +104,17 @@ class ShellSession {
                 // Continuous reader - emits chunks the instant they arrive
                 while (isActive) {
                     val chunk = s.recv() ?: break          // null = EOF
-                    val text = String(chunk, Charsets.UTF_8)
-                    _output.emit(text)
+                    val text = decodeChunk(chunk)
+                    if (text.isNotEmpty()) {
+                        _output.emit(text)
+                    }
                 }
+
+                val finalRemaining = flushLeftoverBytes()
+                if (finalRemaining.isNotEmpty()) {
+                    _output.emit(finalRemaining)
+                }
+
                 // Stream ended normally (device closed the shell)
                 _state.value = ShellSessionState.CLOSED
             } catch (e: CancellationException) {
