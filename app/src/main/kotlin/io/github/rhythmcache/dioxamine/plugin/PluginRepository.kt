@@ -2,7 +2,7 @@ package io.github.rhythmcache.dioxamine.plugin
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
+import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +44,7 @@ class PluginRepository(
             for (dir in dirs) {
                 val manifestFile = File(dir, "plugin.json")
                 if (!manifestFile.exists() || !manifestFile.isFile) {
-                    Log.w(TAG, "Missing plugin.json in directory: ${dir.name}")
+                    AppLogger.w(TAG, "Missing plugin.json in directory: ${dir.name}")
                     continue
                 }
 
@@ -56,15 +56,15 @@ class PluginRepository(
                             if (dir.name == manifest.id) {
                                 validManifests.add(manifest)
                             } else {
-                                Log.w(TAG, "Directory name '${dir.name}' does not match manifest ID '${manifest.id}'")
+                                AppLogger.w(TAG, "Directory name '${dir.name}' does not match manifest ID '${manifest.id}'")
                             }
                         },
                         onFailure = { err ->
-                            Log.w(TAG, "Invalid plugin.json manifest in ${dir.name}: ${err.message}")
+                            AppLogger.w(TAG, "Invalid plugin.json manifest in ${dir.name}: ${err.message}")
                         },
                     )
                 }.onFailure { err ->
-                    Log.w(TAG, "Failed to read plugin.json in ${dir.name}: ${err.message}")
+                    AppLogger.w(TAG, "Failed to read plugin.json in ${dir.name}: ${err.message}")
                 }
             }
 

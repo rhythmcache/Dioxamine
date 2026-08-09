@@ -3,6 +3,7 @@ package io.github.rhythmcache.dioxamine.plugin
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.webkit.WebResourceRequest
+import io.github.rhythmcache.dioxamine.core.AppLogger
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -124,7 +125,7 @@ fun PluginRunnerScreen(
                 )
                 .addPathHandler(
                     "/plugin/",
-                    WebViewAssetLoader.InternalStoragePathHandler(context, pluginDir),
+                    PluginStoragePathHandler(pluginDir),
                 )
                 .build()
         }
@@ -203,11 +204,6 @@ fun PluginRunnerScreen(
                                     favicon: android.graphics.Bitmap?,
                                 ) {
                                     super.onPageStarted(view, url, favicon)
-                                    if (bridgeJsContent.isNotBlank()) {
-                                        view?.evaluateJavascript(bridgeJsContent, null)
-                                    }
-                                    val themeScript = buildThemeInjectionScript(colorScheme, isDark)
-                                    view?.evaluateJavascript(themeScript, null)
                                 }
 
                                 override fun onPageFinished(
@@ -215,6 +211,9 @@ fun PluginRunnerScreen(
                                     url: String?,
                                 ) {
                                     super.onPageFinished(view, url)
+                                    if (bridgeJsContent.isNotBlank()) {
+                                        view?.evaluateJavascript(bridgeJsContent, null)
+                                    }
                                     val themeScript = buildThemeInjectionScript(colorScheme, isDark)
                                     view?.evaluateJavascript(themeScript, null)
                                 }
@@ -233,4 +232,69 @@ private fun isTrustedPluginUrl(uri: Uri): Boolean {
     if (uri.host != "appassets.androidplatform.net") return false
     val path = uri.path ?: return false
     return path.startsWith("/plugin/") || path.startsWith("/assets/")
+}
+
+private class PluginStoragePathHandler(private val pluginDir: File) : WebViewAssetLoader.PathHandler {
+
+    companion object {
+        private const val BRIDGE_SCRIPT_TAG =
+            """<script src="https://appassets.androidplatform.net/assets/plugin_runtime/dioxamine-bridge.js"></script>"""
+    }
+
+    override fun handle(path: String): WebResourceResponse? {
+        val file = File(pluginDir, path)
+        val canonicalPluginPath = pluginDir.canonicalPath + File.separator
+        val canonicalFilePath = file.canonicalPath
+        if (!canonicalFilePath.startsWith(canonicalPluginPath) && canonicalFilePath != pluginDir.canonicalPath) {
+            AppLogger.w("PluginPathHandler", "Path traversal blocked: $path")
+            return null
+        }
+        if (!file.exists() || !file.isFile) {
+            AppLogger.w("PluginPathHandler", "Plugin file not found: ${file.absolutePath}")
+            return null
+        }
+        val mimeType = when (file.extension.lowercase()) {
+            "html", "htm" -> "text/html"
+            "js" -> "text/javascript"
+            "css" -> "text/css"
+            "json" -> "application/json"
+            "png" -> "image/png"
+            "jpg", "jpeg" -> "image/jpeg"
+            "svg" -> "image/svg+xml"
+            "woff" -> "font/woff"
+            "woff2" -> "font/woff2"
+            "ttf" -> "font/ttf"
+            else -> "application/octet-stream"
+        }
+        return try {
+            if (mimeType == "text/html") {
+                val html = file.readText()
+                val injected = injectBridgeScript(html)
+                WebResourceResponse(mimeType, "UTF-8", injected.byteInputStream())
+            } else {
+                WebResourceResponse(mimeType, "UTF-8", file.inputStream())
+            }
+        } catch (e: Exception) {
+            AppLogger.e("PluginPathHandler", "Error opening plugin file: ${file.absolutePath}", e)
+            null
+        }
+    }
+
+    private fun injectBridgeScript(html: String): String {
+        // Inject bridge script as the first child of <head> for synchronous loading
+        val headIndex = html.indexOf("<head>", ignoreCase = true)
+        if (headIndex >= 0) {
+            val insertAt = headIndex + "<head>".length
+            return html.substring(0, insertAt) + "\n    " + BRIDGE_SCRIPT_TAG + html.substring(insertAt)
+        }
+        // Handle <head> with attributes
+        val headWithAttrsRegex = Regex("<head\\s[^>]*>", RegexOption.IGNORE_CASE)
+        val match = headWithAttrsRegex.find(html)
+        if (match != null) {
+            val insertAt = match.range.last + 1
+            return html.substring(0, insertAt) + "\n    " + BRIDGE_SCRIPT_TAG + html.substring(insertAt)
+        }
+        // Last resort: prepend the script tag
+        return BRIDGE_SCRIPT_TAG + "\n" + html
+    }
 }

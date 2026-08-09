@@ -34,7 +34,11 @@ class PluginSafBridge(private val context: Context) {
     val pendingRequest: StateFlow<PendingSafPickerRequest?> = _pendingRequest.asStateFlow()
 
     private val pickerMutex = Mutex()
-    private val resolvedUris = mutableMapOf<String, Uri>()
+    private val resolvedUris = LinkedHashMap<String, Uri>()
+
+    companion object {
+        private const val MAX_PENDING_URIS = 20
+    }
 
     suspend fun requestOpenDocument(): String =
         pickerMutex.withLock {
@@ -56,11 +60,7 @@ class PluginSafBridge(private val context: Context) {
                 throw IllegalArgumentException("User cancelled file selection")
             }
 
-            val requestId = UUID.randomUUID().toString()
-            synchronized(resolvedUris) {
-                resolvedUris[requestId] = uri
-            }
-            requestId
+            storeUri(uri)
         }
 
     suspend fun requestCreateDocument(suggestedName: String = "file"): String =
@@ -83,11 +83,7 @@ class PluginSafBridge(private val context: Context) {
                 throw IllegalArgumentException("User cancelled file creation")
             }
 
-            val requestId = UUID.randomUUID().toString()
-            synchronized(resolvedUris) {
-                resolvedUris[requestId] = uri
-            }
-            requestId
+            storeUri(uri)
         }
 
     fun resolveInputStream(requestId: String): InputStream? {
@@ -104,6 +100,18 @@ class PluginSafBridge(private val context: Context) {
                 resolvedUris.remove(requestId)
             } ?: return null
         return runCatching { context.contentResolver.openOutputStream(uri) }.getOrNull()
+    }
+
+    private fun storeUri(uri: Uri): String {
+        val requestId = UUID.randomUUID().toString()
+        synchronized(resolvedUris) {
+            while (resolvedUris.size >= MAX_PENDING_URIS) {
+                val oldest = resolvedUris.keys.iterator().next()
+                resolvedUris.remove(oldest)
+            }
+            resolvedUris[requestId] = uri
+        }
+        return requestId
     }
 }
 

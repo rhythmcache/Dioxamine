@@ -49,7 +49,6 @@ class DioxaminePluginBridge(
 ) {
 
     private val toastTimestamps = ArrayDeque<Long>()
-    private val shellSessionsMutex = Mutex()
     private val activeShellSessions = mutableMapOf<String, Pair<AdbStream, Job>>()
 
     fun closeAllSessions() {
@@ -183,14 +182,14 @@ class DioxaminePluginBridge(
                             val encodedMsg = Json.encodeToString(String.serializer(), e.message ?: e.toString())
                             evaluateJs("window.__dioxamine_shell_closed($encodedSessionId, $encodedMsg)")
                         } finally {
-                            shellSessionsMutex.withLock {
+                            synchronized(activeShellSessions) {
                                 activeShellSessions.remove(sessionId)
                             }
                             runCatching { stream.close() }
                         }
                     }
 
-                shellSessionsMutex.withLock {
+                synchronized(activeShellSessions) {
                     activeShellSessions[sessionId] = stream to readJob
                 }
                 
