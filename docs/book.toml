@@ -1,0 +1,23 @@
+[book]
+title = "Dioxamine Documentation"
+authors = ["RhythmCache"]
+language = "en"
+src = "src"
+
+[output.html]
+git-repository-url = "https://github.com/rhythmcache/dioxamine"
+edit-url-template = "https://github.com/rhythmcache/dioxamine/edit/main/docs/{path}"
+default-theme = "coal"
+preferred-dark-theme = "coal"
+mathjax-support = false
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1
+boost-paragraph = 1
+expand = true
+heading-split-level = 3
