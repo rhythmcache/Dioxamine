@@ -19,6 +19,7 @@ data class PluginManifest(
     val minAppVersionCode: Int = 1,
     val permissions: List<String> = emptyList(),
     val homepage: String? = null,
+    val fullscreen: Boolean = false,
 )
 
 private val jsonParser = Json { ignoreUnknownKeys = true }

@@ -2,6 +2,8 @@ package io.github.rhythmcache.dioxamine.plugin
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.webkit.ConsoleMessage
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import android.webkit.WebResourceResponse
@@ -75,6 +77,8 @@ fun PluginRunnerScreen(
         }
     }
 
+    var isFullScreen by remember(manifest.id) { mutableStateOf(manifest.fullscreen) }
+
     val bridge =
         remember(manifest.id, bridgeScope) {
             DioxaminePluginBridge(
@@ -91,6 +95,9 @@ fun PluginRunnerScreen(
                     webViewRef?.post {
                         webViewRef?.evaluateJavascript(script, null)
                     }
+                },
+                onFullScreenChanged = { enable ->
+                    isFullScreen = enable
                 },
             )
         }
@@ -134,31 +141,33 @@ fun PluginRunnerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = manifest.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            text = "v${manifest.version}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_nav_back),
-                        )
-                    }
-                },
-                windowInsets = WindowInsets(0, 0, 0, 0),
-            )
+            if (!isFullScreen) {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = manifest.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "v${manifest.version}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.cd_nav_back),
+                            )
+                        }
+                    },
+                    windowInsets = TopAppBarDefaults.windowInsets,
+                )
+            }
         },
     ) { padding ->
         Box(
@@ -167,9 +176,14 @@ fun PluginRunnerScreen(
                     .fillMaxSize()
                     .padding(padding),
         ) {
+            val webViewDebugEnabled = remember {
+                context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("plugin_webview_debug", false)
+            }
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
+                    WebView.setWebContentsDebuggingEnabled(webViewDebugEnabled)
                     WebView(ctx).apply {
                         webViewRef = this
                         @Suppress("DEPRECATION")
@@ -179,7 +193,13 @@ fun PluginRunnerScreen(
                         settings.allowContentAccess = false
                         settings.allowUniversalAccessFromFileURLs = false
                         settings.allowFileAccessFromFileURLs = false
-                        settings.domStorageEnabled = true
+                        layoutParams = android.view.ViewGroup.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        )
+                        isFocusable = true
+                        isFocusableInTouchMode = true
+                        setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
 
                         addJavascriptInterface(bridge, "DioxamineNative")
 
@@ -204,6 +224,7 @@ fun PluginRunnerScreen(
                                     favicon: android.graphics.Bitmap?,
                                 ) {
                                     super.onPageStarted(view, url, favicon)
+                                    AppLogger.d("PluginWebView", "onPageStarted: $url")
                                 }
 
                                 override fun onPageFinished(
@@ -211,13 +232,42 @@ fun PluginRunnerScreen(
                                     url: String?,
                                 ) {
                                     super.onPageFinished(view, url)
+                                    AppLogger.d("PluginWebView", "onPageFinished: $url")
                                     if (bridgeJsContent.isNotBlank()) {
+                                        AppLogger.d("PluginWebView", "Injecting bridge JS (${bridgeJsContent.length} chars)")
                                         view?.evaluateJavascript(bridgeJsContent, null)
                                     }
                                     val themeScript = buildThemeInjectionScript(colorScheme, isDark)
                                     view?.evaluateJavascript(themeScript, null)
                                 }
+
+                                override fun onReceivedError(
+                                    view: WebView?,
+                                    request: WebResourceRequest?,
+                                    error: android.webkit.WebResourceError?,
+                                ) {
+                                    super.onReceivedError(view, request, error)
+                                    AppLogger.e("PluginWebView", "onReceivedError: url=${request?.url}, code=${error?.errorCode}, desc=${error?.description}")
+                                }
                             }
+
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                                consoleMessage?.let {
+                                    val tag = "PluginJS:${manifest.id}"
+                                    val msg = "[${it.sourceId()?.substringAfterLast('/') ?: "?"}:${it.lineNumber()}] ${it.message()}"
+                                    when (it.messageLevel()) {
+                                        ConsoleMessage.MessageLevel.ERROR -> AppLogger.e(tag, msg)
+                                        ConsoleMessage.MessageLevel.WARNING -> AppLogger.w(tag, msg)
+                                        ConsoleMessage.MessageLevel.LOG -> AppLogger.i(tag, msg)
+                                        ConsoleMessage.MessageLevel.TIP -> AppLogger.d(tag, msg)
+                                        ConsoleMessage.MessageLevel.DEBUG -> AppLogger.d(tag, msg)
+                                        else -> AppLogger.d(tag, msg)
+                                    }
+                                }
+                                return true
+                            }
+                        }
 
                         loadUrl(entryUrl)
                     }
@@ -242,28 +292,52 @@ private class PluginStoragePathHandler(private val pluginDir: File) : WebViewAss
     }
 
     override fun handle(path: String): WebResourceResponse? {
+        AppLogger.d("PluginPathHandler", "handle() called: path=$path, pluginDir=${pluginDir.absolutePath}")
         val file = File(pluginDir, path)
         val canonicalPluginPath = pluginDir.canonicalPath + File.separator
         val canonicalFilePath = file.canonicalPath
         if (!canonicalFilePath.startsWith(canonicalPluginPath) && canonicalFilePath != pluginDir.canonicalPath) {
             AppLogger.w("PluginPathHandler", "Path traversal blocked: $path")
-            return null
+            return WebResourceResponse(null, null, null)
         }
         if (!file.exists() || !file.isFile) {
             AppLogger.w("PluginPathHandler", "Plugin file not found: ${file.absolutePath}")
-            return null
+            return WebResourceResponse(null, null, null)
         }
         val mimeType = when (file.extension.lowercase()) {
             "html", "htm" -> "text/html"
-            "js" -> "text/javascript"
+            "js", "mjs" -> "text/javascript"
             "css" -> "text/css"
-            "json" -> "application/json"
+            "json", "map" -> "application/json"
+            "xml" -> "text/xml"
+            "wasm" -> "application/wasm"
             "png" -> "image/png"
-            "jpg", "jpeg" -> "image/jpeg"
-            "svg" -> "image/svg+xml"
+            "jpg", "jpeg", "jfif" -> "image/jpeg"
+            "gif" -> "image/gif"
+            "svg", "svgz" -> "image/svg+xml"
+            "webp" -> "image/webp"
+            "ico" -> "image/x-icon"
+            "bmp" -> "image/bmp"
+            "apng" -> "image/apng"
+            "avif" -> "image/avif"
             "woff" -> "font/woff"
             "woff2" -> "font/woff2"
             "ttf" -> "font/ttf"
+            "otf" -> "font/otf"
+            "eot" -> "application/vnd.ms-fontobject"
+            "mp3" -> "audio/mpeg"
+            "ogg", "oga", "opus" -> "audio/ogg"
+            "wav" -> "audio/wav"
+            "flac" -> "audio/flac"
+            "m4a", "aac" -> "audio/mp4"
+            "mp4", "m4v" -> "video/mp4"
+            "webm" -> "video/webm"
+            "ogv" -> "video/ogg"
+            "pdf" -> "application/pdf"
+            "zip" -> "application/zip"
+            "gz", "tgz" -> "application/gzip"
+            "txt" -> "text/plain"
+            "csv" -> "text/csv"
             else -> "application/octet-stream"
         }
         return try {
@@ -272,29 +346,31 @@ private class PluginStoragePathHandler(private val pluginDir: File) : WebViewAss
                 val injected = injectBridgeScript(html)
                 WebResourceResponse(mimeType, "UTF-8", injected.byteInputStream())
             } else {
-                WebResourceResponse(mimeType, "UTF-8", file.inputStream())
+                WebResourceResponse(mimeType, null, file.inputStream())
             }
         } catch (e: Exception) {
             AppLogger.e("PluginPathHandler", "Error opening plugin file: ${file.absolutePath}", e)
-            null
+            WebResourceResponse(null, null, null)
         }
     }
 
     private fun injectBridgeScript(html: String): String {
-        // Inject bridge script as the first child of <head> for synchronous loading
-        val headIndex = html.indexOf("<head>", ignoreCase = true)
+        var result = html
+        // If developer omitted viewport meta tag, inject it automatically for mobile responsiveness
+        val hasViewport = html.contains("<meta name=\"viewport\"", ignoreCase = true) || html.contains("<meta name='viewport'", ignoreCase = true)
+        val viewportTag = if (!hasViewport) "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n    " else ""
+
+        val headIndex = result.indexOf("<head>", ignoreCase = true)
         if (headIndex >= 0) {
             val insertAt = headIndex + "<head>".length
-            return html.substring(0, insertAt) + "\n    " + BRIDGE_SCRIPT_TAG + html.substring(insertAt)
+            return result.substring(0, insertAt) + "\n    " + viewportTag + BRIDGE_SCRIPT_TAG + result.substring(insertAt)
         }
-        // Handle <head> with attributes
         val headWithAttrsRegex = Regex("<head\\s[^>]*>", RegexOption.IGNORE_CASE)
-        val match = headWithAttrsRegex.find(html)
+        val match = headWithAttrsRegex.find(result)
         if (match != null) {
             val insertAt = match.range.last + 1
-            return html.substring(0, insertAt) + "\n    " + BRIDGE_SCRIPT_TAG + html.substring(insertAt)
+            return result.substring(0, insertAt) + "\n    " + viewportTag + BRIDGE_SCRIPT_TAG + result.substring(insertAt)
         }
-        // Last resort: prepend the script tag
-        return BRIDGE_SCRIPT_TAG + "\n" + html
+        return viewportTag + BRIDGE_SCRIPT_TAG + "\n" + result
     }
 }

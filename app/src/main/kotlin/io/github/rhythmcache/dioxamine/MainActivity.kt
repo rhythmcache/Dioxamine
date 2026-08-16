@@ -97,7 +97,8 @@ fun DioxamineApp(keyDir: File) {
 
     val coroutineScope = rememberCoroutineScope()
     val pluginRepo = remember { io.github.rhythmcache.dioxamine.plugin.PluginRepository(context.applicationContext, coroutineScope) }
-    val permissionGate = remember { io.github.rhythmcache.dioxamine.plugin.PluginPermissionGate() }
+    val permissionStore = remember { io.github.rhythmcache.dioxamine.plugin.PluginPermissionStore(context.applicationContext) }
+    val permissionGate = remember { io.github.rhythmcache.dioxamine.plugin.PluginPermissionGate(store = permissionStore) }
     val dialogGate = remember { io.github.rhythmcache.dioxamine.plugin.PluginDialogGate() }
     val safBridge = remember { io.github.rhythmcache.dioxamine.plugin.PluginSafBridge(context.applicationContext) }
 
@@ -109,6 +110,7 @@ fun DioxamineApp(keyDir: File) {
     ListenForFastbootDevices(fastbootVm)
 
     var isScrcpyFullScreen by remember { mutableStateOf(false) }
+    var isPluginActive by remember { mutableStateOf(false) }
 
     DisposableEffect(isScrcpyFullScreen) {
         val activity = context as? ComponentActivity
@@ -127,14 +129,16 @@ fun DioxamineApp(keyDir: File) {
             val windowOnDispose = activityOnDispose?.window
             if (windowOnDispose != null) {
                 WindowCompat.getInsetsController(windowOnDispose, windowOnDispose.decorView)
-                    .show(WindowInsetsCompat.Type.systemBars())
+                .show(WindowInsetsCompat.Type.systemBars())
             }
         }
     }
 
+    val hideBottomBar = isScrcpyFullScreen || isPluginActive
+
     Scaffold(
         bottomBar = {
-            if (!isScrcpyFullScreen) {
+            if (!hideBottomBar) {
                 NavigationBar {
                     Tab.entries.forEach { tab ->
                         NavigationBarItem(
@@ -149,11 +153,11 @@ fun DioxamineApp(keyDir: File) {
         }
     ) { padding ->
         Box(
-            modifier = if (isScrcpyFullScreen) Modifier.fillMaxSize()
+            modifier = if (hideBottomBar) Modifier.fillMaxSize()
                        else Modifier.padding(padding).fillMaxSize()
         ) {
             when (selectedTab) {
-                Tab.ADB -> AdbScreen(vm, pluginRepo, permissionGate, dialogGate, safBridge)
+                Tab.ADB -> AdbScreen(vm, pluginRepo, permissionGate, dialogGate, safBridge, onPluginActiveChange = { isPluginActive = it })
                 Tab.SCRCPY -> ScrcpyScreen(vm, onFullScreenChange = { isScrcpyFullScreen = it })
                 Tab.FASTBOOT -> FastbootScreen(fastbootVm)
                 Tab.SETTINGS -> SettingsScreen(vm)

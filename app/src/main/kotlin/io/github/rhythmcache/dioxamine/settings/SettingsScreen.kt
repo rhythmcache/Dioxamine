@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Refresh
@@ -87,6 +88,10 @@ fun SettingsScreen(vm: AdbViewModel) {
     var keyExpanded by remember { mutableStateOf(false) }
     var logsExpanded by remember { mutableStateOf(false) }
     var aboutExpanded by remember { mutableStateOf(false) }
+    var pluginExpanded by remember { mutableStateOf(false) }
+    var pluginWebViewDebug by remember {
+        mutableStateOf(prefs.getBoolean("plugin_webview_debug", false))
+    }
 
     var showRegenDialog by remember { mutableStateOf(false) }
     var showClearLogsDialog by remember { mutableStateOf(false) }
@@ -619,6 +624,83 @@ fun SettingsScreen(vm: AdbViewModel) {
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.settings_btn_clear_logs))
                         }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // -- Plugin Settings Card (Expandable) -----------------------
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { pluginExpanded = !pluginExpanded }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Filled.Extension, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text("Plugin", fontWeight = FontWeight.Bold)
+                            Text(
+                                "WebView debugging & permissions",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Icon(
+                        imageVector = if (pluginExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (pluginExpanded) "Collapse" else "Expand"
+                    )
+                }
+
+                if (pluginExpanded) {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // WebView Debugging Toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                                Text(
+                                    "WebView Debugging",
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    "Allow Chrome DevTools inspection via chrome://inspect",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = pluginWebViewDebug,
+                                onCheckedChange = { checked ->
+                                    pluginWebViewDebug = checked
+                                    prefs.edit().putBoolean("plugin_webview_debug", checked).apply()
+                                }
+                            )
+                        }
+
+                        Text(
+                            "Changes take effect on next plugin launch",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
                     }
                 }
             }

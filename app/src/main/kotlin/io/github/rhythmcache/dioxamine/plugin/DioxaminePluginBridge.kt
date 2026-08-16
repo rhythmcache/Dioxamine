@@ -7,6 +7,7 @@ import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import io.github.rhythmcache.adb.AdbClient
+import io.github.rhythmcache.dioxamine.core.AppLogger
 import io.github.rhythmcache.adb.AdbStream
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -46,8 +47,10 @@ class DioxaminePluginBridge(
     private val safBridge: PluginSafBridge,
     private val scope: CoroutineScope,
     private val evaluateJs: (String) -> Unit,
+    private val onFullScreenChanged: (Boolean) -> Unit = {},
 ) {
 
+    private val logTimestamps = ArrayDeque<Long>()
     private val toastTimestamps = ArrayDeque<Long>()
     private val activeShellSessions = mutableMapOf<String, Pair<AdbStream, Job>>()
 
@@ -632,5 +635,47 @@ class DioxaminePluginBridge(
                 reject(callbackId, e.message ?: e.toString())
             }
         }
+    }
+
+    @JavascriptInterface
+    fun logMessage(level: String, tag: String, message: String) {
+        val now = System.currentTimeMillis()
+        val shouldLog =
+            synchronized(logTimestamps) {
+                while (logTimestamps.isNotEmpty() && now - logTimestamps.first() > 2000L) {
+                    logTimestamps.removeFirst()
+                }
+                if (logTimestamps.size < 50) {
+                    logTimestamps.addLast(now)
+                    true
+                } else {
+                    false
+                }
+            }
+        if (!shouldLog) return
+
+        val truncated = if (message.length > 2000) message.take(2000) else message
+        val pluginTag = "Plugin:$pluginId/$tag"
+
+        when (level.uppercase()) {
+            "V" -> AppLogger.v(pluginTag, truncated)
+            "D" -> AppLogger.d(pluginTag, truncated)
+            "I" -> AppLogger.i(pluginTag, truncated)
+            "W" -> AppLogger.w(pluginTag, truncated)
+            "E" -> AppLogger.e(pluginTag, truncated)
+            else -> AppLogger.d(pluginTag, truncated)
+        }
+    }
+
+    @JavascriptInterface
+    fun setFullScreen(enable: Boolean) {
+        scope.launch(Dispatchers.Main) {
+            onFullScreenChanged(enable)
+        }
+    }
+
+    @JavascriptInterface
+    fun fullScreen(enable: Boolean) {
+        setFullScreen(enable)
     }
 }

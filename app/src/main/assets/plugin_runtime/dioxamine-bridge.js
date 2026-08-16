@@ -88,7 +88,59 @@
                 message: options.message || '',
                 buttons: options.buttons || ['OK']
             }));
+        },
+        setFullScreen: function(enable) {
+            if (window.DioxamineNative && typeof window.DioxamineNative.setFullScreen === 'function') {
+                window.DioxamineNative.setFullScreen(Boolean(enable));
+            }
+        },
+        fullScreen: function(enable) {
+            this.setFullScreen(enable);
+        },
+        log: {
+            v: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('V', tag, String(msg)); },
+            d: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('D', tag, String(msg)); },
+            i: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('I', tag, String(msg)); },
+            w: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('W', tag, String(msg)); },
+            e: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('E', tag, String(msg)); },
+            log: function(msg) { this.d('Plugin', msg); }
         }
+    };
+
+    var _formatConsoleArgs = function(args) {
+        return args.map(function(a) {
+            if (typeof a === 'object') {
+                try { return JSON.stringify(a); } catch(e) { return String(a); }
+            }
+            return String(a);
+        }).join(' ');
+    };
+
+    var _consoleLog = console.log;
+    var _consoleWarn = console.warn;
+    var _consoleError = console.error;
+    var _consoleInfo = console.info;
+    var _consoleDebug = console.debug;
+
+    console.log = function(...args) {
+        window.dioxamine.log.i('Console', _formatConsoleArgs(args));
+        if (_consoleLog) _consoleLog.apply(console, args);
+    };
+    console.warn = function(...args) {
+        window.dioxamine.log.w('Console', _formatConsoleArgs(args));
+        if (_consoleWarn) _consoleWarn.apply(console, args);
+    };
+    console.error = function(...args) {
+        window.dioxamine.log.e('Console', _formatConsoleArgs(args));
+        if (_consoleError) _consoleError.apply(console, args);
+    };
+    console.info = function(...args) {
+        window.dioxamine.log.i('Console', _formatConsoleArgs(args));
+        if (_consoleInfo) _consoleInfo.apply(console, args);
+    };
+    console.debug = function(...args) {
+        window.dioxamine.log.d('Console', _formatConsoleArgs(args));
+        if (_consoleDebug) _consoleDebug.apply(console, args);
     };
 
     window.__dioxamine_bridge_ready = true;

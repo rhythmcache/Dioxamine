@@ -65,11 +65,22 @@ fun AdbScreen(
     permissionGate: PluginPermissionGate,
     dialogGate: PluginDialogGate,
     safBridge: PluginSafBridge,
+    onPluginActiveChange: (Boolean) -> Unit = {},
 ) {
     var subTab by remember { mutableStateOf(0) }
     var activePluginId by remember { mutableStateOf<String?>(null) }
     val activeConn = vm.devices[vm.activeDeviceId]
     val mode = activeConn?.mode ?: AdbDeviceMode.UNKNOWN
+
+    LaunchedEffect(activePluginId) {
+        onPluginActiveChange(activePluginId != null)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            onPluginActiveChange(false)
+        }
+    }
 
     vm.daemonDialogMessage?.let { msg ->
         AlertDialog(

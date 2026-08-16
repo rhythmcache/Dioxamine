@@ -54,6 +54,10 @@ fun buildThemeCss(colorScheme: ColorScheme): String =
         --dioxamine-accent: var(--dioxamine-primary);
         --dioxamine-danger: var(--dioxamine-error);
     }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
     """.trimIndent()
 
 fun buildThemeInjectionScript(colorScheme: ColorScheme, isDark: Boolean): String {
