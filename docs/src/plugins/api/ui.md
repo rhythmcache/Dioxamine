@@ -93,3 +93,27 @@ document.getElementById('toggle-fullscreen-btn').addEventListener('click', () =>
     dioxamine.setFullScreen(isFull);
 });
 ```
+
+---
+
+## Exiting and Closing Plugins
+
+### 1. System Back Gesture / Back Button
+Users can exit any plugin at any time by performing the standard Android **Back gesture** (swiping from the left/right screen edge) or pressing the system **Back button**.
+
+### 2. Programmatic Exit (`dioxamine.exitPlugin()`)
+Plugins can also provide an in-app "Exit" or "Close" button in their web UI:
+
+```javascript
+dioxamine.exitPlugin(): void
+```
+
+#### Example
+```javascript
+document.getElementById('close-btn').addEventListener('click', () => {
+    dioxamine.exitPlugin();
+});
+```
+
+#### Note
+`dioxamine.closePlugin()` is also supported as an alias.

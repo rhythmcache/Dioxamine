@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-b3f2db85.js";
+            window.path_to_searchindex_js = "searchindex-7fc8dbe9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-70c85870.js"></script>
@@ -518,6 +518,14 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <li>API calls fail immediately with <code>Permission denied by user policy</code>.</li>
 </ul>
 </li>
+</ol>
+<h2 id="managing-and-revoking-permissions-in-app-settings"><a class="header" href="#managing-and-revoking-permissions-in-app-settings">Managing and Revoking Permissions in App Settings</a></h2>
+<p>Users can view, grant, or revoke permissions at any time:</p>
+<ol>
+<li>Open Dioxamine and go to the <strong>Settings</strong> tab.</li>
+<li>Expand the <strong>Plugins</strong> card.</li>
+<li>Tap <strong>Manage</strong> next to <strong>Plugin Permissions</strong>.</li>
+<li>Adjust policies individually for each installed plugin (<code>Ask Every Time</code>, <code>Always Allow</code>, or <code>Always Deny</code>), or tap <strong>Reset All</strong> to restore default prompt behavior.</li>
 </ol>
 <h2 id="safe-native-apis-no-permission-required"><a class="header" href="#safe-native-apis-no-permission-required">Safe Native APIs (No Permission Required)</a></h2>
 <p>The following bridge methods are safe UI/context utilities and do not require declared permissions:</p>
@@ -1043,6 +1051,21 @@ document.getElementById('toggle-fullscreen-btn').addEventListener('click', () =&
     dioxamine.setFullScreen(isFull);
 });
 </code></pre>
+<hr>
+<h2 id="exiting-and-closing-plugins"><a class="header" href="#exiting-and-closing-plugins">Exiting and Closing Plugins</a></h2>
+<h3 id="1-system-back-gesture--back-button"><a class="header" href="#1-system-back-gesture--back-button">1. System Back Gesture / Back Button</a></h3>
+<p>Users can exit any plugin at any time by performing the standard Android <strong>Back gesture</strong> (swiping from the left/right screen edge) or pressing the system <strong>Back button</strong>.</p>
+<h3 id="2-programmatic-exit-dioxamineexitplugin"><a class="header" href="#2-programmatic-exit-dioxamineexitplugin">2. Programmatic Exit (<code>dioxamine.exitPlugin()</code>)</a></h3>
+<p>Plugins can also provide an in-app “Exit” or “Close” button in their web UI:</p>
+<pre><code class="language-javascript">dioxamine.exitPlugin(): void
+</code></pre>
+<h4 id="example-3"><a class="header" href="#example-3">Example</a></h4>
+<pre><code class="language-javascript">document.getElementById('close-btn').addEventListener('click', () =&gt; {
+    dioxamine.exitPlugin();
+});
+</code></pre>
+<h4 id="note-1"><a class="header" href="#note-1">Note</a></h4>
+<p><code>dioxamine.closePlugin()</code> is also supported as an alias.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="native-logging-and-debugging"><a class="header" href="#native-logging-and-debugging">Native Logging and Debugging</a></h1>
 <p>Dioxamine provides integrated logging channels that bridge JavaScript console messages and explicit log calls directly into the native Android <code>Logcat</code> stream.</p>
@@ -1056,7 +1079,7 @@ dioxamine.log.i(tag: string, message: string): void  // Info
 dioxamine.log.w(tag: string, message: string): void  // Warn
 dioxamine.log.e(tag: string, message: string): void  // Error
 </code></pre>
-<h3 id="example-3"><a class="header" href="#example-3">Example</a></h3>
+<h3 id="example-4"><a class="header" href="#example-4">Example</a></h3>
 <pre><code class="language-javascript">dioxamine.log.i("Network", "Connecting to device socket at 127.0.0.1:8080");
 dioxamine.log.e("Sync", "File transfer aborted unexpectedly");
 </code></pre>

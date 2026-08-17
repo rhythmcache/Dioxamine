@@ -32,6 +32,14 @@ When a plugin is executed, Dioxamine evaluates permission requests using a confi
    - The user has permanently blocked the permission for this plugin.
    - API calls fail immediately with `Permission denied by user policy`.
 
+## Managing and Revoking Permissions in App Settings
+
+Users can view, grant, or revoke permissions at any time:
+1. Open Dioxamine and go to the **Settings** tab.
+2. Expand the **Plugins** card.
+3. Tap **Manage** next to **Plugin Permissions**.
+4. Adjust policies individually for each installed plugin (`Ask Every Time`, `Always Allow`, or `Always Deny`), or tap **Reset All** to restore default prompt behavior.
+
 ## Safe Native APIs (No Permission Required)
 
 The following bridge methods are safe UI/context utilities and do not require declared permissions:

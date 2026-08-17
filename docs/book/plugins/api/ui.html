@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../../searchindex-b3f2db85.js";
+            window.path_to_searchindex_js = "../../searchindex-7fc8dbe9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-70c85870.js"></script>
@@ -250,6 +250,21 @@ document.getElementById('toggle-fullscreen-btn').addEventListener('click', () =&
     dioxamine.setFullScreen(isFull);
 });
 </code></pre>
+<hr>
+<h2 id="exiting-and-closing-plugins"><a class="header" href="#exiting-and-closing-plugins">Exiting and Closing Plugins</a></h2>
+<h3 id="1-system-back-gesture--back-button"><a class="header" href="#1-system-back-gesture--back-button">1. System Back Gesture / Back Button</a></h3>
+<p>Users can exit any plugin at any time by performing the standard Android <strong>Back gesture</strong> (swiping from the left/right screen edge) or pressing the system <strong>Back button</strong>.</p>
+<h3 id="2-programmatic-exit-dioxamineexitplugin"><a class="header" href="#2-programmatic-exit-dioxamineexitplugin">2. Programmatic Exit (<code>dioxamine.exitPlugin()</code>)</a></h3>
+<p>Plugins can also provide an in-app “Exit” or “Close” button in their web UI:</p>
+<pre><code class="language-javascript">dioxamine.exitPlugin(): void
+</code></pre>
+<h4 id="example-3"><a class="header" href="#example-3">Example</a></h4>
+<pre><code class="language-javascript">document.getElementById('close-btn').addEventListener('click', () =&gt; {
+    dioxamine.exitPlugin();
+});
+</code></pre>
+<h4 id="note-1"><a class="header" href="#note-1">Note</a></h4>
+<p><code>dioxamine.closePlugin()</code> is also supported as an alias.</p>
 
                     </main>
 
