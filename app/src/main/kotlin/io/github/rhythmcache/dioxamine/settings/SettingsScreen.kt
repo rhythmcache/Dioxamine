@@ -757,6 +757,7 @@ fun SettingsScreen(vm: AdbViewModel) {
                                     scope.launch { pluginRepo.refresh() }
                                     showPluginPermissionsDialog = true
                                 },
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                 modifier = Modifier.height(36.dp)
                             ) {
@@ -1029,6 +1030,7 @@ private fun PluginPermissionsDialog(
                                                 Box {
                                                     OutlinedButton(
                                                         onClick = { expandedDropdown = true },
+                                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
                                                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                                                         modifier = Modifier.height(36.dp)
                                                     ) {

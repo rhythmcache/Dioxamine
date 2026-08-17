@@ -1,12 +1,15 @@
 package io.github.rhythmcache.dioxamine.plugin
 
+import android.graphics.BitmapFactory
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -17,6 +20,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.rhythmcache.dioxamine.R
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Composable
 fun PluginsTab(
@@ -107,6 +114,21 @@ fun PluginsTab(
                 items(installedPlugins, key = { it.id }) { manifest ->
                     var menuExpanded by remember { mutableStateOf(false) }
 
+                    val iconBitmap = remember(manifest.id, manifest.icon) {
+                        val pluginDir = File(context.filesDir, "plugins/${manifest.id}")
+                        val iconFileName = manifest.icon ?: "icon.png"
+                        val iconFile = File(pluginDir, iconFileName)
+                        if (iconFile.exists() && iconFile.isFile) {
+                            try {
+                                BitmapFactory.decodeFile(iconFile.absolutePath)?.asImageBitmap()
+                            } catch (e: Exception) {
+                                null
+                            }
+                        } else {
+                            null
+                        }
+                    }
+
                     Card(
                         modifier =
                             Modifier
@@ -116,99 +138,137 @@ fun PluginsTab(
                             CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             ),
+                        shape = RoundedCornerShape(12.dp),
                     ) {
-                        Column(
+                        Row(
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Row(
-                                    modifier = Modifier.weight(1f),
-                                    verticalAlignment = Alignment.CenterVertically,
+                            // Left: Plugin Icon / Placeholder
+                            if (iconBitmap != null) {
+                                Image(
+                                    bitmap = iconBitmap,
+                                    contentDescription = null,
+                                    modifier =
+                                        Modifier
+                                            .size(42.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            } else {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(42.dp),
                                 ) {
-                                    Text(
-                                        text = manifest.name,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Surface(
-                                        shape = MaterialTheme.shapes.small,
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                    ) {
-                                        Text(
-                                            text = "v${manifest.version}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                        )
-                                    }
-                                }
-
-                                Box {
-                                    IconButton(
-                                        onClick = { menuExpanded = true },
-                                    ) {
+                                    Box(contentAlignment = Alignment.Center) {
                                         Icon(
-                                            imageVector = Icons.Filled.MoreVert,
-                                            contentDescription = stringResource(R.string.cd_more_options),
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = menuExpanded,
-                                        onDismissRequest = { menuExpanded = false },
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text(stringResource(R.string.plugin_menu_info)) },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Info,
-                                                    contentDescription = null,
-                                                )
-                                            },
-                                            onClick = {
-                                                menuExpanded = false
-                                                infoDialogManifest = manifest
-                                            },
-                                        )
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = stringResource(R.string.plugin_menu_uninstall),
-                                                    color = MaterialTheme.colorScheme.error,
-                                                )
-                                            },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Delete,
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.error,
-                                                )
-                                            },
-                                            onClick = {
-                                                menuExpanded = false
-                                                uninstallConfirmManifest = manifest
-                                            },
+                                            imageVector = Icons.Filled.Extension,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(24.dp),
                                         )
                                     }
                                 }
                             }
 
-                            if (manifest.description.isNotBlank()) {
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = manifest.description,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                            Spacer(Modifier.width(12.dp))
+
+                            // Center: Title + Version + Description
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(
+                                        text = manifest.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                    ) {
+                                        Text(
+                                            text = "v${manifest.version}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        )
+                                    }
+                                }
+
+                                if (manifest.description.isNotBlank()) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = manifest.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+
+                            // Right: 3-dots Menu Button (Vertically centered)
+                            Box(
+                                modifier = Modifier.padding(start = 4.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                IconButton(
+                                    onClick = { menuExpanded = true },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.MoreVert,
+                                        contentDescription = stringResource(R.string.cd_more_options),
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = menuExpanded,
+                                    onDismissRequest = { menuExpanded = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.plugin_menu_info)) },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Filled.Info,
+                                                contentDescription = null,
+                                            )
+                                        },
+                                        onClick = {
+                                            menuExpanded = false
+                                            infoDialogManifest = manifest
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = stringResource(R.string.plugin_menu_uninstall),
+                                                color = MaterialTheme.colorScheme.error,
+                                            )
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Filled.Delete,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error,
+                                            )
+                                        },
+                                        onClick = {
+                                            menuExpanded = false
+                                            uninstallConfirmManifest = manifest
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
