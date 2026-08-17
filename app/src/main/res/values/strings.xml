@@ -94,6 +94,22 @@
     <string name="plugin_msg_uninstalled">Plugin \"%1$s\" uninstalled</string>
     <string name="cd_more_options">More options</string>
 
+    <!-- Plugin Settings & Permission Manager Strings -->
+    <string name="settings_plugins_title">Plugins</string>
+    <string name="settings_plugins_desc">WebView debugging &amp; permissions</string>
+    <string name="settings_plugins_webview_debug_title">WebView Debugging</string>
+    <string name="settings_plugins_webview_debug_desc">Allow Chrome DevTools inspection via chrome://inspect</string>
+    <string name="settings_plugins_take_effect_hint">Changes take effect on next plugin launch</string>
+    <string name="settings_plugins_permissions_title">Plugin Permissions</string>
+    <string name="settings_plugins_permissions_desc">Manage and revoke permissions for installed plugins</string>
+    <string name="settings_plugins_btn_manage">Manage</string>
+    <string name="settings_plugins_no_permissions">No permissions declared</string>
+    <string name="plugin_policy_ask_default">Ask Every Time (Default)</string>
+    <string name="plugin_policy_ask">Ask Every Time</string>
+    <string name="plugin_policy_always_allow">Always Allow</string>
+    <string name="plugin_policy_always_deny">Always Deny</string>
+    <string name="btn_reset_all">Reset All</string>
+
     <!-- Fastboot Tab -->
     <string name="fastboot_title">Fastboot support</string>
     <string name="fastboot_no_device_status">USB Detector Active &#8226; No Fastboot Device Connected</string>
