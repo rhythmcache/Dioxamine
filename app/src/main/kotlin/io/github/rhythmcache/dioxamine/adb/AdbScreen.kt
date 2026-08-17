@@ -1,5 +1,6 @@
 package io.github.rhythmcache.dioxamine.adb
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -80,6 +81,11 @@ fun AdbScreen(
         onDispose {
             onPluginActiveChange(false)
         }
+    }
+
+    // Return to Built-in sub-tab when on Shell or Plugins tab
+    BackHandler(enabled = activePluginId == null && subTab != 0) {
+        subTab = 0
     }
 
     vm.daemonDialogMessage?.let { msg ->

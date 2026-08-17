@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -421,6 +422,21 @@ fun PackageManagerScreen(
         }
     }
 
+    BackHandler {
+        if (selectedAppForInfo != null) {
+            selectedAppForInfo = null
+        } else if (selectedAppForUninstall != null) {
+            selectedAppForUninstall = null
+        } else if (selectedAppForPull != null) {
+            selectedAppForPull = null
+        } else if (isSearchActive) {
+            isSearchActive = false
+            searchQuery = ""
+        } else {
+            onBack()
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         Surface(
             tonalElevation = 2.dp,
@@ -428,7 +444,7 @@ fun PackageManagerScreen(
         ) {
             Column {
                 TopAppBar(
-                    windowInsets = WindowInsets(0, 0, 0, 0),
+                    windowInsets = TopAppBarDefaults.windowInsets,
                     title = {
                         if (isSearchActive) {
                             TextField(

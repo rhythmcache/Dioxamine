@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
@@ -135,6 +136,16 @@ fun DioxamineApp(keyDir: File) {
     }
 
     val hideBottomBar = isScrcpyFullScreen || isPluginActive
+
+    // Navigate back to ADB home tab before exiting app
+    BackHandler(enabled = selectedTab != Tab.ADB && !hideBottomBar) {
+        selectedTab = Tab.ADB
+    }
+
+    // Exit Scrcpy fullscreen on back gesture
+    BackHandler(enabled = isScrcpyFullScreen) {
+        isScrcpyFullScreen = false
+    }
 
     Scaffold(
         bottomBar = {

@@ -46,6 +46,13 @@ import io.github.rhythmcache.dioxamine.core.AppTheme
 import java.util.zip.ZipOutputStream
 
 import androidx.compose.material.icons.automirrored.filled.ScreenShare
+import androidx.compose.material.icons.filled.Security
+import io.github.rhythmcache.dioxamine.plugin.PluginPermissionStore
+import io.github.rhythmcache.dioxamine.plugin.PluginRepository
+import io.github.rhythmcache.dioxamine.plugin.PluginPermission
+import io.github.rhythmcache.dioxamine.plugin.PermissionPolicy
+import io.github.rhythmcache.dioxamine.plugin.PluginManifest
+import kotlinx.coroutines.launch
 
 data class LanguageOption(@StringRes val nameRes: Int, val languageTag: String?)
 
@@ -92,6 +99,12 @@ fun SettingsScreen(vm: AdbViewModel) {
     var pluginWebViewDebug by remember {
         mutableStateOf(prefs.getBoolean("plugin_webview_debug", false))
     }
+    var showPluginPermissionsDialog by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    val permissionStore = remember { PluginPermissionStore(context.applicationContext) }
+    val pluginRepo = remember { PluginRepository(context.applicationContext, scope) }
+    val installedPlugins by pluginRepo.installedPlugins.collectAsState()
 
     var showRegenDialog by remember { mutableStateOf(false) }
     var showClearLogsDialog by remember { mutableStateOf(false) }
@@ -649,9 +662,9 @@ fun SettingsScreen(vm: AdbViewModel) {
                         Icon(Icons.Filled.Extension, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(12.dp))
                         Column {
-                            Text("Plugin", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.settings_plugins_title), fontWeight = FontWeight.Bold)
                             Text(
-                                "WebView debugging & permissions",
+                                stringResource(R.string.settings_plugins_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -659,7 +672,7 @@ fun SettingsScreen(vm: AdbViewModel) {
                     }
                     Icon(
                         imageVector = if (pluginExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (pluginExpanded) "Collapse" else "Expand"
+                        contentDescription = stringResource(if (pluginExpanded) R.string.cd_collapse else R.string.cd_expand)
                     )
                 }
 
@@ -677,11 +690,11 @@ fun SettingsScreen(vm: AdbViewModel) {
                         ) {
                             Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
                                 Text(
-                                    "WebView Debugging",
+                                    stringResource(R.string.settings_plugins_webview_debug_title),
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    "Allow Chrome DevTools inspection via chrome://inspect",
+                                    stringResource(R.string.settings_plugins_webview_debug_desc),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -696,11 +709,60 @@ fun SettingsScreen(vm: AdbViewModel) {
                         }
 
                         Text(
-                            "Changes take effect on next plugin launch",
+                            stringResource(R.string.settings_plugins_take_effect_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.padding(top = 4.dp)
                         )
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                        // Plugin Permissions Manager Tile
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    scope.launch { pluginRepo.refresh() }
+                                    showPluginPermissionsDialog = true
+                                }
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f).padding(end = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Filled.Security,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        stringResource(R.string.settings_plugins_permissions_title),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        stringResource(R.string.settings_plugins_permissions_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Button(
+                                onClick = {
+                                    scope.launch { pluginRepo.refresh() }
+                                    showPluginPermissionsDialog = true
+                                },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(36.dp)
+                            ) {
+                                Text(stringResource(R.string.settings_plugins_btn_manage), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
                 }
             }
@@ -870,4 +932,170 @@ fun SettingsScreen(vm: AdbViewModel) {
             }
         )
     }
+
+    if (showPluginPermissionsDialog) {
+        PluginPermissionsDialog(
+            plugins = installedPlugins,
+            permissionStore = permissionStore,
+            onDismiss = { showPluginPermissionsDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun PluginPermissionsDialog(
+    plugins: List<PluginManifest>,
+    permissionStore: PluginPermissionStore,
+    onDismiss: () -> Unit
+) {
+    var triggerUpdate by remember { mutableStateOf(0) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(stringResource(R.string.settings_plugins_permissions_title), fontWeight = FontWeight.Bold)
+        },
+        text = {
+            if (plugins.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        stringResource(R.string.plugins_no_plugins),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    plugins.forEach { plugin ->
+                        val declaredPermissions = remember(plugin.id) {
+                            plugin.permissions.mapNotNull { PluginPermission.fromManifestString(it) }
+                        }
+
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = plugin.name,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text(
+                                    text = plugin.id,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Spacer(Modifier.height(8.dp))
+
+                                if (declaredPermissions.isEmpty()) {
+                                    Text(
+                                        stringResource(R.string.settings_plugins_no_permissions),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.outline
+                                    )
+                                } else {
+                                    declaredPermissions.forEach { perm ->
+                                        key(triggerUpdate, plugin.id, perm) {
+                                            val currentPolicy = permissionStore.getPolicy(plugin.id, perm)
+
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 4.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = perm.name.lowercase().replaceFirstChar { it.uppercase() },
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+
+                                                var expandedDropdown by remember { mutableStateOf(false) }
+
+                                                Box {
+                                                    OutlinedButton(
+                                                        onClick = { expandedDropdown = true },
+                                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                                        modifier = Modifier.height(36.dp)
+                                                    ) {
+                                                        val label = when (currentPolicy) {
+                                                            PermissionPolicy.ALWAYS_ALLOW -> stringResource(R.string.plugin_policy_always_allow)
+                                                            PermissionPolicy.ALWAYS_DENY -> stringResource(R.string.plugin_policy_always_deny)
+                                                            PermissionPolicy.ASK -> stringResource(R.string.plugin_policy_ask)
+                                                        }
+                                                        Text(label, style = MaterialTheme.typography.bodySmall)
+                                                    }
+
+                                                    DropdownMenu(
+                                                        expanded = expandedDropdown,
+                                                        onDismissRequest = { expandedDropdown = false }
+                                                    ) {
+                                                        DropdownMenuItem(
+                                                            text = { Text(stringResource(R.string.plugin_policy_ask_default)) },
+                                                            onClick = {
+                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ASK)
+                                                                expandedDropdown = false
+                                                                triggerUpdate++
+                                                            }
+                                                        )
+                                                        DropdownMenuItem(
+                                                            text = { Text(stringResource(R.string.plugin_policy_always_allow)) },
+                                                            onClick = {
+                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ALWAYS_ALLOW)
+                                                                expandedDropdown = false
+                                                                triggerUpdate++
+                                                            }
+                                                        )
+                                                        DropdownMenuItem(
+                                                            text = { Text(stringResource(R.string.plugin_policy_always_deny)) },
+                                                            onClick = {
+                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ALWAYS_DENY)
+                                                                expandedDropdown = false
+                                                                triggerUpdate++
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_done))
+            }
+        },
+        dismissButton = {
+            if (plugins.isNotEmpty()) {
+                TextButton(
+                    onClick = {
+                        permissionStore.resetAll()
+                        triggerUpdate++
+                    }
+                ) {
+                    Text(stringResource(R.string.btn_reset_all), color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    )
 }

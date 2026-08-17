@@ -9,6 +9,7 @@ import io.github.rhythmcache.dioxamine.core.AppLogger
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -99,8 +100,17 @@ fun PluginRunnerScreen(
                 onFullScreenChanged = { enable ->
                     isFullScreen = enable
                 },
+                onClosePlugin = onBack,
             )
         }
+
+    BackHandler {
+        if (webViewRef?.canGoBack() == true) {
+            webViewRef?.goBack()
+        } else {
+            onBack()
+        }
+    }
 
     DisposableEffect(bridge) {
         onDispose {

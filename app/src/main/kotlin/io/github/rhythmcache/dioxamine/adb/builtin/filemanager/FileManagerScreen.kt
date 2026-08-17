@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -423,11 +424,24 @@ fun FileManagerScreen(
         else fileList.filter { it.isParentDir || it.name.contains(searchQuery, ignoreCase = true) }
     }
 
+    BackHandler {
+        if (activeDialog != ActiveDialog.NONE) {
+            activeDialog = ActiveDialog.NONE
+        } else if (isSearching) {
+            isSearching = false
+            searchQuery = ""
+        } else if (currentPath != "/sdcard" && currentPath != "/") {
+            val parent = java.io.File(currentPath).parent ?: "/sdcard"
+            loadDirectory(parent)
+        } else {
+            onBack()
+        }
+    }
+
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
+                windowInsets = TopAppBarDefaults.windowInsets,
                 title = {
                     Column {
                         Text(stringResource(R.string.file_manager_title), style = MaterialTheme.typography.titleMedium)

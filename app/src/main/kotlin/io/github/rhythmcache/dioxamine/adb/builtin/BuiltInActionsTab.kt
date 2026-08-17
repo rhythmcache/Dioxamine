@@ -1,5 +1,6 @@
 package io.github.rhythmcache.dioxamine.adb.builtin
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,11 @@ sealed class BuiltInSubScreen {
 fun BuiltInActionsTab(vm: AdbViewModel) {
     var activeSubScreen by remember { mutableStateOf<BuiltInSubScreen>(BuiltInSubScreen.TilesList) }
     val isConnected = vm.activeClient() != null
+
+    // Return to tools list when on a sub-screen
+    BackHandler(enabled = activeSubScreen != BuiltInSubScreen.TilesList) {
+        activeSubScreen = BuiltInSubScreen.TilesList
+    }
 
     when (activeSubScreen) {
         BuiltInSubScreen.TilesList -> {

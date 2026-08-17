@@ -97,6 +97,14 @@
         fullScreen: function(enable) {
             this.setFullScreen(enable);
         },
+        exitPlugin: function() {
+            if (window.DioxamineNative && typeof window.DioxamineNative.exitPlugin === 'function') {
+                window.DioxamineNative.exitPlugin();
+            }
+        },
+        closePlugin: function() {
+            this.exitPlugin();
+        },
         log: {
             v: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('V', tag, String(msg)); },
             d: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('D', tag, String(msg)); },

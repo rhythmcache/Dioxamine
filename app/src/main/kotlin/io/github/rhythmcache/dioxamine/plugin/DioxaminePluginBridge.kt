@@ -48,6 +48,7 @@ class DioxaminePluginBridge(
     private val scope: CoroutineScope,
     private val evaluateJs: (String) -> Unit,
     private val onFullScreenChanged: (Boolean) -> Unit = {},
+    private val onClosePlugin: () -> Unit = {},
 ) {
 
     private val logTimestamps = ArrayDeque<Long>()
@@ -677,5 +678,17 @@ class DioxaminePluginBridge(
     @JavascriptInterface
     fun fullScreen(enable: Boolean) {
         setFullScreen(enable)
+    }
+
+    @JavascriptInterface
+    fun exitPlugin() {
+        scope.launch(Dispatchers.Main) {
+            onClosePlugin()
+        }
+    }
+
+    @JavascriptInterface
+    fun closePlugin() {
+        exitPlugin()
     }
 }
