@@ -444,7 +444,7 @@ fun PackageManagerScreen(
         ) {
             Column {
                 TopAppBar(
-                    windowInsets = TopAppBarDefaults.windowInsets,
+                    windowInsets = WindowInsets(0, 0, 0, 0),
                     title = {
                         if (isSearchActive) {
                             TextField(

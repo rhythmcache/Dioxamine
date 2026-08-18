@@ -22,13 +22,16 @@ import io.github.rhythmcache.dioxamine.adb.builtin.remotecontrol.RemoteControlSc
 import io.github.rhythmcache.dioxamine.adb.builtin.remotecontrol.RemoteControlTile
 import io.github.rhythmcache.dioxamine.adb.builtin.screencap.ScreencapScreen
 import io.github.rhythmcache.dioxamine.adb.builtin.screencap.ScreencapTile
+import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.TouchpadScreen
+import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.TouchpadTile
 
 sealed class BuiltInSubScreen {
     object TilesList : BuiltInSubScreen()
     object DeviceInfo : BuiltInSubScreen()
+    object RemoteControl : BuiltInSubScreen()
+    object Touchpad : BuiltInSubScreen()
     object FileManager : BuiltInSubScreen()
     object PackageManager : BuiltInSubScreen()
-    object RemoteControl : BuiltInSubScreen()
     object Reboot : BuiltInSubScreen()
     object Screenshot : BuiltInSubScreen()
 }
@@ -75,6 +78,12 @@ fun BuiltInActionsTab(vm: AdbViewModel) {
                     )
                 }
                 item {
+                    TouchpadTile(
+                        isConnected = isConnected,
+                        onClick = { activeSubScreen = BuiltInSubScreen.Touchpad }
+                    )
+                }
+                item {
                     FileManagerTile(
                         isConnected = isConnected,
                         onClick = { activeSubScreen = BuiltInSubScreen.FileManager }
@@ -109,6 +118,13 @@ fun BuiltInActionsTab(vm: AdbViewModel) {
         BuiltInSubScreen.RemoteControl -> {
             RemoteControlScreen(
                 vm = vm,
+                onBack = { activeSubScreen = BuiltInSubScreen.TilesList },
+                onOpenTouchpad = { activeSubScreen = BuiltInSubScreen.Touchpad }
+            )
+        }
+        BuiltInSubScreen.Touchpad -> {
+            TouchpadScreen(
+                vm = vm,
                 onBack = { activeSubScreen = BuiltInSubScreen.TilesList }
             )
         }
@@ -138,3 +154,4 @@ fun BuiltInActionsTab(vm: AdbViewModel) {
         }
     }
 }
+

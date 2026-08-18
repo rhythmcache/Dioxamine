@@ -39,7 +39,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun RemoteControlScreen(
     vm: AdbViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenTouchpad: (() -> Unit)? = null
 ) {
     val client = vm.activeClient()
     val scope = rememberCoroutineScope()
@@ -180,6 +181,17 @@ fun RemoteControlScreen(
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                if (onOpenTouchpad != null) {
+                    IconButton(onClick = onOpenTouchpad) {
+                        Icon(
+                            imageVector = Icons.Filled.Mouse,
+                            contentDescription = "Open TouchPad",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         )

@@ -477,6 +477,32 @@
     <string name="remote_tv_ch_down">Ch -</string>
     <string name="remote_tv_search">Search</string>
 
+    <!-- Touchpad & Virtual Mouse/Keyboard Strings -->
+    <string name="touchpad_title">TouchPad &amp; Mouse</string>
+    <string name="touchpad_desc">Control target device cursor with a virtual touchpad and hardware keyboard</string>
+    <string name="tab_touchpad">TouchPad</string>
+    <string name="tab_keyboard">PC Keyboard</string>
+    <string name="touchpad_connecting">Initializing virtual input devices...</string>
+    <string name="touchpad_connected">Virtual mouse &amp; keyboard active</string>
+    <string name="touchpad_surface_hint">Swipe to move &#8226; Tap to Left Click &#8226; Hold to Right Click &#8226; 2-finger scroll</string>
+    <string name="touchpad_btn_left">Left</string>
+    <string name="touchpad_btn_right">Right</string>
+    <string name="touchpad_btn_middle">Middle</string>
+    <string name="touchpad_sensitivity">Pointer Sensitivity</string>
+    <string name="touchpad_keyboard_section">Hardware Keyboard</string>
+    <string name="touchpad_modifiers">Modifiers</string>
+    <string name="touchpad_functions">Function Keys</string>
+    <string name="touchpad_shortcuts">Shortcuts</string>
+    <string name="touchpad_navigation">Navigation</string>
+    <string name="touchpad_numpad">Numpad</string>
+    <string name="touchpad_soft_keyboard">Soft Keyboard</string>
+    <string name="touchpad_toggle_ime">Toggle Keyboard</string>
+    <string name="touchpad_type_here">Type here for instant real-time keystrokes...</string>
+    <string name="touchpad_realtime_typing_hint">Real-time typing enabled. Characters and backspaces are streamed instantly.</string>
+    <string name="touchpad_error_title">Virtual Input Error</string>
+    <string name="touchpad_error_desc">Could not initialize virtual mouse/keyboard (/dev/uhid). Ensure Developer Options > USB debugging (Security settings) is enabled if applicable.</string>
+
+
     <!-- Daemon Control & Connection Strings -->
     <string name="daemon_dialog_title">Daemon Response</string>
     <string name="btn_ok">OK</string>

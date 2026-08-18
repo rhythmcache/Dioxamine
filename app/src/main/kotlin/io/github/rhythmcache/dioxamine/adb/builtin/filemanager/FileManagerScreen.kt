@@ -439,9 +439,10 @@ fun FileManagerScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = TopAppBarDefaults.windowInsets,
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Column {
                         Text(stringResource(R.string.file_manager_title), style = MaterialTheme.typography.titleMedium)
