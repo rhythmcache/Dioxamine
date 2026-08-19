@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-7fc8dbe9.js";
+            window.path_to_searchindex_js = "searchindex-f463bf75.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-70c85870.js"></script>
+        <script src="toc-7c01cd5f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,22 +182,52 @@
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>Welcome to the official documentation for Dioxamine.</p>
-<p>Dioxamine is a fast, modern Android application that provides native ADB device management, wireless pairing, Scrcpy screen mirroring, Fastboot controls, and an extensible web-based Plugin System.</p>
-<h2 id="documentation-structure"><a class="header" href="#documentation-structure">Documentation Structure</a></h2>
-<p>This documentation is organized into key focus areas:</p>
+<p>Dioxamine is a fast, modern Android application designed for Android enthusiasts, developers, and technicians. It allows you to control secondary Android devices, send ADB commands, mirror and stream displays or cameras with Scrcpy, flash Fastboot firmware, manage files and apps, and run custom Web plugins directly from your phone.</p>
+<h2 id="what-you-can-do-with-dioxamine"><a class="header" href="#what-you-can-do-with-dioxamine">What You Can Do with Dioxamine</a></h2>
 <ol>
-<li><strong>Plugin Development Guide</strong>: Comprehensive specifications, guides, and API documentation for building custom Dioxamine Web plugins using HTML, CSS, and JavaScript.</li>
-<li><strong>App User Guide</strong> (Coming soon): End-user documentation for connecting devices over USB, Wi-Fi pairing, Scrcpy configuration, and fastboot flashing.</li>
-<li><strong>Core Architecture</strong> (Coming soon): Internal design documentation for the Kotlin native runtime, ADB engine, and security gates.</li>
+<li><strong>Connect Devices Anywhere</strong>: Connect target devices via USB OTG cable adapters, Wireless ADB auto-discovery, Android 11+ QR code scanning, pairing code PINs, or direct TCP/IP.</li>
+<li><strong>Built-in ADB Tools</strong>:
+<ul>
+<li>Inspect full hardware specifications, CPU telemetry, battery status, and uptime.</li>
+<li>Browse, upload, download, rename, and delete files on target storage.</li>
+<li>Install APKs, split APK bundles (.apks, .xapk), pull installed apps, and enable or disable system packages.</li>
+<li>Control Android TV and phones using a D-pad remote control or a full trackpad with virtual PC hardware keyboard.</li>
+<li>Capture screenshots and execute interactive ADB shell commands.</li>
+<li>Sideload recovery updates, wipe userdata in Rescue mode, and reboot into System, Recovery, Bootloader, or Fastbootd.</li>
+</ul>
+</li>
+<li><strong>Scrcpy Screen Mirroring and Camera Streaming</strong>:
+<ul>
+<li>Low-latency screen mirroring with touch control and audio forwarding.</li>
+<li>Stream high-speed target camera video with lens selection, frame rate controls, and remote flashlight toggle.</li>
+</ul>
+</li>
+<li><strong>Fastboot Tools</strong>:
+<ul>
+<li>Flash partition images (boot, recovery, system, vendor_boot, init_boot) with live transfer progress.</li>
+<li>Live boot custom kernels or recovery images without overwriting partitions.</li>
+<li>Lock and unlock bootloader states.</li>
+</ul>
+</li>
+<li><strong>Web Plugin System</strong>:
+<ul>
+<li>Build and install modular HTML5/JavaScript plugins with full bridge access to ADB, shell, and file transfers.</li>
+</ul>
+</li>
 </ol>
-<p>To get started building custom modules for Dioxamine, proceed to the <a href="plugins/overview.html">Plugin Development Overview</a>.</p>
+<h2 id="documentation-overview"><a class="header" href="#documentation-overview">Documentation Overview</a></h2>
+<p>This manual is organized into two main parts:</p>
+<ul>
+<li><strong>App User Guide</strong>: Complete instructions on connecting devices, using each built-in tool, tuning Scrcpy mirroring, flashing in Fastboot mode, and configuring app settings.</li>
+<li><strong>Plugin Development Guide</strong>: Complete technical specification and JavaScript bridge reference for creating custom Dioxamine plugins.</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
 
-                            <a rel="next prefetch" href="plugins/overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="user-guide/getting-started.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -208,7 +238,7 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
 
-                    <a rel="next prefetch" href="plugins/overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="user-guide/getting-started.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

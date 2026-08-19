@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-7fc8dbe9.js";
+            window.path_to_searchindex_js = "searchindex-f463bf75.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-70c85870.js"></script>
+        <script src="toc-7c01cd5f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,15 +180,1212 @@
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>Welcome to the official documentation for Dioxamine.</p>
-<p>Dioxamine is a fast, modern Android application that provides native ADB device management, wireless pairing, Scrcpy screen mirroring, Fastboot controls, and an extensible web-based Plugin System.</p>
-<h2 id="documentation-structure"><a class="header" href="#documentation-structure">Documentation Structure</a></h2>
-<p>This documentation is organized into key focus areas:</p>
+<p>Dioxamine is a fast, modern Android application designed for Android enthusiasts, developers, and technicians. It allows you to control secondary Android devices, send ADB commands, mirror and stream displays or cameras with Scrcpy, flash Fastboot firmware, manage files and apps, and run custom Web plugins directly from your phone.</p>
+<h2 id="what-you-can-do-with-dioxamine"><a class="header" href="#what-you-can-do-with-dioxamine">What You Can Do with Dioxamine</a></h2>
 <ol>
-<li><strong>Plugin Development Guide</strong>: Comprehensive specifications, guides, and API documentation for building custom Dioxamine Web plugins using HTML, CSS, and JavaScript.</li>
-<li><strong>App User Guide</strong> (Coming soon): End-user documentation for connecting devices over USB, Wi-Fi pairing, Scrcpy configuration, and fastboot flashing.</li>
-<li><strong>Core Architecture</strong> (Coming soon): Internal design documentation for the Kotlin native runtime, ADB engine, and security gates.</li>
+<li><strong>Connect Devices Anywhere</strong>: Connect target devices via USB OTG cable adapters, Wireless ADB auto-discovery, Android 11+ QR code scanning, pairing code PINs, or direct TCP/IP.</li>
+<li><strong>Built-in ADB Tools</strong>:
+<ul>
+<li>Inspect full hardware specifications, CPU telemetry, battery status, and uptime.</li>
+<li>Browse, upload, download, rename, and delete files on target storage.</li>
+<li>Install APKs, split APK bundles (.apks, .xapk), pull installed apps, and enable or disable system packages.</li>
+<li>Control Android TV and phones using a D-pad remote control or a full trackpad with virtual PC hardware keyboard.</li>
+<li>Capture screenshots and execute interactive ADB shell commands.</li>
+<li>Sideload recovery updates, wipe userdata in Rescue mode, and reboot into System, Recovery, Bootloader, or Fastbootd.</li>
+</ul>
+</li>
+<li><strong>Scrcpy Screen Mirroring and Camera Streaming</strong>:
+<ul>
+<li>Low-latency screen mirroring with touch control and audio forwarding.</li>
+<li>Stream high-speed target camera video with lens selection, frame rate controls, and remote flashlight toggle.</li>
+</ul>
+</li>
+<li><strong>Fastboot Tools</strong>:
+<ul>
+<li>Flash partition images (boot, recovery, system, vendor_boot, init_boot) with live transfer progress.</li>
+<li>Live boot custom kernels or recovery images without overwriting partitions.</li>
+<li>Lock and unlock bootloader states.</li>
+</ul>
+</li>
+<li><strong>Web Plugin System</strong>:
+<ul>
+<li>Build and install modular HTML5/JavaScript plugins with full bridge access to ADB, shell, and file transfers.</li>
+</ul>
+</li>
 </ol>
-<p>To get started building custom modules for Dioxamine, proceed to the <a href="#plugin-architecture-and-overview">Plugin Development Overview</a>.</p>
+<h2 id="documentation-overview"><a class="header" href="#documentation-overview">Documentation Overview</a></h2>
+<p>This manual is organized into two main parts:</p>
+<ul>
+<li><strong>App User Guide</strong>: Complete instructions on connecting devices, using each built-in tool, tuning Scrcpy mirroring, flashing in Fastboot mode, and configuring app settings.</li>
+<li><strong>Plugin Development Guide</strong>: Complete technical specification and JavaScript bridge reference for creating custom Dioxamine plugins.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
+<p>This guide introduces Dioxamine, its navigation layout, and how to start managing secondary Android devices.</p>
+<h2 id="app-layout-and-navigation"><a class="header" href="#app-layout-and-navigation">App Layout and Navigation</a></h2>
+<p>Dioxamine is organized into four main tabs along the bottom navigation bar:</p>
+<ol>
+<li><strong>ADB</strong>: The central hub for ADB device management. Contains device connection controls, built-in device tools (File Manager, Package Manager, Remote Control, Touchpad, Screenshots, Reboot Menu, Sideload), an interactive ADB terminal, and custom Web plugins.</li>
+<li><strong>Scrcpy</strong>: Real-time screen mirroring, remote touch interaction, audio forwarding, and target camera video streaming.</li>
+<li><strong>Fastboot</strong>: Bootloader flashing utilities, kernel booting, lock state management, variable inspection, and raw Fastboot command execution.</li>
+<li><strong>Settings</strong>: ADB RSA key management (generation, export, import), Material 3 Monet theming, language configuration, diagnostic log export, and plugin security permissions.</li>
+</ol>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<p>To use Dioxamine effectively, ensure your setup meets the following requirements:</p>
+<h3 id="host-phone-running-dioxamine"><a class="header" href="#host-phone-running-dioxamine">Host Phone (Running Dioxamine)</a></h3>
+<ul>
+<li>Android 7.0 (Nougat, API 24) or newer.</li>
+<li>USB OTG support if connecting via cable.</li>
+<li>Dynamic Material 3 colors (Monet) require Android 12 or newer.</li>
+</ul>
+<h3 id="target-device-device-being-controlled"><a class="header" href="#target-device-device-being-controlled">Target Device (Device Being Controlled)</a></h3>
+<ul>
+<li><strong>Developer Options</strong> enabled.</li>
+<li><strong>USB Debugging</strong> enabled (for USB OTG or TCP connections).</li>
+<li><strong>Wireless Debugging</strong> enabled (for Android 11+ Wi-Fi connections).</li>
+<li>For Scrcpy audio forwarding: target device must run Android 11 (API 30) or newer.</li>
+<li>For Scrcpy audio duplication without muting the target: target device must run Android 13 (API 33) or newer.</li>
+</ul>
+<h2 id="enabling-developer-options-on-target-device"><a class="header" href="#enabling-developer-options-on-target-device">Enabling Developer Options on Target Device</a></h2>
+<p>Before connecting any target device:</p>
+<ol>
+<li>Open <strong>Settings</strong> on the target device.</li>
+<li>Navigate to <strong>About Phone</strong> (or <strong>About Device</strong>).</li>
+<li>Tap <strong>Build Number</strong> repeatedly (usually 7 times) until a message appears saying “You are now a developer!”.</li>
+<li>Go back to <strong>Settings &gt; System &gt; Developer Options</strong> (location varies slightly by manufacturer).</li>
+<li>Toggle <strong>USB Debugging</strong> to ON.</li>
+<li>If connecting wirelessly on Android 11+, also toggle <strong>Wireless Debugging</strong> to ON.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="connecting-devices"><a class="header" href="#connecting-devices">Connecting Devices</a></h1>
+<p>Dioxamine provides multiple connection methods to interface with secondary Android devices over physical cables or local Wi-Fi networks.</p>
+<h2 id="connection-methods-overview"><a class="header" href="#connection-methods-overview">Connection Methods Overview</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Method</th><th>Best Used For</th><th>Requirements</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>USB OTG Cable</strong></td><td>Maximum reliability, initial wireless setup, Fastboot flashing</td><td>USB OTG adapter/cable, USB Debugging enabled</td></tr>
+<tr><td><strong>Wireless Auto-Discovery</strong></td><td>Quick Wi-Fi connection without typing IP addresses</td><td>Both devices on the same Wi-Fi network, mDNS enabled</td></tr>
+<tr><td><strong>QR Code Pairing</strong></td><td>Fastest wireless setup on Android 11+</td><td>Android 11+ target, camera permission on host</td></tr>
+<tr><td><strong>Pairing Code / PIN</strong></td><td>Android 11+ pairing when QR scanning is not available</td><td>Android 11+ target, 6-digit PIN and pairing port</td></tr>
+<tr><td><strong>Direct TCP/IP</strong></td><td>Legacy wireless connection or static IP environments</td><td>Port 5555 enabled on target, shared network</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="1-usb-otg-cable-connection"><a class="header" href="#1-usb-otg-cable-connection">1. USB OTG Cable Connection</a></h2>
+<p>Connecting over USB OTG provides the fastest and most stable link between devices.</p>
+<h3 id="step-by-step-instructions"><a class="header" href="#step-by-step-instructions">Step-by-Step Instructions:</a></h3>
+<ol>
+<li>Plug a USB OTG adapter into your host phone (the phone running Dioxamine).</li>
+<li>Connect a USB cable from the adapter to the target device.</li>
+<li>On your host phone, Android will display a popup: <em>“Allow Dioxamine to access this USB device?”</em>. Tap <strong>OK</strong>.</li>
+<li>On the target phone screen, look for the prompt: <em>“Allow USB debugging?”</em>.</li>
+<li>Check the box <strong>“Always allow from this computer”</strong> and tap <strong>Allow</strong>.</li>
+<li>Dioxamine will automatically detect the device and display its model name in the top device chip bar.</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>If the target device does not show the debugging prompt, check whether the USB cable supports data transfer (some cables are charge-only). Also verify that USB Debugging is toggled on in Developer Options.</p>
+</blockquote>
+<hr>
+<h2 id="2-wireless-adb-auto-discovery"><a class="header" href="#2-wireless-adb-auto-discovery">2. Wireless ADB Auto-Discovery</a></h2>
+<p>If both devices are connected to the same Wi-Fi network or if one device is connected to the other’s portable hotspot, Dioxamine can automatically discover the target device using mDNS.</p>
+<h3 id="step-by-step-instructions-1"><a class="header" href="#step-by-step-instructions-1">Step-by-Step Instructions:</a></h3>
+<ol>
+<li>On the ADB tab in Dioxamine, tap the <strong>Add Device (+)</strong> button in the top bar.</li>
+<li>The <strong>Discovered Devices</strong> dialog will appear and begin scanning your local network.</li>
+<li>Look for your target device in the list:
+<ul>
+<li>Devices marked with <strong>TLS</strong> are already paired and ready to connect. Tap the device to connect immediately.</li>
+<li>Devices marked with <strong>Pairing</strong> require pairing first. Tap the device to open the pairing code input screen.</li>
+<li>Devices marked with <strong>TCP</strong> are listening on standard ADB ports. Tap to connect directly.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="3-wireless-adb-qr-code-pairing-android-11"><a class="header" href="#3-wireless-adb-qr-code-pairing-android-11">3. Wireless ADB QR Code Pairing (Android 11+)</a></h2>
+<p>Android 11 and newer support native Wireless Debugging with QR code pairing.</p>
+<h3 id="step-by-step-instructions-2"><a class="header" href="#step-by-step-instructions-2">Step-by-Step Instructions:</a></h3>
+<ol>
+<li>Connect both devices to the same Wi-Fi network or mobile hotspot.</li>
+<li>On the <strong>target device</strong>, open <strong>Settings &gt; Developer Options &gt; Wireless Debugging</strong>.</li>
+<li>Tap on <strong>Pair device with QR code</strong>. A QR code will appear on the target device screen.</li>
+<li>On your <strong>host device</strong> (running Dioxamine), tap the <strong>QR Code icon</strong> in the top device bar.</li>
+<li>Point your host camera at the QR code displayed on the target device.</li>
+<li>Once scanned, Dioxamine will automatically pair with the target and establish the secure TLS connection.</li>
+</ol>
+<hr>
+<h2 id="4-manual-pairing-code-android-11"><a class="header" href="#4-manual-pairing-code-android-11">4. Manual Pairing Code (Android 11+)</a></h2>
+<p>If camera scanning is not possible, you can pair manually using the 6-digit Wi-Fi pairing code.</p>
+<h3 id="step-by-step-instructions-3"><a class="header" href="#step-by-step-instructions-3">Step-by-Step Instructions:</a></h3>
+<ol>
+<li>On the <strong>target device</strong>, go to <strong>Settings &gt; Developer Options &gt; Wireless Debugging</strong>.</li>
+<li>Tap <strong>Pair device with pairing code</strong>.</li>
+<li>The target screen will show:
+<ul>
+<li><strong>Wi-Fi pairing code</strong> (a 6-digit number, for example: <code>123456</code>).</li>
+<li><strong>IP address &amp; Port</strong> (for example: <code>192.168.1.50:37123</code>).</li>
+</ul>
+</li>
+<li>In Dioxamine, tap <strong>Add Device (+)</strong> &gt; <strong>Manual Entry</strong> &gt; <strong>Wireless Debugging (TLS)</strong> &gt; <strong>Pair with Code</strong>.</li>
+<li>Enter the IP address, the <strong>Pairing Port</strong> shown in the popup (e.g., <code>37123</code>), and the 6-digit pairing code.</li>
+<li>Tap <strong>Pair</strong>.</li>
+<li>Once paired successfully, Dioxamine will transition to the Connect screen. Enter the main connection port shown on the target’s main Wireless Debugging page and tap <strong>Connect</strong>.</li>
+</ol>
+<hr>
+<h2 id="5-direct-tcpip-connection-port-5555"><a class="header" href="#5-direct-tcpip-connection-port-5555">5. Direct TCP/IP Connection (Port 5555)</a></h2>
+<p>Used for devices running Android 10 or older, Android TV boxes with fixed IP addresses, or devices configured with ADB over TCP.</p>
+<h3 id="connecting-directly"><a class="header" href="#connecting-directly">Connecting Directly:</a></h3>
+<ol>
+<li>Tap <strong>Add Device (+)</strong> &gt; <strong>Manual Entry</strong> &gt; <strong>Plain TCP (IP:Port)</strong>.</li>
+<li>Enter the target IP address and port (default is <code>5555</code>).</li>
+<li>Tap <strong>Connect</strong>.</li>
+</ol>
+<h3 id="switching-a-usb-device-to-tcpip"><a class="header" href="#switching-a-usb-device-to-tcpip">Switching a USB Device to TCP/IP:</a></h3>
+<p>If you currently have a device plugged in via USB OTG and want to disconnect the cable and continue wirelessly:</p>
+<ol>
+<li>Ensure both devices are connected to the same Wi-Fi.</li>
+<li>In the top device connector card, tap the three-dots menu next to the USB device.</li>
+<li>Tap <strong>Switch to TCP/IP</strong>.</li>
+<li>Set the port (default <code>5555</code>) and confirm.</li>
+<li>You can now unplug the USB cable and connect to the target’s IP address over Wi-Fi.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="oem-specific-setup-and-troubleshooting"><a class="header" href="#oem-specific-setup-and-troubleshooting">OEM-Specific Setup and Troubleshooting</a></h1>
+<p>Certain Android manufacturers include custom security layers, battery optimizers, or modified permission frameworks that require specific adjustments for ADB, Touch Control, and Screen Mirroring to function properly.</p>
+<hr>
+<h2 id="xiaomi--redmi--poco-hyperos-and-miui"><a class="header" href="#xiaomi--redmi--poco-hyperos-and-miui">Xiaomi / Redmi / POCO (HyperOS and MIUI)</a></h2>
+<p>Xiaomi devices impose strict limitations on remote ADB input and background automation by default.</p>
+<h3 id="required-settings"><a class="header" href="#required-settings">Required Settings:</a></h3>
+<ol>
+<li>Open <strong>Settings &gt; Additional Settings &gt; Developer Options</strong>.</li>
+<li>Enable <strong>USB debugging</strong>.</li>
+<li>Enable <strong>Install via USB</strong> (allows Dioxamine to install APKs and push helper tools).</li>
+<li>Enable <strong>USB debugging (Security settings)</strong>:
+<ul>
+<li>This setting allows Dioxamine to send touch events, simulate keypresses, and control the screen via Scrcpy or Touchpad.</li>
+<li>Xiaomi requires a working SIM card and a signed-in Mi Account to enable this toggle. Follow the on-screen countdown prompts.</li>
+</ul>
+</li>
+<li>If using Wireless Debugging, also enable <strong>Wireless Debugging</strong>.</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>If <strong>USB debugging (Security settings)</strong> is disabled, screen mirroring will work, but you will not be able to tap, swipe, or send keystrokes to the target device.</p>
+</blockquote>
+<hr>
+<h2 id="samsung-one-ui"><a class="header" href="#samsung-one-ui">Samsung (One UI)</a></h2>
+<p>Samsung devices generally work smoothly with ADB, but consider the following:</p>
+<ol>
+<li>Go to <strong>Settings &gt; Developer Options</strong>.</li>
+<li>Enable <strong>USB Debugging</strong>.</li>
+<li>If connecting via Wireless Debugging on One UI 3.0+ (Android 11+), ensure <strong>Wireless Debugging</strong> is toggled on.</li>
+<li>Disable <strong>Auto Blocker</strong> (One UI 6.0+ / Android 14+):
+<ul>
+<li>Navigate to <strong>Settings &gt; Security and Privacy &gt; Auto Blocker</strong>.</li>
+<li>If Auto Blocker is enabled, it blocks all USB command execution and package installations via ADB. Turn Auto Blocker OFF or customize its restrictions to allow ADB commands.</li>
+</ul>
+</li>
+<li>In <strong>Developer Options</strong>, turn off <strong>Verify apps over USB</strong> if package installations hang or prompt repeatedly.</li>
+</ol>
+<hr>
+<h2 id="oneplus--oppo--realme-coloros--oxygenos--realme-ui"><a class="header" href="#oneplus--oppo--realme-coloros--oxygenos--realme-ui">OnePlus / OPPO / Realme (ColorOS / OxygenOS / Realme UI)</a></h2>
+<ol>
+<li>Open <strong>Settings &gt; Additional Settings (or System Settings) &gt; Developer Options</strong>.</li>
+<li>Toggle on <strong>USB Debugging</strong>.</li>
+<li>Enable <strong>Disable Permission Monitoring</strong>:
+<ul>
+<li>This prevents ColorOS from popping up a confirmation prompt on the target device every time an automated touch event or shell command is executed.</li>
+</ul>
+</li>
+<li>If installing applications fails, ensure <strong>Install via USB</strong> or <strong>Verify ADB installs</strong> is properly configured.</li>
+</ol>
+<hr>
+<h2 id="huawei--honor-emui--magicos"><a class="header" href="#huawei--honor-emui--magicos">Huawei / Honor (EMUI / MagicOS)</a></h2>
+<ol>
+<li>Go to <strong>Settings &gt; System &amp; updates &gt; Developer options</strong>.</li>
+<li>Enable <strong>USB debugging</strong>.</li>
+<li>Enable <strong>“Allow ADB debugging in charge only mode”</strong>:
+<ul>
+<li>Huawei devices often switch USB connections to Charge Only mode when connected via OTG. Enabling this setting ensures the ADB daemon remains active.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="android-tv--google-tv-boxes"><a class="header" href="#android-tv--google-tv-boxes">Android TV / Google TV Boxes</a></h2>
+<ol>
+<li>Open TV <strong>Settings &gt; Device Preferences &gt; About</strong>.</li>
+<li>Tap <strong>Android TV OS Build</strong> 7 times to enable Developer Options.</li>
+<li>Return to <strong>Device Preferences &gt; Developer Options</strong>.</li>
+<li>Enable <strong>USB Debugging</strong> and <strong>Network Debugging</strong> (if available).</li>
+<li>When connecting Dioxamine, keep the TV screen on so you can click <strong>“Always allow from this computer”</strong> using your TV remote control.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adb-tools-overview"><a class="header" href="#adb-tools-overview">ADB Tools Overview</a></h1>
+<p>When a device is connected and active in the <strong>ADB</strong> tab, Dioxamine offers three sub-tabs at the top:</p>
+<ol>
+<li><strong>Built-in Actions</strong>: A curated suite of management tiles for hardware telemetry, remote control, trackpad input, file management, app installation, screenshot capture, and rebooting.</li>
+<li><strong>ADB Shell</strong>: An interactive terminal emulator for direct command-line execution.</li>
+<li><strong>Plugins</strong>: Web-based modular extensions installed into Dioxamine.</li>
+</ol>
+<h2 id="built-in-actions-suite"><a class="header" href="#built-in-actions-suite">Built-in Actions Suite</a></h2>
+<p>The <strong>Built-in Actions</strong> sub-tab provides quick access to 8 essential tool tiles:</p>
+<ul>
+<li><strong>Device Information</strong>: Quick inspect for hardware model, Android version, battery percentage, serial number, processor details, screen resolution, and installed package counts.</li>
+<li><strong>Remote Control</strong>: A directional D-pad remote with power, volume, media playback, TV input switching, and text injection controls tailored for phones and Android TVs.</li>
+<li><strong>Touchpad &amp; PC Keyboard</strong>: Transform your phone into a full laptop trackpad and full-featured hardware keyboard with modifier keys, function keys, and live soft typing.</li>
+<li><strong>File Manager</strong>: Explore internal storage (<code>/sdcard</code>) and root directories, push multiple files from your phone, pull files back, rename, and manage folders.</li>
+<li><strong>Package Manager</strong>: Inspect installed user and system apps, install new APKs/split APKs (.apks, .xapk), pull installed apps with split reconstruction, disable bloatware, and force-stop apps.</li>
+<li><strong>Screenshot</strong>: Take instant PNG screenshots of the target device screen and save them to local storage.</li>
+<li><strong>Reboot Menu</strong>: Quickly restart into Android System, Recovery, Bootloader, Fastbootd, or shut down.</li>
+<li><strong>Sideload &amp; Rescue</strong>: Automatically triggered when a device is connected in Recovery Sideload mode or Rescue mode to flash OTA update zips or wipe userdata.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="device-information"><a class="header" href="#device-information">Device Information</a></h1>
+<p>The <strong>Device Information</strong> tool provides an instant diagnostic summary of the target device’s hardware, software version, and real-time operating metrics.</p>
+<h2 id="accessing-device-information"><a class="header" href="#accessing-device-information">Accessing Device Information</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab in Dioxamine.</li>
+<li>Select <strong>Built-in Actions</strong> sub-tab.</li>
+<li>Tap on the <strong>Device Information</strong> tile.</li>
+</ol>
+<h2 id="displayed-metrics"><a class="header" href="#displayed-metrics">Displayed Metrics</a></h2>
+<p>When opened, Dioxamine queries the target device sequentially and displays the following information cards:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Card</th><th>Description</th><th>Command Executed</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Device Model</strong></td><td>Manufacturer marketing name and hardware model number</td><td><code>getprop ro.product.model</code></td></tr>
+<tr><td><strong>Android Version</strong></td><td>OS release version (for example: Android 13, Android 14)</td><td><code>getprop ro.build.version.release</code></td></tr>
+<tr><td><strong>Battery Info</strong></td><td>Real-time battery charge level, status, temperature, and health</td><td><code>dumpsys battery</code></td></tr>
+<tr><td><strong>Serial Number</strong></td><td>Target device unique serial identifier</td><td><code>getprop ro.serialno</code></td></tr>
+<tr><td><strong>CPU Info</strong></td><td>Processor architecture, core count, and hardware chipset</td><td><code>cat /proc/cpuinfo</code></td></tr>
+<tr><td><strong>Uptime</strong></td><td>How long the device has been powered on since the last reboot</td><td><code>cat /proc/uptime</code></td></tr>
+<tr><td><strong>Screen Resolution</strong></td><td>Current display resolution and physical display dimensions</td><td><code>wm size</code></td></tr>
+<tr><td><strong>Installed Packages</strong></td><td>Total count of packages currently installed on the target</td><td><code>pm list packages | wc -l</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="ui-controls"><a class="header" href="#ui-controls">UI Controls</a></h2>
+<ul>
+<li><strong>Refresh Button (Top Right)</strong>: Tap the refresh icon in the top app bar to re-query all metrics sequentially from the device.</li>
+<li><strong>Copying Text</strong>: You can long-press and select text within any output card to copy details to your clipboard.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="file-manager"><a class="header" href="#file-manager">File Manager</a></h1>
+<p>Dioxamine includes a full-featured remote <strong>File Manager</strong> that allows you to browse internal storage, upload files, download files to your local phone, create folders, rename, and delete items on the target device.</p>
+<h2 id="opening-the-file-manager"><a class="header" href="#opening-the-file-manager">Opening the File Manager</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab.</li>
+<li>Under <strong>Built-in Actions</strong>, tap the <strong>File Manager</strong> tile.</li>
+<li>The File Manager will initialize and open the primary storage directory (<code>/sdcard</code>).</li>
+</ol>
+<hr>
+<h2 id="navigating-folders"><a class="header" href="#navigating-folders">Navigating Folders</a></h2>
+<ul>
+<li><strong>Breadcrumbs Bar (Top)</strong>: Below the top app bar, a horizontal breadcrumb path shows your current location (e.g. <code>/ &gt; sdcard &gt; Download</code>). Tap any folder name in the breadcrumb path to jump directly to it.</li>
+<li><strong>Entering Folders</strong>: Tap on any folder in the list to open it.</li>
+<li><strong>Parent Directory</strong>: Tap the top item <code>..</code> to navigate one level up.</li>
+<li><strong>Back Gesture</strong>: Pressing the Android back button returns to the previous parent directory.</li>
+</ul>
+<hr>
+<h2 id="file-manager-actions"><a class="header" href="#file-manager-actions">File Manager Actions</a></h2>
+<h3 id="1-uploading-files-to-target-push"><a class="header" href="#1-uploading-files-to-target-push">1. Uploading Files to Target (Push)</a></h3>
+<ol>
+<li>Navigate to the target folder where you want to save the files (e.g. <code>/sdcard/Download</code>).</li>
+<li>Tap the <strong>Add (+)</strong> icon in the top right app bar.</li>
+<li>Your host phone’s system file picker will open.</li>
+<li>Select one or multiple files (APKs, images, documents, zips).</li>
+<li>Dioxamine will immediately start uploading the files and display live progress bars for each item.</li>
+</ol>
+<h3 id="2-downloading-files-to-host-phone-pull"><a class="header" href="#2-downloading-files-to-host-phone-pull">2. Downloading Files to Host Phone (Pull)</a></h3>
+<ol>
+<li>Locate the file you want to download on the target device.</li>
+<li>Tap the three-dots menu icon on the right side of the file row.</li>
+<li>Select <strong>Download</strong>.</li>
+<li>A system save dialog will open on your host phone. Choose where to save the file and tap <strong>Save</strong>.</li>
+<li>Dioxamine will stream the file directly to your phone storage.</li>
+</ol>
+<h3 id="3-creating-a-new-folder"><a class="header" href="#3-creating-a-new-folder">3. Creating a New Folder</a></h3>
+<ol>
+<li>Navigate to the directory where the new folder should be created.</li>
+<li>Tap the <strong>New Folder icon</strong> in the top app bar.</li>
+<li>Enter the desired folder name.</li>
+<li>Tap <strong>Create</strong>.</li>
+</ol>
+<h3 id="4-renaming-a-file-or-folder"><a class="header" href="#4-renaming-a-file-or-folder">4. Renaming a File or Folder</a></h3>
+<ol>
+<li>Tap the three-dots menu icon next to the target item.</li>
+<li>Select <strong>Rename</strong>.</li>
+<li>Edit the full path or name in the text field.</li>
+<li>Tap <strong>Rename</strong> to apply.</li>
+</ol>
+<h3 id="5-deleting-a-file-or-folder"><a class="header" href="#5-deleting-a-file-or-folder">5. Deleting a File or Folder</a></h3>
+<ol>
+<li>Tap the three-dots menu icon next to the item.</li>
+<li>Select <strong>Delete</strong>.</li>
+<li>Confirm the deletion in the warning dialog.</li>
+</ol>
+<h3 id="6-viewing-file-properties"><a class="header" href="#6-viewing-file-properties">6. Viewing File Properties</a></h3>
+<ol>
+<li>Tap on any file, or select <strong>Properties</strong> from the three-dots menu.</li>
+<li>The dialog displays:
+<ul>
+<li><strong>Name and Full Path</strong></li>
+<li><strong>Type</strong> (File, Directory, or Symlink target)</li>
+<li><strong>File Size</strong> (formatted in KB/MB/GB and exact bytes)</li>
+<li><strong>Unix Permissions / Mode</strong> (e.g. <code>drwxrwxr-x</code>)</li>
+</ul>
+</li>
+</ol>
+<h3 id="7-searching-files"><a class="header" href="#7-searching-files">7. Searching Files</a></h3>
+<ul>
+<li>Tap the <strong>Search (Magnifying Glass)</strong> icon in the top app bar.</li>
+<li>Type any keywords to filter files and folders in real time within the active directory.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="package-manager"><a class="header" href="#package-manager">Package Manager</a></h1>
+<p>The <strong>Package Manager</strong> allows you to inspect all installed applications on the target device, install new APKs or split APK bundles, pull installed apps back to your phone, disable bloatware, force stop processes, and uninstall apps.</p>
+<h2 id="opening-the-package-manager"><a class="header" href="#opening-the-package-manager">Opening the Package Manager</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab.</li>
+<li>Under <strong>Built-in Actions</strong>, tap the <strong>Package Manager</strong> tile.</li>
+<li>Dioxamine will stream all installed application packages along with their app icons, labels, package names, and version badges.</li>
+</ol>
+<hr>
+<h2 id="filtering-and-searching-apps"><a class="header" href="#filtering-and-searching-apps">Filtering and Searching Apps</a></h2>
+<ul>
+<li><strong>Search Bar</strong>: Tap the <strong>Search (Magnifying Glass)</strong> icon in the top app bar to filter apps by app title or package name (e.g. <code>chrome</code> or <code>com.android.settings</code>).</li>
+<li><strong>Filter Dropdown</strong>: Tap the <strong>Filter List</strong> icon in the top app bar to filter apps by category:
+<ul>
+<li><strong>All</strong>: Shows all packages installed on the device.</li>
+<li><strong>User</strong>: Shows only user-installed applications.</li>
+<li><strong>System</strong>: Shows pre-installed system apps and framework services.</li>
+<li><strong>Disabled</strong>: Shows apps that are currently disabled or frozen.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="app-card-information"><a class="header" href="#app-card-information">App Card Information</a></h2>
+<p>Each application card in the list displays:</p>
+<ul>
+<li><strong>App Icon</strong>: Decoded high-resolution application icon.</li>
+<li><strong>App Name</strong>: Human-readable label (e.g. “YouTube”).</li>
+<li><strong>Package Name</strong>: Unique identifier (e.g. <code>com.google.android.youtube</code>).</li>
+<li><strong>Badges</strong>:
+<ul>
+<li><code>v1.2.3</code>: Version name.</li>
+<li><code>System</code>: Marks pre-installed system applications.</li>
+<li><code>Disabled</code>: Highlights frozen or disabled apps.</li>
+<li><code>Splits (N)</code>: Indicates the app uses Android App Bundle split APKs.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="package-manager-actions"><a class="header" href="#package-manager-actions">Package Manager Actions</a></h2>
+<p>Tap the three-dots menu on any app tile to perform actions:</p>
+<h3 id="1-enable--disable-freeze-app"><a class="header" href="#1-enable--disable-freeze-app">1. Enable / Disable (Freeze) App</a></h3>
+<ul>
+<li>Toggle the package between Enabled and Disabled states (<code>pm disable-user</code> / <code>pm enable</code>).</li>
+<li>Useful for freezing manufacturer bloatware without root access. Disabled apps cannot run in the background or consume battery.</li>
+</ul>
+<h3 id="2-force-stop-app"><a class="header" href="#2-force-stop-app">2. Force Stop App</a></h3>
+<ul>
+<li>Instantly terminates all running background and foreground processes of the selected application (<code>am force-stop</code>).</li>
+</ul>
+<h3 id="3-pull-app-extract-apk-to-local-phone"><a class="header" href="#3-pull-app-extract-apk-to-local-phone">3. Pull App (Extract APK to Local Phone)</a></h3>
+<ul>
+<li>Tap <strong>Pull APK</strong> to export the installed application from the target device to your host phone storage.</li>
+<li><strong>Single APK Apps</strong>: Extracted directly as a standalone <code>.apk</code> file.</li>
+<li><strong>Split APK Bundle Apps</strong>: Dioxamine automatically pulls the master APK and all architecture/language/density split APKs, assembling them into a standard <code>.apks</code> bundle archive with a generated <code>toc.json</code> manifest.</li>
+</ul>
+<h3 id="4-uninstall-app"><a class="header" href="#4-uninstall-app">4. Uninstall App</a></h3>
+<ul>
+<li>Opens a confirmation dialog and completely removes the application package from the target device (<code>pm uninstall</code>).</li>
+</ul>
+<h3 id="5-app-info"><a class="header" href="#5-app-info">5. App Info</a></h3>
+<ul>
+<li>Opens a detailed dialog showing package paths, version code, target SDK level, and provides a button to launch the App Details page in the target device’s Settings menu.</li>
+</ul>
+<hr>
+<h2 id="installing-new-apps-apk-apks-xapk-zip"><a class="header" href="#installing-new-apps-apk-apks-xapk-zip">Installing New Apps (APK, APKS, XAPK, ZIP)</a></h2>
+<p>Dioxamine supports installing standalone APKs as well as modern split-APK formats:</p>
+<ol>
+<li>In the top app bar of Package Manager, tap the <strong>Add (+)</strong> icon.</li>
+<li>Select your application files from your host phone. You can pick:
+<ul>
+<li>Standalone <code>.apk</code> files.</li>
+<li>Multiple split <code>.apk</code> files at once.</li>
+<li>Bundled <code>.apks</code>, <code>.xapk</code>, or <code>.zip</code> split archive packages.</li>
+</ul>
+</li>
+<li>Dioxamine will automatically extract any archives, establish an atomic install session (<code>pm install-create</code>), stream the splits to the target, and commit the installation.</li>
+<li>A toast notification will confirm when the installation is successful.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="remote-control"><a class="header" href="#remote-control">Remote Control</a></h1>
+<p>The <strong>Remote Control</strong> tool transforms your host phone into a wireless remote controller with directional buttons, volume/power controls, Android TV-specific features, media buttons, and text injection.</p>
+<h2 id="opening-remote-control"><a class="header" href="#opening-remote-control">Opening Remote Control</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab.</li>
+<li>Under <strong>Built-in Actions</strong>, tap the <strong>Remote Control</strong> tile.</li>
+</ol>
+<hr>
+<h2 id="automatic-android-tv-detection"><a class="header" href="#automatic-android-tv-detection">Automatic Android TV Detection</a></h2>
+<p>When opened, Dioxamine queries the target device for Android TV characteristics (such as Leanback UI features):</p>
+<ul>
+<li><strong>Android TV Mode</strong>: Automatically activates television-specific controls (TV Guide, TV Input, Channel +/-) and media playback panels.</li>
+<li><strong>Standard Android Mode</strong>: Streamlined for secondary phones and tablets.</li>
+<li><strong>Manual Mode Switcher</strong>: Tap the dropdown arrow in the top app bar title to manually switch between <strong>Android TV</strong> and <strong>Standard Android</strong> modes.</li>
+</ul>
+<hr>
+<h2 id="remote-control-layout"><a class="header" href="#remote-control-layout">Remote Control Layout</a></h2>
+<h3 id="1-power-and-volume-bar-top"><a class="header" href="#1-power-and-volume-bar-top">1. Power and Volume Bar (Top)</a></h3>
+<ul>
+<li><strong>Power Button (Red)</strong>: Sends power key event (<code>KEYCODE_POWER</code>) to lock, unlock, or wake the device.</li>
+<li><strong>Mute Button</strong>: Toggles audio mute state (<code>KEYCODE_VOLUME_MUTE</code>).</li>
+<li><strong>Vol - / Vol + Buttons</strong>: Lowers or raises system media volume (<code>KEYCODE_VOLUME_DOWN</code> / <code>KEYCODE_VOLUME_UP</code>).</li>
+</ul>
+<h3 id="2-directional-pad-d-pad"><a class="header" href="#2-directional-pad-d-pad">2. Directional Pad (D-Pad)</a></h3>
+<ul>
+<li><strong>Up, Down, Left, Right Arrows</strong>: Navigates through menus, app grids, list views, and TV interfaces.</li>
+<li><strong>Center OK Button (Primary)</strong>: Confirms selections and opens selected apps or items (<code>KEYCODE_DPAD_CENTER</code>).</li>
+</ul>
+<h3 id="3-android-navigation-bar"><a class="header" href="#3-android-navigation-bar">3. Android Navigation Bar</a></h3>
+<ul>
+<li><strong>Back Button</strong>: Navigates back one screen (<code>KEYCODE_BACK</code>).</li>
+<li><strong>Home Button</strong>: Returns immediately to the home launcher screen (<code>KEYCODE_HOME</code>).</li>
+<li><strong>Recents Button</strong>: Opens the multitasking / recent apps view (<code>KEYCODE_APP_SWITCH</code>).</li>
+<li><strong>Menu Button</strong>: Opens the context options menu (<code>KEYCODE_MENU</code>).</li>
+</ul>
+<h3 id="4-android-tv-controls-tv-mode-only"><a class="header" href="#4-android-tv-controls-tv-mode-only">4. Android TV Controls (TV Mode Only)</a></h3>
+<ul>
+<li><strong>TV Guide</strong>: Opens the electronic program guide (<code>KEYCODE_GUIDE</code>).</li>
+<li><strong>TV Input</strong>: Cycles through HDMI and auxiliary inputs (<code>KEYCODE_TV_INPUT</code>).</li>
+<li><strong>Channel Up / Channel Down</strong>: Switches channels up or down (<code>KEYCODE_CHANNEL_UP</code> / <code>KEYCODE_CHANNEL_DOWN</code>).</li>
+<li><strong>Search</strong>: Launches voice/text search on the TV interface (<code>KEYCODE_SEARCH</code>).</li>
+</ul>
+<h3 id="5-media-playback-controls-tv-mode-only"><a class="header" href="#5-media-playback-controls-tv-mode-only">5. Media Playback Controls (TV Mode Only)</a></h3>
+<ul>
+<li><strong>Previous</strong>: Skips to previous audio/video track (<code>KEYCODE_MEDIA_PREVIOUS</code>).</li>
+<li><strong>Rewind</strong>: Fast-rewinds media playback (<code>KEYCODE_MEDIA_REWIND</code>).</li>
+<li><strong>Play / Pause (Center Blue)</strong>: Toggles media playback (<code>KEYCODE_MEDIA_PLAY_PAUSE</code>).</li>
+<li><strong>Fast Forward</strong>: Fast-forwards media playback (<code>KEYCODE_MEDIA_FAST_FORWARD</code>).</li>
+<li><strong>Next</strong>: Skips to next audio/video track (<code>KEYCODE_MEDIA_NEXT</code>).</li>
+</ul>
+<h3 id="6-text-input-injection-bar"><a class="header" href="#6-text-input-injection-bar">6. Text Input Injection Bar</a></h3>
+<p>Typing on a TV with a directional remote can be slow. Dioxamine lets you type directly from your phone:</p>
+<ol>
+<li>Tap the text field at the bottom of the Remote Control screen.</li>
+<li>Type any text, URL, or password using your phone keyboard.</li>
+<li>Tap the <strong>Send icon</strong> (or press Enter on your keyboard).</li>
+<li>Dioxamine will instantly inject the text string into the focused input field on the target device.</li>
+</ol>
+<h3 id="7-numeric-keypad-drawer"><a class="header" href="#7-numeric-keypad-drawer">7. Numeric Keypad Drawer</a></h3>
+<ul>
+<li>Tap the <strong>Dialpad icon</strong> inside the text input bar to open a 0-9 numeric pad.</li>
+<li>Useful for entering PINs, channel numbers, or security codes on Android TVs.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="touchpad-and-pc-keyboard"><a class="header" href="#touchpad-and-pc-keyboard">Touchpad and PC Keyboard</a></h1>
+<p>The <strong>Touchpad &amp; PC Keyboard</strong> tool turns your host phone into a full-precision laptop trackpad and a complete PC hardware keyboard. It uses virtual HID device drivers over ADB to send native mouse movements, clicks, multi-finger scroll gestures, keyboard shortcuts, and real-time typing.</p>
+<h2 id="opening-touchpad-and-keyboard"><a class="header" href="#opening-touchpad-and-keyboard">Opening Touchpad and Keyboard</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab.</li>
+<li>Under <strong>Built-in Actions</strong>, tap the <strong>Touchpad</strong> tile.</li>
+<li>At the top of the screen, choose between two sub-tabs:
+<ul>
+<li><strong>TouchPad</strong>: Full trackpad interface with discrete buttons and quick soft typing.</li>
+<li><strong>PC Keyboard</strong>: Complete desktop keyboard layout with modifier keys, function keys, navigation keys, and shortcuts.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="tab-1-touchpad-interface"><a class="header" href="#tab-1-touchpad-interface">Tab 1: Touchpad Interface</a></h2>
+<h3 id="trackpad-canvas-gestures"><a class="header" href="#trackpad-canvas-gestures">Trackpad Canvas Gestures:</a></h3>
+<ul>
+<li><strong>Move Pointer</strong>: Slide one finger across the trackpad area to move the mouse cursor on the target device.</li>
+<li><strong>Left Click</strong>: Single tap with one finger.</li>
+<li><strong>Right Click</strong>: Long-press on the trackpad, or tap with two fingers.</li>
+<li><strong>Scroll (Wheel)</strong>: Drag up or down with two fingers simultaneously to scroll web pages, lists, and documents.</li>
+<li><strong>Drag and Drop</strong>: Double tap, hold your finger down on the second tap, and slide to drag windows or select text.</li>
+</ul>
+<h3 id="discrete-physical-buttons"><a class="header" href="#discrete-physical-buttons">Discrete Physical Buttons:</a></h3>
+<p>Below the trackpad canvas are 3 physical buttons:</p>
+<ul>
+<li><strong>Left Button</strong>: Tap to left click, or press and hold while moving your finger on the canvas to highlight text and drag items.</li>
+<li><strong>Middle Button</strong>: Sends a middle mouse click (<code>KEYCODE_BUTTON_MIDDLE</code>).</li>
+<li><strong>Right Button</strong>: Tap or hold for context menus.</li>
+</ul>
+<h3 id="sensitivity-tuning"><a class="header" href="#sensitivity-tuning">Sensitivity Tuning:</a></h3>
+<ul>
+<li>Tap the <strong>Tune (Sliders)</strong> icon in the top app bar to open the sensitivity slider.</li>
+<li>Adjust cursor tracking speed from <strong>0.5x</strong> (fine precision) to <strong>3.0x</strong> (fast velocity).</li>
+</ul>
+<h3 id="quick-action-keys"><a class="header" href="#quick-action-keys">Quick Action Keys:</a></h3>
+<ul>
+<li>Quick access buttons for <strong>Esc</strong>, <strong>Tab</strong>, <strong>Enter</strong>, and <strong>Backspace (Del)</strong>.</li>
+<li><strong>Type Button</strong>: Toggles a real-time soft keyboard input bar right above the trackpad.</li>
+</ul>
+<hr>
+<h2 id="tab-2-pc-hardware-keyboard-layout"><a class="header" href="#tab-2-pc-hardware-keyboard-layout">Tab 2: PC Hardware Keyboard Layout</a></h2>
+<p>The PC Keyboard tab provides a full desktop keyboard experience organized into clean sections:</p>
+<h3 id="1-real-time-soft-keyboard-interceptor"><a class="header" href="#1-real-time-soft-keyboard-interceptor">1. Real-Time Soft Keyboard Interceptor</a></h3>
+<p>At the top of the PC Keyboard tab is a live typing input box:</p>
+<ul>
+<li>Tap the input box to open your phone’s on-screen keyboard.</li>
+<li>Every character you type, paste, or delete is streamed to the target device <strong>in real time</strong>.</li>
+<li>There is no need to press a “Send” button.</li>
+</ul>
+<h3 id="2-modifier-keys-with-latch-state"><a class="header" href="#2-modifier-keys-with-latch-state">2. Modifier Keys (With Latch State)</a></h3>
+<p>Tap any modifier key once to latch it active for your next keystroke:</p>
+<ul>
+<li><strong>Ctrl</strong> (Control)</li>
+<li><strong>Alt</strong> (Alternate)</li>
+<li><strong>Shift</strong></li>
+<li><strong>Win</strong> (Windows / Command / Meta key)</li>
+<li><strong>Esc</strong> and <strong>Tab</strong></li>
+</ul>
+<h3 id="3-navigation-and-editing-block"><a class="header" href="#3-navigation-and-editing-block">3. Navigation and Editing Block</a></h3>
+<ul>
+<li><strong>Del</strong> (Forward Delete)</li>
+<li><strong>Ins</strong> (Insert)</li>
+<li><strong>Home</strong> and <strong>End</strong></li>
+<li><strong>PgUp</strong> (Page Up) and <strong>PgDn</strong> (Page Down)</li>
+<li><strong>Enter</strong> and <strong>Backspace</strong></li>
+<li><strong>Arrow Keys</strong> (Left, Up, Down, Right)</li>
+</ul>
+<h3 id="4-function-keys-f1---f12"><a class="header" href="#4-function-keys-f1---f12">4. Function Keys (F1 - F12)</a></h3>
+<p>Dedicated grid for function keys <strong>F1 through F12</strong>, useful for BIOS menus, terminal shortcuts, and PC desktop applications.</p>
+<h3 id="5-common-desktop-shortcuts"><a class="header" href="#5-common-desktop-shortcuts">5. Common Desktop Shortcuts</a></h3>
+<p>One-tap chips for standard desktop keyboard shortcuts:</p>
+<ul>
+<li><strong>Ctrl+C</strong> (Copy)</li>
+<li><strong>Ctrl+V</strong> (Paste)</li>
+<li><strong>Ctrl+Z</strong> (Undo)</li>
+<li><strong>Ctrl+A</strong> (Select All)</li>
+<li><strong>Alt+Tab</strong> (Switch Windows / Apps)</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="screenshot-tool"><a class="header" href="#screenshot-tool">Screenshot Tool</a></h1>
+<p>The <strong>Screenshot</strong> tool allows you to capture pixel-perfect PNG images of the target device screen over ADB and save them directly to your phone’s storage.</p>
+<h2 id="opening-the-screenshot-tool"><a class="header" href="#opening-the-screenshot-tool">Opening the Screenshot Tool</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab.</li>
+<li>Under <strong>Built-in Actions</strong>, tap the <strong>Screenshot</strong> tile.</li>
+<li>Dioxamine will automatically request a screenshot from the target device and render the preview image.</li>
+</ol>
+<hr>
+<h2 id="tool-controls"><a class="header" href="#tool-controls">Tool Controls</a></h2>
+<h3 id="1-taking-a-screenshot-refresh"><a class="header" href="#1-taking-a-screenshot-refresh">1. Taking a Screenshot (Refresh)</a></h3>
+<ul>
+<li>Tap the <strong>Refresh icon</strong> in the top app bar to capture a new screenshot at any time.</li>
+<li>Dioxamine streams raw PNG framebuffer data from the target device and displays the updated image on screen.</li>
+</ul>
+<h3 id="2-saving-the-screenshot"><a class="header" href="#2-saving-the-screenshot">2. Saving the Screenshot</a></h3>
+<ol>
+<li>Once a screenshot is captured, a <strong>Save (Disk) icon</strong> appears in the top app bar.</li>
+<li>Tap the <strong>Save</strong> icon.</li>
+<li>Your phone’s system document picker will open with a suggested filename (e.g. <code>screenshot_1710000000000.png</code>).</li>
+<li>Select your destination folder (e.g. Pictures or Downloads) and tap <strong>Save</strong>.</li>
+<li>A confirmation message will appear confirming the file was saved.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="reboot-menu"><a class="header" href="#reboot-menu">Reboot Menu</a></h1>
+<p>The <strong>Reboot Menu</strong> allows you to safely reboot the target device into various operating modes or completely shut it down without using physical hardware buttons.</p>
+<h2 id="opening-the-reboot-menu"><a class="header" href="#opening-the-reboot-menu">Opening the Reboot Menu</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab.</li>
+<li>Under <strong>Built-in Actions</strong>, tap the <strong>Reboot</strong> tile.</li>
+</ol>
+<hr>
+<h2 id="available-reboot-options"><a class="header" href="#available-reboot-options">Available Reboot Options</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Target Mode</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Reboot System</strong></td><td>Android OS</td><td>Normal reboot back into the Android operating system.</td></tr>
+<tr><td><strong>Reboot to Bootloader</strong></td><td>Bootloader (Fastboot)</td><td>Restarts the device into hardware Bootloader/Fastboot mode for flashing.</td></tr>
+<tr><td><strong>Reboot to Recovery</strong></td><td>Stock / Custom Recovery</td><td>Restarts into Android Recovery mode (e.g. Stock Recovery, TWRP, OrangeFox).</td></tr>
+<tr><td><strong>Reboot to Fastboot (fastbootd)</strong></td><td>Userspace Fastbootd</td><td>Reboots directly into Android 10+ userspace <code>fastbootd</code> mode to flash dynamic logical partitions.</td></tr>
+<tr><td><strong>Shutdown (Power Off)</strong></td><td>Power Off</td><td>Safely powers off the target device completely.</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="executing-a-reboot"><a class="header" href="#executing-a-reboot">Executing a Reboot</a></h2>
+<ol>
+<li>Tap on any reboot card (or tap the <strong>Play arrow</strong> on the right side of the card).</li>
+<li>Dioxamine will display a toast confirming execution (e.g. <em>“Executing: Reboot to Recovery”</em>).</li>
+<li>The target device will immediately begin its reboot sequence.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="sideload-and-rescue-modes"><a class="header" href="#sideload-and-rescue-modes">Sideload and Rescue Modes</a></h1>
+<p>When a target device is connected while in Recovery Sideload mode or Rescue mode, Dioxamine automatically detects the state and presents a dedicated maintenance interface on the main ADB screen.</p>
+<hr>
+<h2 id="1-sideload-mode-flashing-ota-zips"><a class="header" href="#1-sideload-mode-flashing-ota-zips">1. Sideload Mode (Flashing OTA ZIPs)</a></h2>
+<p>Recovery Sideload mode is used to flash official OTA update packages, custom ROM zips, Magisk, or custom kernels directly from stock or custom recovery.</p>
+<h3 id="when-sideload-mode-appears"><a class="header" href="#when-sideload-mode-appears">When Sideload Mode Appears:</a></h3>
+<p>When the target device is in Recovery mode and you select <strong>“Apply update from ADB”</strong> (or <strong>“Advanced &gt; ADB Sideload”</strong> in TWRP/OrangeFox), Dioxamine displays a <strong>[Sideload]</strong> badge on the top device chip and opens the <strong>Sideload Flash Screen</strong>.</p>
+<h3 id="step-by-step-instructions-4"><a class="header" href="#step-by-step-instructions-4">Step-by-Step Instructions:</a></h3>
+<ol>
+<li>Connect the target device in Sideload mode via USB OTG cable.</li>
+<li>In Dioxamine, tap <strong>Choose File</strong>.</li>
+<li>Select your <code>.zip</code> firmware package (OTA update, ROM, kernel, or Magisk zip) from your phone storage.</li>
+<li>Tap <strong>Sideload</strong>.</li>
+<li>Dioxamine will stream the update package to the recovery installer and display:
+<ul>
+<li>Live percentage progress bar (0% - 100%).</li>
+<li>Total megabytes transferred (e.g. <code>1450MB / 2200MB</code>).</li>
+</ul>
+</li>
+<li>When complete, a <strong>Complete</strong> confirmation will appear. You can tap <strong>Done</strong> and reboot the target device.</li>
+</ol>
+<hr>
+<h2 id="2-rescue-mode-wiping-userdata"><a class="header" href="#2-rescue-mode-wiping-userdata">2. Rescue Mode (Wiping Userdata)</a></h2>
+<p>Rescue mode is available on certain modern Android devices (such as Google Pixel devices) when booted into Android Rescue Mode.</p>
+<h3 id="when-rescue-mode-appears"><a class="header" href="#when-rescue-mode-appears">When Rescue Mode Appears:</a></h3>
+<p>When a device is connected in Rescue mode, Dioxamine displays a <strong>[Rescue]</strong> badge and presents:</p>
+<ul>
+<li><strong>Sideload OTA Flasher</strong>: Allows pushing recovery firmware zips.</li>
+<li><strong>Wipe Userdata Button</strong>: Erases user data partitions to recover from bootloops.</li>
+</ul>
+<h3 id="wiping-userdata-in-rescue-mode"><a class="header" href="#wiping-userdata-in-rescue-mode">Wiping Userdata in Rescue Mode:</a></h3>
+<ol>
+<li>Tap the <strong>Wipe Userdata</strong> button (outlined in red).</li>
+<li>A confirmation dialog will warn you that this action erases all user data on the target device.</li>
+<li>Tap <strong>Wipe</strong> to confirm.</li>
+<li>Dioxamine will send the wipe command and output the completion status on screen.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adb-terminal-shell"><a class="header" href="#adb-terminal-shell">ADB Terminal Shell</a></h1>
+<p>Dioxamine includes a full interactive ADB terminal shell that allows you to run Linux shell commands, inspect system logs, and control the target system through standard command-line tools.</p>
+<h2 id="opening-the-terminal-shell"><a class="header" href="#opening-the-terminal-shell">Opening the Terminal Shell</a></h2>
+<ol>
+<li>Open the <strong>ADB</strong> tab.</li>
+<li>Select the <strong>ADB Shell</strong> sub-tab at the top.</li>
+<li>If an active device is connected, Dioxamine will automatically launch a live shell session and display the command prompt.</li>
+</ol>
+<hr>
+<h2 id="terminal-interface-features"><a class="header" href="#terminal-interface-features">Terminal Interface Features</a></h2>
+<h3 id="1-terminal-output-view"><a class="header" href="#1-terminal-output-view">1. Terminal Output View</a></h3>
+<ul>
+<li>Supports full ANSI color escape codes (color-coded text, syntax highlighting, warnings, and errors).</li>
+<li>Automatically scrolls with new output while allowing smooth upward touch scrolling to review previous command output.</li>
+</ul>
+<h3 id="2-quick-toolbar-controls"><a class="header" href="#2-quick-toolbar-controls">2. Quick Toolbar Controls</a></h3>
+<p>Above the input bar is a utility toolbar:</p>
+<ul>
+<li><strong>Ctrl Button</strong>: Tap to latch the <code>Ctrl</code> key active for your next keystroke. For example, latching <code>Ctrl</code> and sending <code>c</code> will send <code>SIGINT</code> (Ctrl+C) to terminate running processes (like <code>top</code> or <code>logcat</code>).</li>
+<li><strong>Tab Button</strong>: Sends a tab character for shell path and command autocompletion.</li>
+<li><strong>Clear Button</strong>: Clears the current terminal scroll buffer.</li>
+<li><strong>Restart Button</strong>: Closes and restarts the active shell session.</li>
+</ul>
+<h3 id="3-command-input-bar-and-history"><a class="header" href="#3-command-input-bar-and-history">3. Command Input Bar and History</a></h3>
+<ul>
+<li><strong>Input Field</strong>: Type any ADB shell command (e.g. <code>pm list packages</code>, <code>logcat -d</code>, <code>df -h</code>, <code>top</code>).</li>
+<li><strong>History Navigation (Up / Down Arrows)</strong>: Tap the up or down arrow icons next to the input field to cycle through your previously executed command history.</li>
+<li><strong>Send (Enter)</strong>: Submits the command to the target shell for execution.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="screen-mirroring-and-remote-control"><a class="header" href="#screen-mirroring-and-remote-control">Screen Mirroring and Remote Control</a></h1>
+<p>Dioxamine integrates the Scrcpy 4.1 engine to provide real-time, low-latency screen mirroring and interactive touch control over Wi-Fi or USB OTG.</p>
+<h2 id="starting-screen-mirroring"><a class="header" href="#starting-screen-mirroring">Starting Screen Mirroring</a></h2>
+<ol>
+<li>Ensure a target device is connected and selected on the <strong>ADB</strong> tab.</li>
+<li>Tap the <strong>Scrcpy</strong> tab in the bottom navigation bar.</li>
+<li>On the <strong>Configurator</strong> sub-tab, review or adjust your video settings.</li>
+<li>Tap the <strong>Start Mirroring</strong> button at the bottom of the configurator card.</li>
+<li>Dioxamine will initialize the mirror session and begin rendering the live video stream in the video player window above.</li>
+</ol>
+<hr>
+<h2 id="interactive-touch-and-navigation"><a class="header" href="#interactive-touch-and-navigation">Interactive Touch and Navigation</a></h2>
+<p>While mirroring is active, you can interact directly with the video feed:</p>
+<ul>
+<li><strong>Touch and Drag</strong>: Tapping or dragging on the video player sends real-time multi-touch events directly to the target device screen.</li>
+<li><strong>Full Screen Mode</strong>: Tap the <strong>Full Screen icon</strong> on the video player overlay to expand the mirror feed to cover your entire phone display. Swipe from the edge or press Back to exit full screen.</li>
+<li><strong>Floating Navigation Bar</strong>: Enable the <strong>Floating Navigation Bar</strong> in Display settings to overlay quick buttons for:
+<ul>
+<li><strong>Back</strong>: Navigates back one screen.</li>
+<li><strong>Home</strong>: Returns to the home launcher screen.</li>
+<li><strong>Recents</strong>: Opens recent / multitasking apps.</li>
+</ul>
+</li>
+<li><strong>Volume Buttons</strong>: When the <strong>Bind Volume Keys</strong> option is enabled, pressing the physical volume up/down buttons on your host phone sends volume adjustments directly to the target device.</li>
+<li><strong>Turn Screen Off</strong>: When enabled, the target device display will remain dark while mirroring is active, saving battery on the target device while allowing you to control it remotely.</li>
+</ul>
+<hr>
+<h2 id="stopping-mirroring"><a class="header" href="#stopping-mirroring">Stopping Mirroring</a></h2>
+<ul>
+<li>Tap the <strong>Stop Mirroring</strong> button in the configurator, or tap the stop icon in the player controls overlay to terminate the session.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="scrcpy-settings-and-quality-tuning"><a class="header" href="#scrcpy-settings-and-quality-tuning">Scrcpy Settings and Quality Tuning</a></h1>
+<p>The <strong>Configurator</strong> sub-tab in Scrcpy provides comprehensive controls to balance visual quality, frame rate, latency, and network bandwidth.</p>
+<hr>
+<h2 id="video-settings"><a class="header" href="#video-settings">Video Settings</a></h2>
+<h3 id="1-resolution-max-size"><a class="header" href="#1-resolution-max-size">1. Resolution (Max Size)</a></h3>
+<p>Caps the maximum dimension of the video stream while preserving the target device’s aspect ratio:</p>
+<ul>
+<li><strong>1080p (Default)</strong>: Balanced sharpness and performance.</li>
+<li><strong>720p</strong>: Recommended for slower Wi-Fi networks or older devices.</li>
+<li><strong>480p</strong>: Ultra low bandwidth mode for high latency connections.</li>
+<li><strong>Auto (Original)</strong>: Uncapped original device display resolution.</li>
+<li><strong>Custom Resolution</strong>: When enabled in App Settings, tap <strong>Add Custom (+)</strong> to enter any custom resolution height/width (e.g. <code>1440</code> or <code>1600</code>).</li>
+</ul>
+<h3 id="2-frame-rate-max-fps"><a class="header" href="#2-frame-rate-max-fps">2. Frame Rate (Max FPS)</a></h3>
+<p>Limits the video encoder frame rate:</p>
+<ul>
+<li><strong>60 FPS (Default)</strong>: Smooth, fluid animations and scrolling.</li>
+<li><strong>30 FPS</strong>: Reduces CPU and Wi-Fi load by half.</li>
+<li><strong>15 FPS</strong>: Low-power monitoring mode.</li>
+<li><strong>Custom FPS</strong>: Enter any custom limit (e.g. <code>90</code> or <code>120</code> on supported hardware).</li>
+</ul>
+<h3 id="3-video-bitrate"><a class="header" href="#3-video-bitrate">3. Video Bitrate</a></h3>
+<p>Sets the target compression bitrate:</p>
+<ul>
+<li><strong>8 Mbps (Default)</strong>: High fidelity video output.</li>
+<li><strong>4 Mbps</strong>: Good balance for standard 2.4GHz Wi-Fi networks.</li>
+<li><strong>2 Mbps</strong>: Low data usage mode.</li>
+<li><strong>Custom Bitrate</strong>: Enter custom values in Mbps (e.g. <code>12</code> or <code>16</code>).</li>
+</ul>
+<h3 id="4-video-codec"><a class="header" href="#4-video-codec">4. Video Codec</a></h3>
+<p>Selects the hardware video encoding format on the target device:</p>
+<ul>
+<li><strong>H.264 (Default)</strong>: Compatible with almost all Android devices.</li>
+<li><strong>H.265 (HEVC)</strong>: Better compression and quality at lower bitrates, requires hardware HEVC support.</li>
+<li><strong>AV1</strong>: Advanced open-source video compression on modern Android 14+ chipsets.</li>
+</ul>
+<hr>
+<h2 id="audio-settings"><a class="header" href="#audio-settings">Audio Settings</a></h2>
+<p>Dioxamine supports real-time target device audio forwarding over ADB.</p>
+<h3 id="requirements-1"><a class="header" href="#requirements-1">Requirements:</a></h3>
+<ul>
+<li>Audio forwarding requires the target device to run <strong>Android 11 (API 30)</strong> or newer.</li>
+</ul>
+<h3 id="options"><a class="header" href="#options">Options:</a></h3>
+<ul>
+<li><strong>Forward Device Audio Toggle</strong>: Enables real-time audio playback on your host phone speakers or headphones.</li>
+<li><strong>Audio Codec</strong>: Choose between <strong>Opus (Default)</strong>, <strong>AAC</strong>, <strong>FLAC</strong>, or uncompressed <strong>RAW</strong>.</li>
+<li><strong>Audio Bitrate</strong>: Select audio quality: <strong>64 Kbps</strong>, <strong>128 Kbps (Default)</strong>, <strong>192 Kbps</strong>, <strong>256 Kbps</strong>, or <strong>320 Kbps</strong>.</li>
+<li><strong>Don’t Mute (Audio Duplication)</strong>:
+<ul>
+<li>By default, Android mutes the target phone speakers when audio is forwarded.</li>
+<li>Enabling <strong>Don’t Mute</strong> plays audio simultaneously on both the target device and host phone.</li>
+<li>Requires target device to run <strong>Android 13 (API 33)</strong> or newer.</li>
+</ul>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="camera-streaming-mode"><a class="header" href="#camera-streaming-mode">Camera Streaming Mode</a></h1>
+<p>In addition to mirroring the display, Scrcpy allows you to stream live video directly from the target device’s cameras without installing any camera application on the target phone.</p>
+<h2 id="switching-to-camera-mode"><a class="header" href="#switching-to-camera-mode">Switching to Camera Mode</a></h2>
+<ol>
+<li>Open the <strong>Scrcpy</strong> tab in Dioxamine.</li>
+<li>In the <strong>Video Source</strong> section, tap the <strong>Camera</strong> chip.</li>
+<li>Dioxamine will automatically query the target device’s camera hardware (Camera2 API) and list all available sensors.</li>
+</ol>
+<hr>
+<h2 id="camera-configuration-options"><a class="header" href="#camera-configuration-options">Camera Configuration Options</a></h2>
+<h3 id="1-camera-selector"><a class="header" href="#1-camera-selector">1. Camera Selector</a></h3>
+<ul>
+<li>Pick specific camera sensors on the target device:
+<ul>
+<li><strong>Back / Main Camera</strong> (e.g. <code>Cam 0 (back)</code>)</li>
+<li><strong>Front / Selfie Camera</strong> (e.g. <code>Cam 1 (front)</code>)</li>
+<li><strong>Ultra-wide / Telephoto / Macro Sensors</strong> (if exposed by vendor)</li>
+<li><strong>External USB Webcams</strong> (e.g. <code>external</code>)</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-camera-resolution"><a class="header" href="#2-camera-resolution">2. Camera Resolution</a></h3>
+<ul>
+<li>Select from supported hardware resolutions reported by the camera sensor (e.g. <code>1920x1080</code>, <code>1280x720</code>, <code>640x480</code>).</li>
+</ul>
+<h3 id="3-frame-rate-and-high-speed-120-fps-mode"><a class="header" href="#3-frame-rate-and-high-speed-120-fps-mode">3. Frame Rate and High-Speed 120+ FPS Mode</a></h3>
+<ul>
+<li>Choose your desired capture frame rate:
+<ul>
+<li>Standard rates: <strong>60 FPS</strong>, <strong>30 FPS</strong>, <strong>15 FPS</strong>.</li>
+<li>High-Speed slow motion sensors: <strong>120 FPS</strong>, <strong>240 FPS</strong> (on supported camera hardware).</li>
+<li>When high-speed rates (&gt;=120 FPS) are chosen, Dioxamine automatically configures high-speed H.264 camera profiles.</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-remote-torch--flashlight-toggle"><a class="header" href="#4-remote-torch--flashlight-toggle">4. Remote Torch / Flashlight Toggle</a></h3>
+<ul>
+<li>While streaming camera video, tap the <strong>Flashlight (Torch) icon</strong> in the video player overlay to toggle the target phone’s LED camera flash ON or OFF remotely.</li>
+</ul>
+<hr>
+<h2 id="audio-in-camera-mode"><a class="header" href="#audio-in-camera-mode">Audio in Camera Mode</a></h2>
+<p>When switching Video Source to <strong>Camera</strong>, Dioxamine automatically defaults the audio source to the target device’s <strong>Microphone</strong> (<code>mic</code>). This allows using the target phone as a remote webcam and microphone pair for monitoring, streaming, or video calls.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="scrcpy-logs-and-troubleshooting"><a class="header" href="#scrcpy-logs-and-troubleshooting">Scrcpy Logs and Troubleshooting</a></h1>
+<p>If screen mirroring fails to start, displays a black screen, or lags, use the built-in Scrcpy Logs viewer to identify the exact cause.</p>
+<h2 id="accessing-scrcpy-logs"><a class="header" href="#accessing-scrcpy-logs">Accessing Scrcpy Logs</a></h2>
+<ol>
+<li>Open the <strong>Scrcpy</strong> tab.</li>
+<li>Select the <strong>Logs</strong> sub-tab next to Configurator.</li>
+<li>Dioxamine will display the live log output from the Scrcpy server running on the target device.</li>
+<li>Tap the <strong>Trash (Clear) icon</strong> to clear the current log buffer.</li>
+</ol>
+<hr>
+<h2 id="common-issues-and-solutions"><a class="header" href="#common-issues-and-solutions">Common Issues and Solutions</a></h2>
+<h3 id="1-mirroring-starts-but-screen-is-black"><a class="header" href="#1-mirroring-starts-but-screen-is-black">1. Mirroring Starts But Screen is Black</a></h3>
+<ul>
+<li><strong>Cause</strong>: The target screen may be locked with secure flags, or a streaming DRM-protected app (e.g. Netflix, banking apps) is in the foreground.</li>
+<li><strong>Solution</strong>: Unlock the target device and return to the home screen.</li>
+</ul>
+<h3 id="2-mirroring-works-but-taps-do-not-register-xiaomi--hyperos--miui"><a class="header" href="#2-mirroring-works-but-taps-do-not-register-xiaomi--hyperos--miui">2. Mirroring Works But Taps Do Not Register (Xiaomi / HyperOS / MIUI)</a></h3>
+<ul>
+<li><strong>Cause</strong>: Xiaomi devices block remote touch input by default until a security toggle is enabled.</li>
+<li><strong>Solution</strong>: On the target device, open <strong>Settings &gt; Developer Options</strong> and turn ON <strong>USB debugging (Security settings)</strong>.</li>
+</ul>
+<h3 id="3-audio-forwarding-error-audio-forwarding-requires-android-11"><a class="header" href="#3-audio-forwarding-error-audio-forwarding-requires-android-11">3. Audio Forwarding Error: “Audio forwarding requires Android 11+”</a></h3>
+<ul>
+<li><strong>Cause</strong>: Audio streaming uses internal Android 11 audio capture APIs. Older devices (Android 10 and below) only support video.</li>
+<li><strong>Solution</strong>: Turn OFF <strong>Forward Device Audio</strong> in Scrcpy settings for Android 10 or older targets.</li>
+</ul>
+<h3 id="4-dont-mute-error-requires-at-least-android-13"><a class="header" href="#4-dont-mute-error-requires-at-least-android-13">4. “Don’t Mute” Error: “Requires at least Android 13”</a></h3>
+<ul>
+<li><strong>Cause</strong>: Duplicating audio to both the target speaker and host phone requires Android 13 (API 33).</li>
+<li><strong>Solution</strong>: Turn OFF <strong>Don’t Mute</strong> in Audio settings if target device is running Android 11 or 12.</li>
+</ul>
+<h3 id="5-high-lag-or-stuttering-on-wi-fi"><a class="header" href="#5-high-lag-or-stuttering-on-wi-fi">5. High Lag or Stuttering on Wi-Fi</a></h3>
+<ul>
+<li><strong>Solutions</strong>:
+<ol>
+<li>Switch video resolution from <code>1080p</code> to <code>720p</code> or <code>480p</code>.</li>
+<li>Reduce video bitrate from <code>8 Mbps</code> to <code>4 Mbps</code> or <code>2 Mbps</code>.</li>
+<li>Ensure both devices are connected to a 5GHz Wi-Fi network or a 5GHz mobile hotspot rather than 2.4GHz.</li>
+</ol>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="fastboot-getting-started"><a class="header" href="#fastboot-getting-started">Fastboot Getting Started</a></h1>
+<p>Dioxamine includes native Fastboot protocol support over USB OTG. This allows you to flash custom partition images, test boot recovery/kernels, manage bootloader lock states, and run raw Fastboot commands directly from your phone.</p>
+<hr>
+<h2 id="fastboot-connection-requirements"><a class="header" href="#fastboot-connection-requirements">Fastboot Connection Requirements</a></h2>
+<ol>
+<li><strong>USB OTG Connection</strong>: Fastboot requires a physical USB OTG cable connection between your host phone and the target device. Fastboot does not operate over Wi-Fi.</li>
+<li><strong>Target in Fastboot / Bootloader Mode</strong>:
+<ul>
+<li>Power off the target device.</li>
+<li>Hold the device’s hardware button combination (typically <strong>Power + Volume Down</strong> on most devices, or <strong>Power + Volume Up</strong> on certain models) until the Fastboot/Bootloader screen appears.</li>
+<li>Alternatively, if the device is currently booted into Android with ADB connected, use Dioxamine’s <strong>Reboot Menu &gt; Reboot to Bootloader</strong>.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="device-connection-status-strip"><a class="header" href="#device-connection-status-strip">Device Connection Status Strip</a></h2>
+<p>When you open the <strong>Fastboot</strong> tab in Dioxamine:</p>
+<ul>
+<li><strong>Connected (Green USB icon)</strong>: The target device is detected and communicating with Dioxamine. The device serial or product name is shown in the top strip.</li>
+<li><strong>Detected, Not Connected (Gray USB icon)</strong>: A Fastboot USB interface is present but needs a handshake. Tap the <strong>Retry</strong> button on the right side of the strip.</li>
+<li><strong>Disconnect Button</strong>: Tap <strong>Disconnect</strong> if you wish to close the active Fastboot session.</li>
+</ul>
+<hr>
+<h2 id="sub-tabs-overview"><a class="header" href="#sub-tabs-overview">Sub-Tabs Overview</a></h2>
+<p>The Fastboot screen is divided into two primary sub-tabs:</p>
+<ol>
+<li><strong>Actions</strong>: Guided graphical cards for common maintenance tasks:
+<ul>
+<li><strong>Reboot Options</strong>: Restart to System, Bootloader, Recovery, Fastbootd, Continue Boot, or Shutdown.</li>
+<li><strong>Flash Image</strong>: Flash any partition (<code>boot</code>, <code>recovery</code>, <code>init_boot</code>, <code>vendor_boot</code>, <code>system</code>, etc.) with image files.</li>
+<li><strong>Boot Image</strong>: Temporarily boot a kernel or recovery image without modifying device partitions.</li>
+<li><strong>Lock State</strong>: Unlock or lock bootloader states safely.</li>
+<li><strong>Variables</strong>: Query bootloader variables (e.g. current slot, battery voltage, secure boot status).</li>
+</ul>
+</li>
+<li><strong>Shell</strong>: An interactive Fastboot command-line terminal with real-time log output.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="flashing-partition-images"><a class="header" href="#flashing-partition-images">Flashing Partition Images</a></h1>
+<p>The <strong>Flash Image</strong> tool in Fastboot allows you to write raw <code>.img</code> image files to any partition on the target device (equivalent to running <code>fastboot flash &lt;partition&gt; &lt;file.img&gt;</code>).</p>
+<h2 id="how-to-flash-an-image"><a class="header" href="#how-to-flash-an-image">How to Flash an Image</a></h2>
+<ol>
+<li>Connect the target device in Fastboot mode via USB OTG.</li>
+<li>Tap the <strong>Fastboot</strong> tab in Dioxamine.</li>
+<li>Select the <strong>Actions</strong> sub-tab.</li>
+<li>Tap the <strong>Flash Image</strong> tile.</li>
+<li>Tap <strong>Choose Image File</strong>.</li>
+<li>Your host phone’s file picker will open. Select your <code>.img</code> file (e.g. <code>boot.img</code>, <code>recovery.img</code>, <code>magisk_patched.img</code>, <code>init_boot.img</code>).</li>
+<li>Dioxamine will inspect the filename and auto-populate the partition name in a confirmation dialog (e.g. selecting <code>boot.img</code> auto-fills <code>boot</code>).</li>
+<li>Review or edit the target partition name:
+<ul>
+<li>For kernels on Android 13+: <code>init_boot</code> or <code>boot</code></li>
+<li>For recovery: <code>recovery</code> or <code>vendor_boot</code></li>
+<li>For system images: <code>system</code></li>
+</ul>
+</li>
+<li>Tap <strong>Flash</strong>.</li>
+</ol>
+<hr>
+<h2 id="live-progress-tracking"><a class="header" href="#live-progress-tracking">Live Progress Tracking</a></h2>
+<p>While flashing, Dioxamine displays:</p>
+<ul>
+<li><strong>Circular progress indicator</strong> showing the active flashing operation.</li>
+<li><strong>Percentage bar</strong> (0% to 100%).</li>
+<li><strong>Byte counter</strong> (e.g. <code>48 MB / 64 MB</code>).</li>
+<li><strong>Completion Card</strong>: Displays a green checkmark upon success, or an error message if the partition is write-protected or invalid.</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>Flashing incorrect images to critical partitions can cause your device to fail to boot. Always verify that the image matches your exact device model and processor before flashing.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="live-booting-images-fastboot-boot"><a class="header" href="#live-booting-images-fastboot-boot">Live Booting Images (Fastboot Boot)</a></h1>
+<p>The <strong>Boot Image</strong> tool allows you to upload and boot a kernel or custom recovery image in RAM <strong>without permanently flashing or modifying your device storage</strong> (equivalent to running <code>fastboot boot &lt;image.img&gt;</code>).</p>
+<h2 id="why-use-live-booting"><a class="header" href="#why-use-live-booting">Why Use Live Booting?</a></h2>
+<ul>
+<li><strong>Test Custom Recovery</strong>: Test TWRP or OrangeFox without overwriting your stock recovery partition.</li>
+<li><strong>Rooting via Magisk / KernelSU</strong>: Boot a patched boot image once to install Magisk directly to the device.</li>
+<li><strong>Troubleshooting</strong>: Boot a rescue kernel to recover from bootloops.</li>
+</ul>
+<hr>
+<h2 id="step-by-step-instructions-5"><a class="header" href="#step-by-step-instructions-5">Step-by-Step Instructions</a></h2>
+<ol>
+<li>Ensure the device is connected in Fastboot mode over USB OTG.</li>
+<li>In Dioxamine, open <strong>Fastboot &gt; Actions &gt; Boot Image</strong>.</li>
+<li>Tap <strong>Choose Image File and Boot</strong>.</li>
+<li>Select your <code>.img</code> file from phone storage.</li>
+<li>Dioxamine will stream the image into the target device RAM and issue the boot execution command.</li>
+<li>The target device screen will immediately reboot and launch the selected image in memory.</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Live booting requires an unlocked bootloader. Certain newer devices with dynamic vendor boot partitions may require flashing rather than tethered booting depending on manufacturer bootloader implementation.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="bootloader-lock-and-unlock-state"><a class="header" href="#bootloader-lock-and-unlock-state">Bootloader Lock and Unlock State</a></h1>
+<p>The <strong>Lock State</strong> tool in Fastboot allows you to unlock or lock your device bootloader, modify critical partition access, and check unlock abilities.</p>
+<h2 id="accessing-lock-state-options"><a class="header" href="#accessing-lock-state-options">Accessing Lock State Options</a></h2>
+<ol>
+<li>Connect the target device in Fastboot mode via USB OTG.</li>
+<li>In Dioxamine, open <strong>Fastboot &gt; Actions &gt; Lock State</strong>.</li>
+</ol>
+<hr>
+<h2 id="available-lock-actions"><a class="header" href="#available-lock-actions">Available Lock Actions</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Action</th><th>Command Executed</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Unlock Bootloader</strong></td><td><code>fastboot flashing unlock</code></td><td>Requests unlocking the device bootloader to allow flashing custom firmware.</td></tr>
+<tr><td><strong>Lock Bootloader</strong></td><td><code>fastboot flashing lock</code></td><td>Re-locks the bootloader to restore verified boot and factory security state.</td></tr>
+<tr><td><strong>Unlock Critical Partitions</strong></td><td><code>fastboot flashing unlock_critical</code></td><td>Unlocks critical low-level partitions (bootloader, radio, abl, xbl) on supported devices.</td></tr>
+<tr><td><strong>Lock Critical Partitions</strong></td><td><code>fastboot flashing lock_critical</code></td><td>Re-locks critical low-level partitions.</td></tr>
+<tr><td><strong>Check Unlock Ability</strong></td><td><code>fastboot flashing get_unlock_ability</code></td><td>Queries whether OEM Unlocking is enabled in Developer Options (<code>1</code> = allowed, <code>0</code> = disabled).</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="important-warnings"><a class="header" href="#important-warnings">Important Warnings</a></h2>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>Unlocking or re-locking the bootloader will trigger a factory reset and erase all user data on the target device due to Android security requirements. Always back up your data before proceeding.</p>
+</blockquote>
+<h3 id="confirming-on-target-device"><a class="header" href="#confirming-on-target-device">Confirming on Target Device:</a></h3>
+<p>When you trigger <strong>Unlock Bootloader</strong> or <strong>Lock Bootloader</strong>, the target phone will display an on-screen confirmation prompt (e.g. <em>“Do not unlock bootloader / Unlock the bootloader”</em>). You must use the physical Volume buttons and Power button on the target phone to highlight and confirm the selection.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="fastboot-variables-inspector"><a class="header" href="#fastboot-variables-inspector">Fastboot Variables Inspector</a></h1>
+<p>The <strong>Variables</strong> tool queries and displays hardware variables and configuration parameters from the bootloader (equivalent to running <code>fastboot getvar all</code>).</p>
+<h2 id="viewing-variables"><a class="header" href="#viewing-variables">Viewing Variables</a></h2>
+<ol>
+<li>Connect the target device in Fastboot mode via USB OTG.</li>
+<li>In Dioxamine, navigate to <strong>Fastboot &gt; Actions &gt; Variables</strong>.</li>
+<li>Dioxamine will send the <code>getvar all</code> command and present a list of all exposed variables.</li>
+</ol>
+<hr>
+<h2 id="common-fastboot-variables"><a class="header" href="#common-fastboot-variables">Common Fastboot Variables</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Variable</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>product</code></td><td>Hardware codename of the target device (e.g. <code>husky</code>, <code>taro</code>, <code>marlin</code>).</td></tr>
+<tr><td><code>current-slot</code></td><td>Active A/B boot partition slot (<code>a</code> or <code>b</code>).</td></tr>
+<tr><td><code>slot-count</code></td><td>Number of partition slots supported by the device (<code>2</code> for A/B devices, <code>1</code> for legacy A-only).</td></tr>
+<tr><td><code>unlocked</code></td><td>Current bootloader state (<code>yes</code> = unlocked, <code>no</code> = locked).</td></tr>
+<tr><td><code>secure</code></td><td>Indicates if Secure Boot is active.</td></tr>
+<tr><td><code>battery-voltage</code></td><td>Current battery voltage in millivolts (useful if device battery is depleted).</td></tr>
+<tr><td><code>max-download-size</code></td><td>Maximum packet size the bootloader accepts during image flashing in bytes.</td></tr>
+<tr><td><code>version-bootloader</code></td><td>Internal bootloader firmware version string.</td></tr>
+<tr><td><code>version-baseband</code></td><td>Cellular modem / baseband firmware version string.</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="ui-controls-1"><a class="header" href="#ui-controls-1">UI Controls</a></h2>
+<ul>
+<li><strong>Refresh (Top Right)</strong>: Tap the refresh button to re-query the variables from the target device.</li>
+<li><strong>Copy</strong>: Long press on any variable to copy its key and value to your clipboard.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="fastboot-command-shell"><a class="header" href="#fastboot-command-shell">Fastboot Command Shell</a></h1>
+<p>The <strong>Fastboot Shell</strong> provides an interactive command terminal to execute arbitrary Fastboot commands directly on the connected device.</p>
+<h2 id="opening-the-fastboot-shell"><a class="header" href="#opening-the-fastboot-shell">Opening the Fastboot Shell</a></h2>
+<ol>
+<li>Open the <strong>Fastboot</strong> tab in Dioxamine.</li>
+<li>Select the <strong>Shell</strong> sub-tab at the top.</li>
+<li>The terminal window will open with a command prompt.</li>
+</ol>
+<hr>
+<h2 id="executing-commands"><a class="header" href="#executing-commands">Executing Commands</a></h2>
+<p>Type any Fastboot subcommand into the bottom input bar (without typing the word <code>fastboot</code>) and tap <strong>Send</strong> (or press Enter on your keyboard):</p>
+<h3 id="example-commands"><a class="header" href="#example-commands">Example Commands:</a></h3>
+<ul>
+<li><code>getvar product</code>: Check the device codename.</li>
+<li><code>oem device-info</code>: Check OEM-specific bootloader lock details on older devices.</li>
+<li><code>set_active a</code> / <code>set_active b</code>: Switch active A/B boot slots.</li>
+<li><code>erase userdata</code>: Wipe the user data partition.</li>
+<li><code>reboot</code>: Reboot into the Android system.</li>
+<li><code>reboot-bootloader</code>: Restart back into Fastboot mode.</li>
+<li><code>reboot-fastboot</code>: Reboot into userspace <code>fastbootd</code> mode.</li>
+</ul>
+<hr>
+<h2 id="log-output-and-status-colors"><a class="header" href="#log-output-and-status-colors">Log Output and Status Colors</a></h2>
+<p>Each response line in the log window is color-coded:</p>
+<ul>
+<li><strong><code>$ [command]</code> (Primary Color)</strong>: Command sent to device.</li>
+<li><strong><code>  [output]</code> (White/Gray)</strong>: Text output or info packets returned by the bootloader.</li>
+<li><strong><code>! [error]</code> (Red)</strong>: Fastboot errors (e.g. <code>FAIL: remote: Partition not found</code>).</li>
+<li><strong><code># [system]</code> (Teal)</strong>: Connection lifecycle notices (e.g. USB attached, session opened).</li>
+</ul>
+<hr>
+<h2 id="toolbar-controls"><a class="header" href="#toolbar-controls">Toolbar Controls</a></h2>
+<ul>
+<li><strong>Clear Log</strong>: Tap the <strong>Delete Sweep icon</strong> in the top right to clear the terminal output history.</li>
+<li><strong>Auto Scroll</strong>: The terminal automatically scrolls to the newest line upon receiving new data.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adb-key-management"><a class="header" href="#adb-key-management">ADB Key Management</a></h1>
+<p>ADB requires an RSA cryptographic keypair to authenticate connections with target Android devices. Dioxamine generates and manages its own internal ADB keypair securely within the app.</p>
+<h2 id="accessing-adb-key-settings"><a class="header" href="#accessing-adb-key-settings">Accessing ADB Key Settings</a></h2>
+<ol>
+<li>Tap the <strong>Settings</strong> tab in the bottom navigation bar.</li>
+<li>Tap on the <strong>ADB Key</strong> expandable card.</li>
+</ol>
+<hr>
+<h2 id="key-management-options"><a class="header" href="#key-management-options">Key Management Options</a></h2>
+<h3 id="1-viewing-key-fingerprint"><a class="header" href="#1-viewing-key-fingerprint">1. Viewing Key Fingerprint</a></h3>
+<ul>
+<li>Dioxamine displays the SHA-256 fingerprint of your active public RSA key (e.g. <code>SHA256:abcd1234...</code>).</li>
+<li>When connecting to a target device for the first time, this fingerprint matches the prompt shown on the target phone screen.</li>
+</ul>
+<h3 id="2-regenerate-key-pair"><a class="header" href="#2-regenerate-key-pair">2. Regenerate Key Pair</a></h3>
+<ul>
+<li>Tap <strong>Regenerate Key</strong> to delete the current keypair and create a fresh 2048-bit RSA key.</li>
+<li><strong>When to use</strong>: If an unauthorized device has whitelisted your key, or if you wish to reset trust on all previously paired devices.</li>
+<li>After regenerating, all target devices will prompt to re-authorize the connection when plugged in.</li>
+</ul>
+<h3 id="3-load-custom-key-import"><a class="header" href="#3-load-custom-key-import">3. Load Custom Key (Import)</a></h3>
+<ul>
+<li>Tap <strong>Load Custom Key</strong> to import an existing <code>adbkey</code> private key file from your phone storage (for example, copied from your PC’s <code>~/.android/adbkey</code>).</li>
+<li><strong>Why use this</strong>: Allows Dioxamine to connect to devices that already trust your PC without showing the authorization prompt again.</li>
+</ul>
+<h3 id="4-export-key-backup"><a class="header" href="#4-export-key-backup">4. Export Key (Backup)</a></h3>
+<ul>
+<li>Tap <strong>Export Key</strong> to save your active private <code>adbkey</code> file to your phone’s storage.</li>
+<li>Useful for creating backups or migrating your authorization key to another phone.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="appearance-and-language"><a class="header" href="#appearance-and-language">Appearance and Language</a></h1>
+<p>Dioxamine supports Material 3 styling, dynamic wallpaper coloring (Monet), and flexible dark/light theme preferences.</p>
+<h2 id="accessing-theme-settings"><a class="header" href="#accessing-theme-settings">Accessing Theme Settings</a></h2>
+<ol>
+<li>Open the <strong>Settings</strong> tab.</li>
+<li>Tap the <strong>Theme Settings</strong> expandable card.</li>
+</ol>
+<hr>
+<h2 id="theme-options"><a class="header" href="#theme-options">Theme Options</a></h2>
+<h3 id="1-dynamic-colors-material-you--monet"><a class="header" href="#1-dynamic-colors-material-you--monet">1. Dynamic Colors (Material You / Monet)</a></h3>
+<ul>
+<li><strong>Toggle Switch</strong>: When enabled on Android 12 or newer, Dioxamine generates its color palette dynamically from your current system wallpaper.</li>
+<li>If disabled (or on Android 11 and older), Dioxamine uses its default modern Material 3 color theme.</li>
+</ul>
+<h3 id="2-theme-mode-selection"><a class="header" href="#2-theme-mode-selection">2. Theme Mode Selection</a></h3>
+<p>Choose your preferred theme display mode:</p>
+<ul>
+<li><strong>System Default (Default)</strong>: Automatically follows your phone’s system dark/light mode schedule.</li>
+<li><strong>Light Theme</strong>: Forces bright, high-contrast light colors.</li>
+<li><strong>Dark Theme</strong>: Uses deep dark backgrounds optimized for OLED battery savings and nighttime use.</li>
+</ul>
+<hr>
+<h2 id="language-settings"><a class="header" href="#language-settings">Language Settings</a></h2>
+<ol>
+<li>In the <strong>Settings</strong> tab, tap the <strong>Language</strong> expandable card.</li>
+<li>Choose from:
+<ul>
+<li><strong>System Default</strong>: Follows your Android device locale.</li>
+<li><strong>English (<code>en</code>)</strong>: Forces English across all menus and dialogs.</li>
+</ul>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="application-logs-and-bug-reporting"><a class="header" href="#application-logs-and-bug-reporting">Application Logs and Bug Reporting</a></h1>
+<p>Dioxamine maintains an internal diagnostic log system to assist with troubleshooting connection errors, Scrcpy streaming issues, Fastboot flashing failures, and plugin execution bugs.</p>
+<h2 id="accessing-log-settings"><a class="header" href="#accessing-log-settings">Accessing Log Settings</a></h2>
+<ol>
+<li>Open the <strong>Settings</strong> tab.</li>
+<li>Tap the <strong>Logs</strong> expandable card.</li>
+</ol>
+<hr>
+<h2 id="log-settings-options"><a class="header" href="#log-settings-options">Log Settings Options</a></h2>
+<h3 id="1-enable-logging-toggle"><a class="header" href="#1-enable-logging-toggle">1. Enable Logging Toggle</a></h3>
+<ul>
+<li><strong>Toggle Switch</strong>: Enables or disables background diagnostics logging.</li>
+<li>Enabled by default to record session events and error traces.</li>
+</ul>
+<h3 id="2-export-all-logs-zip-archive"><a class="header" href="#2-export-all-logs-zip-archive">2. Export All Logs (ZIP Archive)</a></h3>
+<ol>
+<li>Tap <strong>Export All Logs</strong>.</li>
+<li>Your phone’s system document picker will open with a suggested ZIP filename (e.g. <code>dioxamine_logs_1710000000000.zip</code>).</li>
+<li>Select your save directory and tap <strong>Save</strong>.</li>
+<li>The generated ZIP file contains complete timestamps and error backtraces. You can share this ZIP file on the official Telegram support channel or attach it to a GitHub issue.</li>
+</ol>
+<h3 id="3-clear-all-logs"><a class="header" href="#3-clear-all-logs">3. Clear All Logs</a></h3>
+<ul>
+<li>Tap <strong>Clear Logs</strong> (outlined in red) to permanently erase all locally cached log records and reclaim storage space.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="plugin-security-and-permissions"><a class="header" href="#plugin-security-and-permissions">Plugin Security and Permissions</a></h1>
+<p>Dioxamine provides a secure sandbox environment for third-party Web plugins with granular permission gates and developer debugging tools.</p>
+<h2 id="accessing-plugin-settings"><a class="header" href="#accessing-plugin-settings">Accessing Plugin Settings</a></h2>
+<ol>
+<li>Open the <strong>Settings</strong> tab.</li>
+<li>Tap the <strong>Plugin Settings</strong> expandable card.</li>
+</ol>
+<hr>
+<h2 id="plugin-security-options"><a class="header" href="#plugin-security-options">Plugin Security Options</a></h2>
+<h3 id="1-webview-debugging-toggle"><a class="header" href="#1-webview-debugging-toggle">1. WebView Debugging Toggle</a></h3>
+<ul>
+<li><strong>Toggle Switch</strong>: Enables Chrome Remote DevTools inspection for installed plugins.</li>
+<li><strong>For Plugin Developers</strong>: When enabled, you can connect your host phone to a PC, open <code>chrome://inspect</code> in Google Chrome on your computer, and inspect plugin DOM, console logs, network calls, and JavaScript breakpoints in real time.</li>
+</ul>
+<h3 id="2-manage-plugin-permissions"><a class="header" href="#2-manage-plugin-permissions">2. Manage Plugin Permissions</a></h3>
+<p>Dioxamine requires user authorization before any plugin can execute shell commands, read device info, push files, or forward ports.</p>
+<ol>
+<li>In the Plugin Settings card, tap <strong>Manage Permissions</strong>.</li>
+<li>A list of all installed plugins will be displayed along with their requested permissions (e.g. <code>device.read</code>, <code>shell.exec</code>, <code>files.manage</code>, <code>saf.pick</code>).</li>
+<li>You can review permission statuses:
+<ul>
+<li><strong>Allowed Always</strong>: Granted permanent permission.</li>
+<li><strong>Ask Every Time</strong>: Prompts every time the plugin triggers an action.</li>
+<li><strong>Denied</strong>: Blocks the plugin from accessing that capability.</li>
+</ul>
+</li>
+<li>Tap <strong>Revoke</strong> or change permissions individually for any plugin at any time.</li>
+</ol>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="plugin-architecture-and-overview"><a class="header" href="#plugin-architecture-and-overview">Plugin Architecture and Overview</a></h1>
 <p>Dioxamine provides a modern, sandboxed Web Plugin System. Developers can create rich tools, dashboards, terminals, and utilities using standard web technologies (HTML, CSS, JavaScript, WebAssembly) that interact directly with connected ADB devices through a secure native bridge.</p>
