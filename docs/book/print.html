@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-f463bf75.js";
+            window.path_to_searchindex_js = "searchindex-f1e94dcc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-7c01cd5f.js"></script>
@@ -1989,10 +1989,22 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
     // Send binary data into the shell stream (data must be base64 encoded)
     write(base64Data: string): Promise&lt;void&gt;;
     
+    // Dynamically resize target device PTY dimensions (triggers SIGWINCH on device)
+    resize(cols: number, rows: number): Promise&lt;void&gt;;
+    
     // Terminate the shell session and close native socket
     close(): Promise&lt;void&gt;;
 }
 </code></pre>
+<hr>
+<h2 id="dynamic-window-sizing-sessionresize"><a class="header" href="#dynamic-window-sizing-sessionresize">Dynamic Window Sizing (<code>session.resize</code>)</a></h2>
+<p>Interactive full-screen CLI apps (like <code>nano</code>, <code>htop</code>, <code>vim</code>, and <code>top</code>) rely on the Linux kernel PTY dimensions (<code>struct winsize</code>) to layout their interface correctly.</p>
+<p>When running inside a responsive WebView, whenever the terminal size changes (such as on screen rotation, split-screen, or when the virtual keyboard appears), call <code>session.resize(cols, rows)</code>.</p>
+<ul>
+<li><strong><code>cols</code></strong>: Number of columns (positive integer, 1..65535).</li>
+<li><strong><code>rows</code></strong>: Number of rows (positive integer, 1..65535).</li>
+</ul>
+<p>This sends an official ADB Shell v2 <code>WINDOW_SIZE_CHANGE</code> packet to the Android daemon, which executes <code>ioctl(pty_fd, TIOCSWINSZ)</code> and broadcasts <code>SIGWINCH</code> to the running command.</p>
 <hr>
 <h2 id="encoding-and-decoding-data"><a class="header" href="#encoding-and-decoding-data">Encoding and Decoding Data</a></h2>
 <p>Data transmitted over <code>onData</code> and <code>write</code> is encoded in Base64 to support arbitrary binary streams, ANSI escape codes, and UTF-8 multibyte characters safely.</p>
@@ -2014,17 +2026,24 @@ function base64ToString(b64) {
 }
 </code></pre>
 <hr>
-<h2 id="example-1-integrating-with-xtermjs"><a class="header" href="#example-1-integrating-with-xtermjs">Example 1: Integrating with xterm.js</a></h2>
+<h2 id="example-1-integrating-with-xtermjs--fitaddon"><a class="header" href="#example-1-integrating-with-xtermjs--fitaddon">Example 1: Integrating with xterm.js &amp; FitAddon</a></h2>
 <pre><code class="language-javascript">const term = new Terminal({
     cursorBlink: true,
     fontFamily: 'monospace',
     theme: { background: '#121212', foreground: '#ffffff' }
 });
 
+const fitAddon = new FitAddon.FitAddon();
+term.loadAddon(fitAddon);
+
 term.open(document.getElementById('terminal-container'));
+fitAddon.fit();
 
 async function startTerminal() {
     const session = await dioxamine.openInteractiveShell();
+
+    // Send initial dimensions
+    session.resize(term.cols, term.rows);
 
     // Device stdout -&gt; xterm.js
     session.onData((b64) =&gt; {
@@ -2035,6 +2054,15 @@ async function startTerminal() {
     // Keyboard input -&gt; Device stdin
     term.onData((data) =&gt; {
         session.write(dioxamine.utf8ToBase64(data));
+    });
+
+    // Dynamic resizing (device rotation / soft keyboard toggling)
+    term.onResize(({ cols, rows }) =&gt; {
+        session.resize(cols, rows);
+    });
+
+    window.addEventListener('resize', () =&gt; {
+        fitAddon.fit();
     });
 
     session.onClose((err) =&gt; {

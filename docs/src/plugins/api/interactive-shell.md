@@ -36,10 +36,26 @@ interface InteractiveShellSession {
     // Send binary data into the shell stream (data must be base64 encoded)
     write(base64Data: string): Promise<void>;
     
+    // Dynamically resize target device PTY dimensions (triggers SIGWINCH on device)
+    resize(cols: number, rows: number): Promise<void>;
+    
     // Terminate the shell session and close native socket
     close(): Promise<void>;
 }
 ```
+
+---
+
+## Dynamic Window Sizing (`session.resize`)
+
+Interactive full-screen CLI apps (like `nano`, `htop`, `vim`, and `top`) rely on the Linux kernel PTY dimensions (`struct winsize`) to layout their interface correctly.
+
+When running inside a responsive WebView, whenever the terminal size changes (such as on screen rotation, split-screen, or when the virtual keyboard appears), call `session.resize(cols, rows)`.
+
+- **`cols`**: Number of columns (positive integer, 1..65535).
+- **`rows`**: Number of rows (positive integer, 1..65535).
+
+This sends an official ADB Shell v2 `WINDOW_SIZE_CHANGE` packet to the Android daemon, which executes `ioctl(pty_fd, TIOCSWINSZ)` and broadcasts `SIGWINCH` to the running command.
 
 ---
 
@@ -69,7 +85,7 @@ function base64ToString(b64) {
 
 ---
 
-## Example 1: Integrating with xterm.js
+## Example 1: Integrating with xterm.js & FitAddon
 
 ```javascript
 const term = new Terminal({
@@ -78,10 +94,17 @@ const term = new Terminal({
     theme: { background: '#121212', foreground: '#ffffff' }
 });
 
+const fitAddon = new FitAddon.FitAddon();
+term.loadAddon(fitAddon);
+
 term.open(document.getElementById('terminal-container'));
+fitAddon.fit();
 
 async function startTerminal() {
     const session = await dioxamine.openInteractiveShell();
+
+    // Send initial dimensions
+    session.resize(term.cols, term.rows);
 
     // Device stdout -> xterm.js
     session.onData((b64) => {
@@ -92,6 +115,15 @@ async function startTerminal() {
     // Keyboard input -> Device stdin
     term.onData((data) => {
         session.write(dioxamine.utf8ToBase64(data));
+    });
+
+    // Dynamic resizing (device rotation / soft keyboard toggling)
+    term.onResize(({ cols, rows }) => {
+        session.resize(cols, rows);
+    });
+
+    window.addEventListener('resize', () => {
+        fitAddon.fit();
     });
 
     session.onClose((err) => {
