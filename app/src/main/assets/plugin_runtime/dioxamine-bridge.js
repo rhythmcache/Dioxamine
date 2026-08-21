@@ -57,6 +57,7 @@
                     onData: function(fn) { window.__dioxamine_shell_listeners[sessionId].onData = fn; },
                     onClose: function(fn) { window.__dioxamine_shell_listeners[sessionId].onClose = fn; },
                     write: function(base64Data) { return callNative('writeInteractiveShell', sessionId, base64Data); },
+                    resize: function(cols, rows) { return callNative('resizeInteractiveShell', sessionId, Number(cols), Number(rows)); },
                     close: function() { return callNative('closeInteractiveShell', sessionId); }
                 };
             });

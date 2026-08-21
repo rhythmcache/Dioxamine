@@ -184,7 +184,8 @@ fun PluginRunnerScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(padding)
+                    .imePadding(),
         ) {
             val webViewDebugEnabled = remember {
                 context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)

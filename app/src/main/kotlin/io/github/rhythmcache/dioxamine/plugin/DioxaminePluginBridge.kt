@@ -7,6 +7,7 @@ import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import io.github.rhythmcache.adb.AdbClient
+import io.github.rhythmcache.adb.AdbInteractiveSession
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import io.github.rhythmcache.adb.AdbStream
 import kotlinx.coroutines.CancellationException
@@ -53,7 +54,7 @@ class DioxaminePluginBridge(
 
     private val logTimestamps = ArrayDeque<Long>()
     private val toastTimestamps = ArrayDeque<Long>()
-    private val activeShellSessions = mutableMapOf<String, Pair<AdbStream, Job>>()
+    private val activeShellSessions = mutableMapOf<String, Pair<AdbInteractiveSession, Job>>()
 
     fun closeAllSessions() {
         val sessions =
@@ -62,11 +63,12 @@ class DioxaminePluginBridge(
                 activeShellSessions.clear()
                 list
             }
-        sessions.forEach { (stream, job) ->
+        sessions.forEach { (session, job) ->
             job.cancel()
-            runCatching { stream.close() }
+            runCatching { session.close() }
         }
     }
+
 
     private fun resolve(
         callbackId: String,
@@ -164,13 +166,13 @@ class DioxaminePluginBridge(
                     return@launch
                 }
 
-                val stream = client.open("shell:")
+                val session = client.openInteractiveShell(terminalType = "xterm-256color")
                 val sessionId = UUID.randomUUID().toString()
 
                 val readJob =
                     scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
                         try {
-                            stream.asFlow().collect { bytes ->
+                            session.outputFlow.collect { bytes ->
                                 val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
                                 val encodedSessionId = Json.encodeToString(String.serializer(), sessionId)
                                 val encodedB64 = Json.encodeToString(String.serializer(), b64)
@@ -189,12 +191,12 @@ class DioxaminePluginBridge(
                             synchronized(activeShellSessions) {
                                 activeShellSessions.remove(sessionId)
                             }
-                            runCatching { stream.close() }
+                            runCatching { session.close() }
                         }
                     }
 
                 synchronized(activeShellSessions) {
-                    activeShellSessions[sessionId] = stream to readJob
+                    activeShellSessions[sessionId] = session to readJob
                 }
                 
                 readJob.start()
@@ -239,6 +241,31 @@ class DioxaminePluginBridge(
     }
 
     @JavascriptInterface
+    fun resizeInteractiveShell(
+        sessionId: String,
+        cols: Int,
+        rows: Int,
+        callbackId: String,
+    ) {
+        scope.launch(Dispatchers.IO) {
+            try {
+                val entry =
+                    synchronized(activeShellSessions) {
+                        activeShellSessions[sessionId]
+                    } ?: run {
+                        reject(callbackId, "Invalid or closed session")
+                        return@launch
+                    }
+
+                entry.first.resize(cols = cols, rows = rows)
+                resolve(callbackId, JsonNull)
+            } catch (e: Exception) {
+                reject(callbackId, e.message ?: "Resize failed")
+            }
+        }
+    }
+
+    @JavascriptInterface
     fun closeInteractiveShell(
         sessionId: String,
         callbackId: String,
@@ -262,6 +289,7 @@ class DioxaminePluginBridge(
             }
         }
     }
+
 
     @JavascriptInterface
     fun requestFilePicker(
