@@ -1,60 +1,121 @@
+> [!WARNING]
+> Dioxamine is currently in an early alpha stage and under active development. Expect bugs, incomplete features, and frequent updates.
+
 # Dioxamine
 
-<p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_512.png" alt="Dioxamine Logo" width="160" height="160" />
-</p>
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_512.png" width="128" height="128" alt="Dioxamine" align="right" />
 
-Dioxamine lets you send ADB commands, mirror and control Android devices, manage files and apps, and use Fastboot—all from your phone via USB OTG or Wireless ADB.
-
-> [!WARNING]
-> Dioxamine is currently in an early alpha stage and under active development. Expect bugs, incomplete features, and sudden updates. Use at your own risk.
-
-## Screenshots
+**Dioxamine** lets you run **ADB**, **Scrcpy**, and **Fastboot** directly from your Android phone or tablet. Connect another device via USB OTG or [Wireless ADB (Wi-Fi)](https://rhythmcache.github.io/Dioxamine/user-guide/connecting-devices.html) to mirror screens with full touch control, flash partitions, unlock bootloaders, manage files and apps, or run custom plugins. No PC or root required.
 
 <p align="center">
-  <img src="assets/screenshots/adb_management.jpg" width="220" alt="ADB Management" />
-  <img src="assets/screenshots/scrcpy_mirroring.jpg" width="220" alt="Screen Mirroring" />
-  <img src="assets/screenshots/fastboot_flashing.jpg" width="220" alt="Fastboot Flashing" />
-  <img src="assets/screenshots/settings.jpg" width="220" alt="App Settings" />
+  <img src="assets/screenshots/adb_management.jpg" width="200" alt="ADB Management" />
+  &nbsp;
+  <img src="assets/screenshots/scrcpy_mirroring.jpg" width="200" alt="Screen Mirroring" />
+  &nbsp;
+  <img src="assets/screenshots/fastboot_flashing.jpg" width="200" alt="Fastboot Flashing" />
+  &nbsp;
+  <img src="assets/screenshots/settings.jpg" width="200" alt="App Settings" />
 </p>
 
-## What Dioxamine Can Do
+It focuses on:
 
-### How to Connect
-- **USB OTG**: Connect two devices using a USB OTG cable adapter.
-- **Wireless ADB**: Connect wirelessly over Wi-Fi or hotspot. Both devices must be connected to the same network (such as a shared Wi-Fi network or one device connected to the other's portable hotspot). Supports auto discovery, QR code pairing, and port pairing code input.
+ - **PC-free control**: full ADB, Fastboot, and Scrcpy client running phone-to-phone
+ - **flashing & recovery**: flash images, live-boot recoveries/kernels, and unlock bootloaders over USB OTG
+ - **non-intrusiveness**: no root or client app needed on the connected device
+ - **extensibility**: build and install custom tools with the HTML/JS plugin engine
 
-> [!NOTE]
-> Device Specific Note (HyperOS / MIUI):
-> On certain Android skins like HyperOS or MIUI, you may need to enable additional Developer Options such as **USB debugging (Security settings)** in addition to Wireless Debugging to allow remote touch control and screen mirroring to work properly.
+## Features
 
-### ADB Device Control
-- Control secondary Android phones, tablets, and Android TV devices directly.
-- Check device specs, CPU usage, battery stats, and uptime.
-- File manager to browse, upload, and download files on target storage.
-- Package manager to install, uninstall, enable, disable, or pull APK files.
-- Capture screenshots and reboot into system, bootloader, recovery, fastbootd, or power off.
-- Run terminal commands using the interactive ADB shell.
-- Sideload firmware packages and access Rescue mode.
+### Scrcpy Screen Mirroring and Audio
+- [Real-time display mirroring](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/screen-mirroring.html) with full multi-touch and hardware key control
+- [Audio forwarding](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/settings-tuning.html) (Android 11+)
+- [Camera streaming](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/camera-streaming.html) (front and rear cameras, flashlight/torch toggle, high-FPS modes)
+- [Mirroring with target screen off](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/screen-mirroring.html) (saves battery and reduces heat)
+- [Touchpad & PC keyboard mode](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/touchpad-keyboard.html) via UHID simulation
+- Configurable codecs (**H.264**, **H.265 / HEVC**, **AV1**), bitrate, resolution, and FPS
 
-### Scrcpy Screen Mirroring and Remote Control
-- Real-time screen mirroring and full interactive touch control over Wi-Fi or USB OTG.
-- Stream target device audio alongside video output.
-- Keep the target device screen dark while controlling and mirroring to save battery.
-- Floating navigation bar and physical volume button forwarding.
-- Adjust display resolution, FPS, and bitrate settings.
+### Fastboot Flasher and Bootloader Tools (USB OTG)
+- [Flash partition images](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/flashing-images.html) (`boot`, `recovery`, `vendor_boot`, `init_boot`, `system`, etc.)
+- [Live boot images](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/boot-image.html) (`fastboot boot <image>`) to test custom kernels or recoveries without flashing
+- [Unlock & lock bootloader](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/lock-bootloader.html) state directly from your phone
+- [Variable inspector](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/variables.html) (`getvar all`, check current slot A/B)
+- [Interactive Fastboot shell](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/fastboot-shell.html) for raw commands
 
-### Fastboot Tools
-- Flash image files 
-- Lock and unlock bootloader state.
-- Interactive Fastboot terminal.
+### ADB Management and Diagnostics
+- [File manager](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/file-manager.html): browse target filesystem, upload, download, and manage storage
+- [Package manager](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/package-manager.html): install split APKs, debloat/disable system apps, extract and pull APKs
+- [Reboot menu](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/reboot-menu.html): one-tap reboot to System, Recovery, Bootloader, FastbootD, EDL, or Power Off
+- [Sideload & rescue](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/sideload-rescue.html): flash OTA packages (`.zip`) via `adb sideload` or restore bricked devices
+- [Screenshot capture](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/screenshots.html): take high-res screenshots pulled directly from the target frame buffer
+- [Interactive ADB shell](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/terminal-shell.html)
 
-## Feedback and Suggestions
+### Custom Plugin Engine
+- Run custom modular tools built with HTML5, CSS, and JavaScript inside a sandboxed WebView
+- Direct JavaScript Bridge API for shell commands, file push/pull, port forwarding, and Material 3 theming
+- Install third-party `.zip` plugins or build your own
+- Check out the [Terminal Plugin](https://github.com/rhythmcache/Terminal) or read the [Plugin Development Guide](https://rhythmcache.github.io/Dioxamine/book/plugins/overview.html)
 
-Suggestions for new features and improvements are welcome. If you have ideas or notice bugs, feel free to share your feedback.
+## Prerequisites
 
-[Telegram Channel](https://t.me/tr1ple_fault)
+- **Host Device**: Android 7.0+ (API 24+)
+- **Target Device**: Android 5.0+ (API 21+)
+  - Audio forwarding requires Android 11+ (API 30+)
+  - Wireless ADB QR code pairing requires Android 11+ (API 30+)
+
+Make sure [USB debugging](https://developer.android.com/studio/debug/dev-options#enable) is enabled on the target device.
+
+On **Xiaomi / HyperOS / MIUI** devices, you must also enable **USB debugging (Security Settings)** in Developer Options to allow touch control and input injection.
+
+## Documentation
+
+Full documentation, guides, and API specifications are available in the [Dioxamine Book](https://rhythmcache.github.io/Dioxamine/):
+
+- **User Guide**
+  - [Connecting Devices (USB OTG, Wireless ADB, QR Pairing)](https://rhythmcache.github.io/Dioxamine/user-guide/connecting-devices.html)
+  - [OEM Setup & Troubleshooting](https://rhythmcache.github.io/Dioxamine/user-guide/oem-setup.html)
+  - [ADB Built-in Tools](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/overview.html)
+  - [Scrcpy Screen Mirroring & Audio](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/screen-mirroring.html)
+  - [Fastboot Tools](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/getting-started.html)
+- **Plugin Development**
+  - [Plugin Overview & Architecture](https://rhythmcache.github.io/Dioxamine/book/plugins/overview.html)
+  - [Quickstart Guide](https://rhythmcache.github.io/Dioxamine/plugins/quickstart.html)
+  - [Manifest Specification (`plugin.json`)](https://rhythmcache.github.io/Dioxamine/plugins/manifest.html)
+  - [JavaScript Bridge API Reference](https://rhythmcache.github.io/Dioxamine/plugins/api-reference.html)
+
+## Build instructions
+
+Clone the repository recursively (to include the embedded `scrcpy` submodule):
+
+```bash
+git clone --recursive https://github.com/rhythmcache/Dioxamine.git
+cd Dioxamine
+./gradlew assembleDebug
+```
+
+Requirements:
+- JDK 17+
+- Android SDK (API 37)
+- Android NDK (`ANDROID_NDK_HOME` set)
+
+## Community
+
+- **Telegram Channel**: [t.me/tr1ple_fault](https://t.me/tr1ple_fault)
+- **Issues & Suggestions**: [GitHub Issues](https://github.com/rhythmcache/Dioxamine/issues)
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+    Copyright (C) 2026 rhythmcache
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
