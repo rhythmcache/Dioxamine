@@ -25,10 +25,17 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
+import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
 import kotlinx.coroutines.launch
 import java.io.File
@@ -44,6 +51,34 @@ fun PluginsTab(
 
     var infoDialogManifest by remember { mutableStateOf<PluginManifest?>(null) }
     var uninstallConfirmManifest by remember { mutableStateOf<PluginManifest?>(null) }
+
+    val linkColor = MaterialTheme.colorScheme.primary
+    val docsPrompt = stringResource(R.string.plugins_docs_prompt)
+    val docsLink = stringResource(R.string.plugins_docs_link)
+
+    val docsAnnotatedText = remember(docsPrompt, docsLink, linkColor) {
+        buildAnnotatedString {
+            append(docsPrompt)
+            if (!docsPrompt.endsWith(" ")) {
+                append(" ")
+            }
+            withLink(
+                LinkAnnotation.Url(
+                    url = BuildConfig.PLUGIN_DOCS_URL,
+                    styles = TextLinkStyles(
+                        style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.SemiBold,
+                        ),
+                    ),
+                ),
+            ) {
+                append(docsLink)
+            }
+            append(".")
+        }
+    }
 
     val pickZipLauncher =
         rememberLauncherForActivityResult(
@@ -84,6 +119,7 @@ fun PluginsTab(
                     imageVector = Icons.Filled.Extension,
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
@@ -94,9 +130,16 @@ fun PluginsTab(
                 Text(
                     text = stringResource(R.string.plugins_description),
                     textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = docsAnnotatedText,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.plugins_no_plugins),
                     style = MaterialTheme.typography.bodySmall,
@@ -111,6 +154,32 @@ fun PluginsTab(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = docsAnnotatedText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+
                 items(installedPlugins, key = { it.id }) { manifest ->
                     var menuExpanded by remember { mutableStateOf(false) }
 

@@ -15,6 +15,11 @@
     
     <string name="adb_shell_title">ADB Shell support</string>
     <string name="feature_coming_soon">This feature is coming soon.</string>
+    <string name="adb_shell_info_dialog_title">ADB Shell Notice</string>
+    <string name="adb_shell_info_dialog_msg_before_link">"This built-in shell is a minimal terminal designed for running basic commands. It has limited capabilities and lacks full terminal emulation. For an advanced or full-featured terminal experience, it is recommended to use the "</string>
+    <string name="adb_shell_info_dialog_link">Terminal Plugin</string>
+    <string name="adb_shell_info_dialog_msg_after_link">.</string>
+    <string name="adb_shell_dont_show_again">"Don't show again"</string>
 
     <string name="no_devices_connected">No devices connected</string>
     <plurals name="connected_devices_count">
@@ -60,7 +65,9 @@
     <string name="tap_refresh_hint">Tap refresh to execute</string>
 
     <string name="plugins_title">Custom Plugins</string>
-    <string name="plugins_description">Load ADB plugins written by yourself or other developers.</string>
+    <string name="plugins_description">"Plugins allow you to install custom plugins written by yourself or other developers."</string>
+    <string name="plugins_docs_prompt">"For plugin documentation, see the "</string>
+    <string name="plugins_docs_link">"Plugin Documentation"</string>
     <string name="plugins_coming_soon">Writing your own plugins - coming soon.</string>
     <string name="plugins_no_plugins">No plugins installed</string>
     <string name="plugins_cd_install">Install plugin</string>

@@ -433,6 +433,8 @@ fun ScrcpyScreen(
                                                 customMaxSizes = customMaxSizes,
                                                 customFps = customFps,
                                                 customBitrates = customBitrates,
+                                                discoveredCameras = discoveredCameras,
+                                                isDiscoveringCameras = isDiscoveringCameras,
                                                 onConfigChange = { config = it },
                                                 onOpenAddDialog = { type ->
                                                     activeAddDialog = type
@@ -440,26 +442,6 @@ fun ScrcpyScreen(
                                                     dialogErrorMsg = null
                                                 }
                                             )
-
-                                            if (config.videoEnabled) {
-                                                Spacer(Modifier.height(12.dp))
-                                                HorizontalDivider()
-                                                Spacer(Modifier.height(12.dp))
-
-                                                VideoSourceSettings(
-                                                    config = config,
-                                                    isMirroring = isMirroring,
-                                                    onConfigChange = { config = it }
-                                                )
-
-                                                CameraSettings(
-                                                    config = config,
-                                                    isMirroring = isMirroring,
-                                                    discoveredCameras = discoveredCameras,
-                                                    isDiscovering = isDiscoveringCameras,
-                                                    onConfigChange = { config = it }
-                                                )
-                                            }
 
                                             Spacer(Modifier.height(12.dp))
                                             HorizontalDivider()
@@ -634,8 +616,8 @@ private fun VideoSourceSettings(
     isMirroring: Boolean,
     onConfigChange: (ScrcpyConfig) -> Unit
 ) {
-    Text(stringResource(R.string.section_video_source), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-    Spacer(Modifier.height(8.dp))
+    Text(stringResource(R.string.section_video_source), style = MaterialTheme.typography.labelMedium)
+    Spacer(Modifier.height(4.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf(
             stringResource(R.string.video_source_screen) to "display",
@@ -789,6 +771,8 @@ private fun VideoSettings(
     customMaxSizes: List<Int>,
     customFps: List<Int>,
     customBitrates: List<Int>,
+    discoveredCameras: List<CameraDevice>,
+    isDiscoveringCameras: Boolean,
     onConfigChange: (ScrcpyConfig) -> Unit,
     onOpenAddDialog: (AddCustomDialogType) -> Unit
 ) {
@@ -825,6 +809,20 @@ private fun VideoSettings(
     if (!config.videoEnabled) return
 
     Spacer(Modifier.height(8.dp))
+
+    VideoSourceSettings(
+        config = config,
+        isMirroring = isMirroring,
+        onConfigChange = onConfigChange
+    )
+
+    CameraSettings(
+        config = config,
+        isMirroring = isMirroring,
+        discoveredCameras = discoveredCameras,
+        isDiscovering = isDiscoveringCameras,
+        onConfigChange = onConfigChange
+    )
 
     if (config.videoSource != "camera") {
         Text(stringResource(R.string.label_resolution), style = MaterialTheme.typography.labelMedium)

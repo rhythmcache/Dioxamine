@@ -1,12 +1,15 @@
 package io.github.rhythmcache.dioxamine.adb.shell
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
@@ -20,6 +23,24 @@ import io.github.rhythmcache.dioxamine.adb.AdbViewModel
  */
 @Composable
 fun ShellScreen(adbViewModel: AdbViewModel) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
+    var showInfoDialog by rememberSaveable {
+        mutableStateOf(!prefs.getBoolean("adb_shell_dont_show_info", false))
+    }
+
+    if (showInfoDialog) {
+        ShellInfoDialog(
+            onDismiss = { showInfoDialog = false },
+            onConfirm = { dontShowAgain ->
+                if (dontShowAgain) {
+                    prefs.edit().putBoolean("adb_shell_dont_show_info", true).apply()
+                }
+                showInfoDialog = false
+            },
+        )
+    }
+
     val shellVm: ShellViewModel = viewModel()
 
     val activeClient = adbViewModel.activeClient()
