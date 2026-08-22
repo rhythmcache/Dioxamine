@@ -1,6 +1,7 @@
 package io.github.rhythmcache.dioxamine.scrcpy
 
 data class ScrcpyConfig(
+    val videoEnabled: Boolean = true,  // Stream screen/camera video
     val maxSize: Int = 1080,         // 0 = Original, 1080, 720, 480
     val maxFps: Int = 60,            // 60, 30, 15
     val bitRateMbps: Int = 8,        // 8, 4, 2 Mbps
@@ -34,6 +35,10 @@ data class ScrcpyConfig(
     fun validate(apiLevel: Int): List<String> {
         val errors = mutableListOf<String>()
 
+        if (!videoEnabled && !audioEnabled) {
+            errors.add("At least one stream (video or audio) must be enabled.")
+        }
+
         if (audioEnabled) {
             if (apiLevel < 30) {
                 errors.add("Audio forwarding requires at least Android 11 (API 30). Device is API $apiLevel.")
@@ -43,7 +48,7 @@ data class ScrcpyConfig(
             }
         }
 
-        if (videoSource == "camera") {
+        if (videoEnabled && videoSource == "camera") {
             if (cameraHighSpeed && (cameraFps == null || cameraFps < 120)) {
                 errors.add("High speed camera mode is enabled, but camera FPS is not set to high-speed (>=120 FPS).")
             }
@@ -73,35 +78,38 @@ data class ScrcpyConfig(
         parts.add("send_device_meta=false") // Skip device name header
         parts.add("send_dummy_byte=false")  // Skip 1-byte dummy header byte on forward tunnel
 
-        parts.add("video_codec=$videoCodec")
-        if (captureOrientation != null && captureOrientation != "0") {
-            parts.add("capture_orientation=$captureOrientation")
-        }
-
-        // --- Video source ---
-        if (videoSource == "camera") {
-            parts.add("video_source=camera")
-            cameraId?.let { parts.add("camera_id=$it") }
-            // camera_facing is forbidden if camera_id is set (mirrors scrcpy's own validation)
-            if (cameraId == null) {
-                cameraFacing?.let { parts.add("camera_facing=$it") }
+        parts.add("video=$videoEnabled")
+        if (videoEnabled) {
+            parts.add("video_codec=$videoCodec")
+            if (captureOrientation != null && captureOrientation != "0") {
+                parts.add("capture_orientation=$captureOrientation")
             }
-            cameraSize?.let { parts.add("camera_size=$it") }
-            // camera_ar / max_size(-m) are forbidden if camera_size is set
-            if (cameraSize == null) {
-                cameraAr?.let { parts.add("camera_ar=$it") }
-                val effectiveMaxSize = if (maxSize > 0) maxSize else 1920 // camera can't do true "original"
-                parts.add("max_size=$effectiveMaxSize")
-            }
-            cameraFps?.let { parts.add("camera_fps=$it") }
-            if (cameraHighSpeed) parts.add("camera_high_speed=true")
-            if (cameraTorch) parts.add("camera_torch=true")
-        } else {
-            if (maxSize > 0) parts.add("max_size=$maxSize")
-        }
 
-        if (maxFps > 0) parts.add("max_fps=$maxFps")
-        if (bitRateMbps > 0) parts.add("video_bit_rate=${bitRateMbps * 1_000_000}")
+            // --- Video source ---
+            if (videoSource == "camera") {
+                parts.add("video_source=camera")
+                cameraId?.let { parts.add("camera_id=$it") }
+                // camera_facing is forbidden if camera_id is set (mirrors scrcpy's own validation)
+                if (cameraId == null) {
+                    cameraFacing?.let { parts.add("camera_facing=$it") }
+                }
+                cameraSize?.let { parts.add("camera_size=$it") }
+                // camera_ar / max_size(-m) are forbidden if camera_size is set
+                if (cameraSize == null) {
+                    cameraAr?.let { parts.add("camera_ar=$it") }
+                    val effectiveMaxSize = if (maxSize > 0) maxSize else 1920 // camera can't do true "original"
+                    parts.add("max_size=$effectiveMaxSize")
+                }
+                cameraFps?.let { parts.add("camera_fps=$it") }
+                if (cameraHighSpeed) parts.add("camera_high_speed=true")
+                if (cameraTorch) parts.add("camera_torch=true")
+            } else {
+                if (maxSize > 0) parts.add("max_size=$maxSize")
+            }
+
+            if (maxFps > 0) parts.add("max_fps=$maxFps")
+            if (bitRateMbps > 0) parts.add("video_bit_rate=${bitRateMbps * 1_000_000}")
+        }
 
         parts.add("audio=$audioEnabled")
         if (audioEnabled) {

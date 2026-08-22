@@ -147,6 +147,10 @@
     <string name="res_auto">Auto</string>
 
     <string name="section_video">Video</string>
+    <string name="video_enable_title">Enable Video</string>
+    <string name="video_enable_subtitle">Stream screen or camera display</string>
+    <string name="scrcpy_audio_only_banner">Audio Streaming Active</string>
+    <string name="scrcpy_audio_only_desc">Audio-only mode (video stream disabled)</string>
     <string name="label_resolution">Max Size</string>
     <string name="label_add_chip">+ Add</string>
     <string name="dialog_add_max_size_title">Add Custom Max Size</string>

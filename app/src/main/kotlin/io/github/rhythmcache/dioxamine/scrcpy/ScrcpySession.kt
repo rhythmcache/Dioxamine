@@ -20,7 +20,7 @@ class ScrcpySession(
     private val sessionScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var sessionJob: Job? = null
     @Volatile private var stoppedByUser = false
-    @Volatile private var videoSocketConnected = false
+    @Volatile private var socketsConnected = false
     @Volatile private var errorReported = false
 
     private var serverStream: AdbStream? = null
@@ -51,14 +51,14 @@ class ScrcpySession(
         }
     }
 
-    fun start(holder: SurfaceHolder) {
+    fun start(holder: SurfaceHolder? = null) {
         if (sessionJob?.isActive == true) {
             AppLogger.w(TAG_CLIENT, "start() called while a session is already active - ignoring")
             return
         }
 
         stoppedByUser = false
-        videoSocketConnected = false
+        socketsConnected = false
         errorReported = false
 
         sessionJob = sessionScope.launch {
@@ -107,7 +107,7 @@ class ScrcpySession(
                         AppLogger.i(TAG_CLIENT, "Server shell stdout stream ended (EOF)")
 
                         if (!stoppedByUser) {
-                            val msg = if (!videoSocketConnected) {
+                            val msg = if (!socketsConnected) {
                                 context.getString(io.github.rhythmcache.dioxamine.R.string.scrcpy_server_start_failed)
                             } else {
                                 context.getString(io.github.rhythmcache.dioxamine.R.string.scrcpy_server_terminated)
@@ -130,24 +130,32 @@ class ScrcpySession(
 
                 delay(300)
 
-                AppLogger.i(TAG_CLIENT, "Step 3: Connecting to video socket (1st connection)...")
-                videoStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 25, 200)
-                val currentVideoStream = videoStream ?: throw Exception("Failed to connect to scrcpy video socket after retries")
-                videoSocketConnected = true
+                // Sockets are accepted in order: video (if enabled), audio (if enabled), control (if enabled)
+                if (config.videoEnabled) {
+                    AppLogger.i(TAG_CLIENT, "Step 3: Connecting to video socket...")
+                    videoStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 25, 200)
+                        ?: throw Exception("Failed to connect to scrcpy video socket after retries")
+                    socketsConnected = true
+                }
 
                 if (config.audioEnabled) {
-                    AppLogger.i(TAG_CLIENT, "Step 3.5: Connecting to audio socket (2nd connection)...")
+                    AppLogger.i(TAG_CLIENT, "Step 3.x: Connecting to audio socket...")
                     audioStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 25, 200)
+                        ?: throw Exception("Failed to connect to scrcpy audio socket after retries")
+                    socketsConnected = true
                 }
 
                 if (config.controlEnabled) {
-                    AppLogger.i(TAG_CLIENT, "Step 3.7: Connecting to control socket (3rd connection)...")
+                    AppLogger.i(TAG_CLIENT, "Step 3.x: Connecting to control socket...")
                     controlStream = connectSocket(AdbEndpoint.LocalAbstract("scrcpy"), 25, 200)
+                        ?: throw Exception("Failed to connect to scrcpy control socket after retries")
+                    socketsConnected = true
                 }
 
+                var audioJob: Job? = null
                 val currentAudioStream = audioStream
                 if (config.audioEnabled && currentAudioStream != null) {
-                    launch {
+                    audioJob = launch {
                         val decoder = ScrcpyAudioDecoder()
                         audioDecoder = decoder
                         decoder.decodeAudioStream(currentAudioStream)
@@ -169,23 +177,32 @@ class ScrcpySession(
                     }
                 }
 
-                AppLogger.i(TAG_CLIENT, "Step 4: Initializing MediaCodec decoder pipeline...")
-                val targetWidth = if (config.maxSize > 0) (config.maxSize * 9 / 16) else 1080
-                val targetHeight = if (config.maxSize > 0) config.maxSize else 1920
+                if (config.videoEnabled) {
+                    val currentVideoStream = videoStream ?: throw Exception("Video stream not available")
+                    val surface = holder?.surface ?: throw IllegalArgumentException("SurfaceHolder is required when video is enabled")
+                    AppLogger.i(TAG_CLIENT, "Step 4: Initializing MediaCodec video decoder pipeline...")
+                    val targetWidth = if (config.maxSize > 0) (config.maxSize * 9 / 16) else 1080
+                    val targetHeight = if (config.maxSize > 0) config.maxSize else 1920
 
-                val decoder = ScrcpyDecoder(
-                    surface = holder.surface,
-                    defaultWidth = targetWidth,
-                    defaultHeight = targetHeight,
-                    onDimensionsParsed = { w, h ->
-                        videoWidth = w
-                        videoHeight = h
-                        onDimensions(w, h)
-                    },
-                    isStoppedByUser = { stoppedByUser }
-                )
-                videoDecoder = decoder
-                decoder.decodeStream(currentVideoStream)
+                    val decoder = ScrcpyDecoder(
+                        surface = surface,
+                        defaultWidth = targetWidth,
+                        defaultHeight = targetHeight,
+                        onDimensionsParsed = { w, h ->
+                            videoWidth = w
+                            videoHeight = h
+                            onDimensions(w, h)
+                        },
+                        isStoppedByUser = { stoppedByUser }
+                    )
+                    videoDecoder = decoder
+                    decoder.decodeStream(currentVideoStream)
+                } else if (config.audioEnabled) {
+                    AppLogger.i(TAG_CLIENT, "Video disabled - running in audio-only streaming mode")
+                    audioJob?.join()
+                } else {
+                    awaitCancellation()
+                }
             } catch (e: Exception) {
                 if (e is CancellationException) {
                     AppLogger.i(TAG_CLIENT, "Scrcpy session cancelled")

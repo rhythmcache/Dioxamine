@@ -243,7 +243,7 @@ fun ScrcpyScreen(
         isFullScreen = false
     }
 
-    fun startMirroring(holder: SurfaceHolder) {
+    fun startMirroring(holder: SurfaceHolder? = null) {
         val validationErrors = config.validate(apiLevel)
         if (validationErrors.isNotEmpty()) {
             errorMessage = context.getString(R.string.scrcpy_invalid_config_prefix) + validationErrors.joinToString("\n") { "\u2022 $it" }
@@ -285,41 +285,49 @@ fun ScrcpyScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (isMirroring) {
-                    ScrcpyVideoPlayer(
-                        modifier = Modifier.fillMaxSize(),
-                        videoWidth = videoWidth,
-                        videoHeight = videoHeight,
-                        isFullScreen = isFullScreen,
-                        showFloatingNav = showFloatingNav,
-                        bindVolumeKeys = config.bindVolumeKeys,
-                        videoSourceIsCamera = config.videoSource == "camera",
-                        torchOn = torchOn,
-                        onToggleTorch = {
-                            torchOn = !torchOn
-                            activeSession?.sendCameraSetTorch(torchOn)
-                        },
-                        onToggleFullScreen = { isFullScreen = !isFullScreen },
-                        onStop = { stopMirroring() },
-                        onNavBack = { activeSession?.sendNavBack() },
-                        onNavHome = { activeSession?.sendNavHome() },
-                        onNavRecents = { activeSession?.sendNavRecents() },
-                        onKeyEvent = { action, keyCode ->
-                            activeSession?.sendKeycode(action, keyCode)
-                        },
-                        onTouchEvent = { action, x, y, vw, vh ->
-                            if (config.videoSource != "camera") {
-                                activeSession?.sendTouchEvent(action, x, y, vw, vh)
+                    if (config.videoEnabled) {
+                        ScrcpyVideoPlayer(
+                            modifier = Modifier.fillMaxSize(),
+                            videoWidth = videoWidth,
+                            videoHeight = videoHeight,
+                            isFullScreen = isFullScreen,
+                            showFloatingNav = showFloatingNav,
+                            bindVolumeKeys = config.bindVolumeKeys,
+                            videoSourceIsCamera = config.videoSource == "camera",
+                            torchOn = torchOn,
+                            onToggleTorch = {
+                                torchOn = !torchOn
+                                activeSession?.sendCameraSetTorch(torchOn)
+                            },
+                            onToggleFullScreen = { isFullScreen = !isFullScreen },
+                            onStop = { stopMirroring() },
+                            onNavBack = { activeSession?.sendNavBack() },
+                            onNavHome = { activeSession?.sendNavHome() },
+                            onNavRecents = { activeSession?.sendNavRecents() },
+                            onKeyEvent = { action, keyCode ->
+                                activeSession?.sendKeycode(action, keyCode)
+                            },
+                            onTouchEvent = { action, x, y, vw, vh ->
+                                if (config.videoSource != "camera") {
+                                    activeSession?.sendTouchEvent(action, x, y, vw, vh)
+                                }
+                            },
+                            onSurfaceCreated = { holder ->
+                                val existingSession = activeSession
+                                if (existingSession != null) {
+                                    existingSession.setSurface(holder.surface)
+                                } else {
+                                    startMirroring(holder)
+                                }
                             }
-                        },
-                        onSurfaceCreated = { holder ->
-                            val existingSession = activeSession
-                            if (existingSession != null) {
-                                existingSession.setSurface(holder.surface)
-                            } else {
-                                startMirroring(holder)
-                            }
-                        }
-                    )
+                        )
+                    } else {
+                        ScrcpyAudioOnlyPlayer(
+                            modifier = Modifier.fillMaxSize(),
+                            config = config,
+                            onStop = { stopMirroring() }
+                        )
+                    }
                 } else if (errorMessage != null) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -417,27 +425,10 @@ fun ScrcpyScreen(
                                 ) {
                                     Card(modifier = Modifier.fillMaxWidth()) {
                                         Column(modifier = Modifier.padding(16.dp)) {
-                                            VideoSourceSettings(
-                                                config = config,
-                                                isMirroring = isMirroring,
-                                                onConfigChange = { config = it }
-                                            )
-
-                                            CameraSettings(
-                                                config = config,
-                                                isMirroring = isMirroring,
-                                                discoveredCameras = discoveredCameras,
-                                                isDiscovering = isDiscoveringCameras,
-                                                onConfigChange = { config = it }
-                                            )
-
-                                            Spacer(Modifier.height(12.dp))
-                                            HorizontalDivider()
-                                            Spacer(Modifier.height(12.dp))
-
                                             VideoSettings(
                                                 config = config,
                                                 isMirroring = isMirroring,
+                                                supportsAudio = supportsAudio,
                                                 allowCustomValues = allowCustomValues,
                                                 customMaxSizes = customMaxSizes,
                                                 customFps = customFps,
@@ -449,6 +440,26 @@ fun ScrcpyScreen(
                                                     dialogErrorMsg = null
                                                 }
                                             )
+
+                                            if (config.videoEnabled) {
+                                                Spacer(Modifier.height(12.dp))
+                                                HorizontalDivider()
+                                                Spacer(Modifier.height(12.dp))
+
+                                                VideoSourceSettings(
+                                                    config = config,
+                                                    isMirroring = isMirroring,
+                                                    onConfigChange = { config = it }
+                                                )
+
+                                                CameraSettings(
+                                                    config = config,
+                                                    isMirroring = isMirroring,
+                                                    discoveredCameras = discoveredCameras,
+                                                    isDiscovering = isDiscoveringCameras,
+                                                    onConfigChange = { config = it }
+                                                )
+                                            }
 
                                             Spacer(Modifier.height(12.dp))
                                             HorizontalDivider()
@@ -494,7 +505,12 @@ fun ScrcpyScreen(
                                                     if (isMirroring) {
                                                         stopMirroring()
                                                     } else {
-                                                        isMirroring = true
+                                                        if (config.videoEnabled) {
+                                                            isMirroring = true
+                                                        } else {
+                                                            isMirroring = true
+                                                            startMirroring(null)
+                                                        }
                                                     }
                                                 },
                                                 modifier = Modifier.fillMaxWidth()
@@ -768,6 +784,7 @@ private fun CameraSettings(
 private fun VideoSettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
+    supportsAudio: Boolean,
     allowCustomValues: Boolean,
     customMaxSizes: List<Int>,
     customFps: List<Int>,
@@ -776,6 +793,37 @@ private fun VideoSettings(
     onOpenAddDialog: (AddCustomDialogType) -> Unit
 ) {
     Text(stringResource(R.string.section_video), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.video_enable_title), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                stringResource(R.string.video_enable_subtitle),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = config.videoEnabled,
+            onCheckedChange = { isChecked ->
+                val newConfig = if (!isChecked && supportsAudio && !config.audioEnabled) {
+                    config.copy(videoEnabled = false, audioEnabled = true)
+                } else {
+                    config.copy(videoEnabled = isChecked)
+                }
+                onConfigChange(newConfig)
+            },
+            enabled = !isMirroring
+        )
+    }
+
+    if (!config.videoEnabled) return
+
     Spacer(Modifier.height(8.dp))
 
     if (config.videoSource != "camera") {
@@ -1384,3 +1432,80 @@ private fun ScrcpyVideoPlayer(
         }
     }
 }
+
+@Composable
+private fun ScrcpyAudioOnlyPlayer(
+    modifier: Modifier = Modifier,
+    config: ScrcpyConfig,
+    onStop: () -> Unit
+) {
+    Box(
+        modifier = modifier.background(Color(0xFF121212)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(64.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                tonalElevation = 4.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.GraphicEq,
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.scrcpy_audio_only_banner),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.scrcpy_audio_only_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SuggestionChip(
+                    onClick = {},
+                    label = { Text(config.audioCodec.uppercase()) }
+                )
+                SuggestionChip(
+                    onClick = {},
+                    label = { Text("${config.audioBitRateKbps} Kbps") }
+                )
+                SuggestionChip(
+                    onClick = {},
+                    label = {
+                        Text(if (config.effectiveAudioSource() == "mic") stringResource(R.string.audio_source_mic) else stringResource(R.string.audio_source_device))
+                    }
+                )
+            }
+        }
+
+        IconButton(
+            onClick = onStop,
+            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f)),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp)
+        ) {
+            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_stop_mirroring), tint = Color.White)
+        }
+    }
+}
+
