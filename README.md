@@ -5,7 +5,7 @@
 
 <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_512.png" width="128" height="128" alt="Dioxamine" align="right" />
 
-**Dioxamine** lets you run **ADB**, **Scrcpy**, and **Fastboot** directly from your Android phone or tablet. Connect another device via USB OTG or [Wireless ADB (Wi-Fi)](https://rhythmcache.github.io/Dioxamine/user-guide/connecting-devices.html) to mirror screens with full touch control, flash partitions, unlock bootloaders, manage files and apps, or run custom plugins. No PC or root required.
+**Dioxamine** lets you run **ADB**, **Scrcpy**, and **Fastboot** directly from your Android phone or tablet. Connect another device via USB OTG or [Wireless ADB (Wi-Fi)](https://rhythmcache.github.io/Dioxamine/book/user-guide/connecting-devices.html) to mirror screens with full touch control, flash partitions, unlock bootloaders, manage files and apps, or run custom plugins. No PC or root required.
 
 <p align="center">
   <img src="assets/screenshots/adb_management.jpg" width="200" alt="ADB Management" />
@@ -27,27 +27,27 @@ It focuses on:
 ## Features
 
 ### Scrcpy Screen Mirroring and Audio
-- [Real-time display mirroring](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/screen-mirroring.html) with full multi-touch and hardware key control
-- [Audio forwarding](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/settings-tuning.html) (Android 11+)
-- [Camera streaming](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/camera-streaming.html) (front and rear cameras, flashlight/torch toggle, high-FPS modes)
-- [Mirroring with target screen off](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/screen-mirroring.html) (saves battery and reduces heat)
-- [Touchpad & PC keyboard mode](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/touchpad-keyboard.html) via UHID simulation
+- [Real-time display mirroring](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html) with full multi-touch and hardware key control
+- [Audio forwarding](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/settings-tuning.html) (Android 11+)
+- [Camera streaming](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/camera-streaming.html) (front and rear cameras, flashlight/torch toggle, high-FPS modes)
+- [Mirroring with target screen off](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html) (saves battery and reduces heat)
+- [Touchpad & PC keyboard mode](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/touchpad-keyboard.html) via UHID simulation
 - Configurable codecs (**H.264**, **H.265 / HEVC**, **AV1**), bitrate, resolution, and FPS
 
 ### Fastboot Flasher and Bootloader Tools (USB OTG)
-- [Flash partition images](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/flashing-images.html) (`boot`, `recovery`, `vendor_boot`, `init_boot`, `system`, etc.)
-- [Live boot images](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/boot-image.html) (`fastboot boot <image>`) to test custom kernels or recoveries without flashing
-- [Unlock & lock bootloader](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/lock-bootloader.html) state directly from your phone
-- [Variable inspector](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/variables.html) (`getvar all`, check current slot A/B)
-- [Interactive Fastboot shell](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/fastboot-shell.html) for raw commands
+- [Flash partition images](https://rhythmcache.github.io/Dioxamine/book/user-guide/fastboot/flashing-images.html) (`boot`, `recovery`, `vendor_boot`, `init_boot`, `system`, etc.)
+- [Live boot images](https://rhythmcache.github.io/Dioxamine/book/user-guide/fastboot/boot-image.html) (`fastboot boot <image>`) to test custom kernels or recoveries without flashing
+- [Unlock & lock bootloader](https://rhythmcache.github.io/Dioxamine/book/user-guide/fastboot/lock-bootloader.html) state directly from your phone
+- [Variable inspector](https://rhythmcache.github.io/Dioxamine/book/user-guide/fastboot/variables.html) (`getvar all`, check current slot A/B)
+- [Interactive Fastboot shell](https://rhythmcache.github.io/Dioxamine/book/user-guide/fastboot/fastboot-shell.html) for raw commands
 
 ### ADB Management and Diagnostics
-- [File manager](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/file-manager.html): browse target filesystem, upload, download, and manage storage
-- [Package manager](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/package-manager.html): install split APKs, debloat/disable system apps, extract and pull APKs
-- [Reboot menu](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/reboot-menu.html): one-tap reboot to System, Recovery, Bootloader, FastbootD, EDL, or Power Off
-- [Sideload & rescue](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/sideload-rescue.html): flash OTA packages (`.zip`) via `adb sideload` or restore bricked devices
-- [Screenshot capture](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/screenshots.html): take high-res screenshots pulled directly from the target frame buffer
-- [Interactive ADB shell](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/terminal-shell.html)
+- [File manager](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/file-manager.html): browse target filesystem, upload, download, and manage storage
+- [Package manager](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/package-manager.html): install split APKs, debloat/disable system apps, extract and pull APKs
+- [Reboot menu](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/reboot-menu.html): one-tap reboot to System, Recovery, Bootloader, FastbootD, EDL, or Power Off
+- [Sideload & rescue](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/sideload-rescue.html): flash OTA packages (`.zip`) via `adb sideload` or restore bricked devices
+- [Screenshot capture](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/screenshots.html): take high-res screenshots pulled directly from the target frame buffer
+- [Interactive ADB shell](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/terminal-shell.html)
 
 ### Custom Plugin Engine
 - Run custom modular tools built with HTML5, CSS, and JavaScript inside a sandboxed WebView
@@ -68,19 +68,19 @@ On **Xiaomi / HyperOS / MIUI** devices, you must also enable **USB debugging (Se
 
 ## Documentation
 
-Full documentation, guides, and API specifications are available in the [Dioxamine Book](https://rhythmcache.github.io/Dioxamine/):
+Full documentation, guides, and API specifications are available in the [Dioxamine Book](https://rhythmcache.github.io/Dioxamine/book/):
 
 - **User Guide**
-  - [Connecting Devices (USB OTG, Wireless ADB, QR Pairing)](https://rhythmcache.github.io/Dioxamine/user-guide/connecting-devices.html)
-  - [OEM Setup & Troubleshooting](https://rhythmcache.github.io/Dioxamine/user-guide/oem-setup.html)
-  - [ADB Built-in Tools](https://rhythmcache.github.io/Dioxamine/user-guide/adb-tools/overview.html)
-  - [Scrcpy Screen Mirroring & Audio](https://rhythmcache.github.io/Dioxamine/user-guide/scrcpy-mirroring/screen-mirroring.html)
-  - [Fastboot Tools](https://rhythmcache.github.io/Dioxamine/user-guide/fastboot/getting-started.html)
+  - [Connecting Devices (USB OTG, Wireless ADB, QR Pairing)](https://rhythmcache.github.io/Dioxamine/book/user-guide/connecting-devices.html)
+  - [OEM Setup & Troubleshooting](https://rhythmcache.github.io/Dioxamine/book/user-guide/oem-setup.html)
+  - [ADB Built-in Tools](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/overview.html)
+  - [Scrcpy Screen Mirroring & Audio](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html)
+  - [Fastboot Tools](https://rhythmcache.github.io/Dioxamine/book/user-guide/fastboot/getting-started.html)
 - **Plugin Development**
   - [Plugin Overview & Architecture](https://rhythmcache.github.io/Dioxamine/book/plugins/overview.html)
-  - [Quickstart Guide](https://rhythmcache.github.io/Dioxamine/plugins/quickstart.html)
-  - [Manifest Specification (`plugin.json`)](https://rhythmcache.github.io/Dioxamine/plugins/manifest.html)
-  - [JavaScript Bridge API Reference](https://rhythmcache.github.io/Dioxamine/plugins/api-reference.html)
+  - [Quickstart Guide](https://rhythmcache.github.io/Dioxamine/book/plugins/quickstart.html)
+  - [Manifest Specification (`plugin.json`)](https://rhythmcache.github.io/Dioxamine/book/plugins/manifest.html)
+  - [JavaScript Bridge API Reference](https://rhythmcache.github.io/Dioxamine/book/plugins/api-reference.html)
 
 ## Build instructions
 
