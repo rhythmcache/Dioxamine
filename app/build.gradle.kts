@@ -37,8 +37,8 @@ android {
         applicationId = "io.github.rhythmcache.dioxamine"
         minSdk = 24
         targetSdk = 36
-        versionCode = 10001
-        versionName = "0.0.2-alpha"
+        versionCode = 10002
+        versionName = "0.0.2-stable"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
