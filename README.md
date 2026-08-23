@@ -1,6 +1,3 @@
-> [!WARNING]
-> Dioxamine is currently in an early alpha stage and under active development. Expect bugs, incomplete features, and frequent updates.
-
 # Dioxamine
 
 <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_512.png" width="128" height="128" alt="Dioxamine" align="right" />
