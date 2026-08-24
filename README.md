@@ -2,7 +2,7 @@
 
 <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_512.png" width="128" height="128" alt="Dioxamine" align="right" />
 
-**Dioxamine** lets you run **ADB**, **Scrcpy**, and **Fastboot** directly from your Android phone or tablet. Connect another device via USB OTG or [Wireless ADB (Wi-Fi)](https://rhythmcache.github.io/Dioxamine/book/user-guide/connecting-devices.html) to mirror screens with full touch control, flash partitions, unlock bootloaders, manage files and apps, or run custom plugins. No PC or root required.
+**Dioxamine** lets you run **ADB**, **Scrcpy**, and **Fastboot** directly from your Android phone or tablet. Connect another device via USB OTG or [Wireless ADB (Wi-Fi)](https://rhythmcache.github.io/Dioxamine/book/user-guide/connecting-devices.html) to mirror screens with full touch control, flash partitions, sideload, unlock bootloaders, manage files and apps, or run custom plugins. No PC or root required.
 
 <p align="center">
   <img src="assets/screenshots/adb_management.jpg" width="200" alt="ADB Management" />
