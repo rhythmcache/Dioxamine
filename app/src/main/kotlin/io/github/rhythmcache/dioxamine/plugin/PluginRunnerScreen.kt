@@ -150,6 +150,7 @@ fun PluginRunnerScreen(
     val entryUrl = "https://appassets.androidplatform.net/plugin/${manifest.entry}"
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             if (!isFullScreen) {
                 TopAppBar(
@@ -184,8 +185,7 @@ fun PluginRunnerScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .imePadding(),
+                    .padding(padding),
         ) {
             val webViewDebugEnabled = remember {
                 context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
