@@ -236,6 +236,7 @@
     <string name="settings_language_system_default">System Default</string>
     <string name="settings_language_english">English</string>
     <string name="settings_language_contribute">Contribute to translation</string>
+    <string name="settings_language_simplified_chinese">Simplified Chinese</string>
 
     <string name="settings_theme_title">Theme</string>
     <string name="theme_system">Device Default</string>
@@ -567,4 +568,84 @@
     <string name="settings_about_source_code">Source Code</string>
     <string name="cd_github">GitHub</string>
     <string name="cd_telegram">Telegram</string>
+
+    <!-- Additional localized UI and accessibility strings -->
+    <string name="cd_run">Run</string>
+    <string name="cd_send">Send</string>
+    <string name="cd_scroll_to_bottom">Scroll to bottom</string>
+    <string name="cd_restart_shell">Restart shell</string>
+    <string name="cd_select_mode">Select mode</string>
+    <string name="cd_open_touchpad">Open TouchPad</string>
+    <string name="cd_power">Power</string>
+    <string name="cd_mute">Mute</string>
+    <string name="cd_volume_down">Volume down</string>
+    <string name="cd_volume_up">Volume up</string>
+    <string name="cd_nav_menu">Menu</string>
+    <string name="cd_nav_up">Up</string>
+    <string name="cd_nav_down">Down</string>
+    <string name="cd_nav_left">Left</string>
+    <string name="cd_nav_right">Right</string>
+    <string name="cd_previous">Previous</string>
+    <string name="cd_rewind">Rewind</string>
+    <string name="cd_play_pause">Play or pause</string>
+    <string name="cd_fast_forward">Fast forward</string>
+    <string name="cd_next">Next</string>
+    <string name="cd_keyboard">Keyboard</string>
+    <string name="cd_send_text">Send text</string>
+    <string name="cd_toggle_numpad">Toggle numeric keypad</string>
+    <string name="cd_sensitivity_settings">Sensitivity settings</string>
+    <string name="cd_hide_keyboard">Hide keyboard</string>
+    <string name="cd_symlink">Symbolic link</string>
+    <string name="cd_actions">Actions</string>
+    <string name="cd_copy_logs_to_clipboard">Copy logs to clipboard</string>
+    <string name="cd_clear_logs">Clear logs</string>
+    <string name="cd_export_logs_zip">Export logs as ZIP</string>
+
+    <string name="status_disconnected">Disconnected</string>
+    <string name="msg_export_failed">Export failed: %1$s</string>
+    <string name="err_no_adb_key_file">No ADB key file found</string>
+    <string name="err_save_file_failed">Failed to save file</string>
+
+    <string name="camera_selector">Camera Selector</string>
+    <string name="camera_label_format">Cam %1$s (%2$s)</string>
+    <string name="camera_resolution">Camera Resolution</string>
+    <string name="camera_frame_rate">Camera Frame Rate</string>
+    <string name="scrcpy_logs_client">Client</string>
+    <string name="scrcpy_logs_server">Server</string>
+    <string name="scrcpy_logs_exported">Logs exported</string>
+    <string name="scrcpy_logs_export_failed">Export failed</string>
+
+    <string name="pkg_manager_dump_failed">Failed to load packages: %1$s</string>
+    <string name="pkg_manager_name_copied">Package name copied</string>
+    <string name="pkg_manager_copy_package">Copy Package</string>
+    <string name="pkg_manager_app_settings">App Settings</string>
+    <string name="pkg_info_package_name">Package Name</string>
+    <string name="pkg_info_version_name">Version Name</string>
+    <string name="pkg_info_version_code">Version Code</string>
+    <string name="pkg_info_target_sdk">Target SDK</string>
+    <string name="pkg_info_min_sdk">Minimum SDK</string>
+    <string name="pkg_info_uid">UID</string>
+    <string name="pkg_info_installer">Installer</string>
+    <string name="pkg_info_source_dir">Source Directory</string>
+    <string name="pkg_info_data_dir">Data Directory</string>
+    <string name="pkg_info_first_installed">First Installed</string>
+    <string name="pkg_info_last_updated">Last Updated</string>
+    <string name="pkg_info_split_apks">Split APKs (%1$d):</string>
+    <string name="pkg_info_not_available">N/A</string>
+
+    <string name="remote_detecting_device">Detecting device type…</string>
+    <string name="remote_mode_tv_detected">Android TV (Detected)</string>
+    <string name="remote_mode_standard_detected">Standard Android (Detected)</string>
+    <string name="remote_media_controls">Media Controls</string>
+    <string name="remote_numeric_keypad">Numeric Keypad</string>
+    <string name="touchpad_type">Type</string>
+    <string name="adb_ip_placeholder">192.168.1.100 or 192.168.1.100:5555</string>
+    <string name="cd_choose_save_location">Choose save location</string>
+    <string name="cd_attach_image">Attach image</string>
+    <string name="shell_error_message">Shell error: %1$s</string>
+    <string name="shell_live_hint">Don\'t prefix commands with &quot;adb shell&quot; — this is the live shell of the device.</string>
+    <string name="pkg_badge_system">System</string>
+    <string name="pkg_badge_disabled">Disabled</string>
+    <string name="pkg_badge_splits">Splits (%1$d)</string>
+    <string name="touchpad_error_details">Details: %1$s</string>
 </resources>

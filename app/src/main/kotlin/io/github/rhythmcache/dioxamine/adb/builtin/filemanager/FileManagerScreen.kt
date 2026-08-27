@@ -843,7 +843,7 @@ private fun FileItemRow(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Shortcut,
-                                contentDescription = "Symlink",
+                                contentDescription = stringResource(R.string.cd_symlink),
                                 tint = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.size(12.dp)
                             )
@@ -885,7 +885,7 @@ private fun FileItemRow(
                 if (!item.isParentDir) {
                     Box {
                         IconButton(onClick = { menuExpanded = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "Actions")
+                            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.cd_actions))
                         }
                         DropdownMenu(
                             expanded = menuExpanded,

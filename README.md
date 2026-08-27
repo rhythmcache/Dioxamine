@@ -103,6 +103,7 @@ Contributions are welcome! If you would like to contribute code, report bugs, or
 We want Dioxamine to be accessible in as many languages as possible.
 
 - [x] English (`en`) - default
+- [x] Simplified Chinese (`zh-CN`) - @riyousa
 
 <!-- Contributors: Add your language checkmark below when submitting a translation -->
 
@@ -168,5 +169,4 @@ git checkout -b translate-<language>
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
 

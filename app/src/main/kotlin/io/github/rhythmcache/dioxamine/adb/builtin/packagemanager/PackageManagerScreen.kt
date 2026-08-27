@@ -394,7 +394,7 @@ fun PackageManagerScreen(
                 AppLogger.e("PKGDUMP_DIAGNOSTIC", ">>> [PKGDUMP_DIAGNOSTIC] STREAM_FAILED: ${err.message}", err)
                 withContext(Dispatchers.Main) {
                     isLoading = false
-                    Toast.makeText(context, "Failed to dump packages: ${err.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.pkg_manager_dump_failed, err.message ?: ""), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -772,21 +772,21 @@ fun AppTileItem(
                     }
                     if (app.isSystem) {
                         BadgeChip(
-                            text = "System",
+                            text = stringResource(R.string.pkg_badge_system),
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             textColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                     if (!app.isEnabled) {
                         BadgeChip(
-                            text = "Disabled",
+                            text = stringResource(R.string.pkg_badge_disabled),
                             color = MaterialTheme.colorScheme.errorContainer,
                             textColor = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                     if (app.hasSplits) {
                         BadgeChip(
-                            text = "Splits (${app.splitDirs.size + 1})",
+                            text = stringResource(R.string.pkg_badge_splits, app.splitDirs.size + 1),
                             color = MaterialTheme.colorScheme.tertiaryContainer,
                             textColor = MaterialTheme.colorScheme.onTertiaryContainer
                         )
@@ -902,30 +902,30 @@ fun AppInfoDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                InfoRow("Package Name", app.packageName)
-                InfoRow("Version Name", app.versionName.ifBlank { "N/A" })
-                InfoRow("Version Code", app.versionCode.toString())
-                InfoRow("Target SDK", "API ${app.targetSdk}")
+                InfoRow(stringResource(R.string.pkg_info_package_name), app.packageName)
+                InfoRow(stringResource(R.string.pkg_info_version_name), app.versionName.ifBlank { stringResource(R.string.pkg_info_not_available) })
+                InfoRow(stringResource(R.string.pkg_info_version_code), app.versionCode.toString())
+                InfoRow(stringResource(R.string.pkg_info_target_sdk), "API ${app.targetSdk}")
                 if (app.minSdk > 0) {
-                    InfoRow("Min SDK", "API ${app.minSdk}")
+                    InfoRow(stringResource(R.string.pkg_info_min_sdk), "API ${app.minSdk}")
                 }
-                InfoRow("UID", app.uid.toString())
+                InfoRow(stringResource(R.string.pkg_info_uid), app.uid.toString())
                 if (app.installer.isNotBlank()) {
-                    InfoRow("Installer", app.installer)
+                    InfoRow(stringResource(R.string.pkg_info_installer), app.installer)
                 }
-                InfoRow("Source Dir", app.sourceDir)
+                InfoRow(stringResource(R.string.pkg_info_source_dir), app.sourceDir)
                 if (app.dataDir.isNotBlank()) {
-                    InfoRow("Data Dir", app.dataDir)
+                    InfoRow(stringResource(R.string.pkg_info_data_dir), app.dataDir)
                 }
                 if (app.firstInstallTime > 0) {
-                    InfoRow("First Installed", dateFormat.format(Date(app.firstInstallTime)))
+                    InfoRow(stringResource(R.string.pkg_info_first_installed), dateFormat.format(Date(app.firstInstallTime)))
                 }
                 if (app.lastUpdateTime > 0) {
-                    InfoRow("Last Updated", dateFormat.format(Date(app.lastUpdateTime)))
+                    InfoRow(stringResource(R.string.pkg_info_last_updated), dateFormat.format(Date(app.lastUpdateTime)))
                 }
                 if (app.hasSplits) {
                     Text(
-                        text = "Split APKs (${app.splitDirs.size}):",
+                        text = stringResource(R.string.pkg_info_split_apks, app.splitDirs.size),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -942,17 +942,17 @@ fun AppInfoDialog(
         confirmButton = {
             TextButton(onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("Package Name", app.packageName)
+                val clip = ClipData.newPlainText(context.getString(R.string.pkg_info_package_name), app.packageName)
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(context, "Package name copied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.pkg_manager_name_copied), Toast.LENGTH_SHORT).show()
             }) {
-                Text("Copy Package")
+                Text(stringResource(R.string.pkg_manager_copy_package))
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onOpenSettings) {
-                    Text("App Settings")
+                    Text(stringResource(R.string.pkg_manager_app_settings))
                 }
                 TextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.btn_close))

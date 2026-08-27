@@ -664,14 +664,14 @@ private fun CameraSettings(
     }
 
     if (discoveredCameras.isNotEmpty()) {
-        Text("Camera Selector", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.camera_selector), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(4.dp))
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             discoveredCameras.forEach { cam ->
-                val label = "Cam ${cam.id} (${cam.facing})"
+                val label = stringResource(R.string.camera_label_format, cam.id, cam.facing)
                 FilterChip(
                     selected = config.cameraId == cam.id || (config.cameraId == null && config.cameraFacing == cam.facing),
                     onClick = {
@@ -691,7 +691,7 @@ private fun CameraSettings(
         val activeCam = discoveredCameras.find { it.id == config.cameraId } ?: discoveredCameras.find { it.facing == config.cameraFacing } ?: discoveredCameras.first()
 
         Spacer(Modifier.height(8.dp))
-        Text("Camera Resolution", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.camera_resolution), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(4.dp))
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -711,7 +711,7 @@ private fun CameraSettings(
         }
 
         Spacer(Modifier.height(8.dp))
-        Text("Camera Frame Rate", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.camera_frame_rate), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(4.dp))
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -1506,4 +1506,3 @@ private fun ScrcpyAudioOnlyPlayer(
         }
     }
 }
-

@@ -1,0 +1,1 @@
+通过 USB OTG 或 Wi-Fi 使用 ADB、屏幕镜像、文件管理和 Fastboot

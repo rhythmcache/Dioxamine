@@ -13,9 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.rhythmcache.dioxamine.R
 
 @Composable
 fun FastbootDetailHeader(
@@ -29,7 +31,7 @@ fun FastbootDetailHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_nav_back))
         }
         Spacer(modifier = Modifier.width(4.dp))
         Text(
@@ -139,7 +141,7 @@ fun OperationStatusCard(
                             color = contentColor,
                         )
                         Text(
-                            text = "Operation in progress...",
+                            text = stringResource(R.string.fastboot_op_in_progress),
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor.copy(alpha = 0.8f),
                         )
@@ -155,7 +157,7 @@ fun OperationStatusCard(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "${status.opLabel} Done",
+                            text = stringResource(R.string.fastboot_op_done, status.opLabel),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = contentColor,
                         )
@@ -180,7 +182,7 @@ fun OperationStatusCard(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "${status.opLabel} Failed",
+                            text = stringResource(R.string.fastboot_op_failed, status.opLabel),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = contentColor,
                         )
@@ -199,7 +201,7 @@ fun OperationStatusCard(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Dismiss",
+                        contentDescription = stringResource(R.string.btn_dismiss),
                         tint = contentColor,
                     )
                 }
@@ -209,5 +211,4 @@ fun OperationStatusCard(
 }
 
 private fun String?.isNullOrOkayOrBlank(): Boolean = this.isNullOrBlank() || this.trim() == "OKAY"
-
 

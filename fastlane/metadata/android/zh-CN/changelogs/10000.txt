@@ -1,0 +1,5 @@
+Dioxamine 0.0.1-alpha 首次发布：
+• 支持 USB OTG 和无线 ADB 设备连接，并提供 mDNS 自动发现和二维码配对
+• 完整的 ADB 设备管理功能，包括文件管理器、应用管理器、交互式 Shell 和重启选项
+• 低延迟 scrcpy 屏幕镜像、触控遥控、音频传输和显示调节
+• Fastboot 镜像刷入、引导加载程序锁定/解锁和 Fastboot 终端
