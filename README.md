@@ -106,8 +106,6 @@ We want Dioxamine to be accessible in as many languages as possible.
 
 <!-- Contributors: Add your language checkmark below when submitting a translation -->
 
-👉 **[Click here for the Translation Guide](#-how-to-add-a-language-translation)**
-
 <details>
 <summary><b>📖 Instructions: How to Add a Language Translation</b></summary>
 
