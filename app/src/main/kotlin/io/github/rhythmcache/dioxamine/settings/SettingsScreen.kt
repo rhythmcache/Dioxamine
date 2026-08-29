@@ -54,12 +54,6 @@ import io.github.rhythmcache.dioxamine.plugin.PermissionPolicy
 import io.github.rhythmcache.dioxamine.plugin.PluginManifest
 import kotlinx.coroutines.launch
 
-data class LanguageOption(@StringRes val nameRes: Int, val languageTag: String?)
-
-private val supportedLanguages = listOf(
-    LanguageOption(R.string.settings_language_system_default, null),
-    LanguageOption(R.string.settings_language_english, "en")
-)
 
 @Composable
 fun SettingsScreen(vm: AdbViewModel) {

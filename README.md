@@ -94,6 +94,66 @@ Requirements:
 - Android SDK (API 37)
 - Android NDK (`ANDROID_NDK_HOME` set)
 
+## Contributing
+
+Contributions are welcome! If you would like to contribute code, report bugs, or help translate Dioxamine into your language, feel free to open an issue or pull request.
+
+### Translations
+
+We want Dioxamine to be accessible in as many languages as possible.
+
+- [x] English (`en`) - default
+
+<!-- Contributors: Add your language checkmark below when submitting a translation -->
+
+👉 **[Click here for the Translation Guide](#-how-to-add-a-language-translation)**
+
+<details>
+<summary><b>📖 Instructions: How to Add a Language Translation</b></summary>
+
+<h4 id="-how-to-add-a-language-translation">1. Fork & Clone</h4>
+
+Fork this repository and clone your fork locally:
+```bash
+git clone https://github.com/<your-username>/Dioxamine.git
+cd Dioxamine
+git checkout -b translate-<language>
+```
+
+#### 2. Create the Translation File
+1. Create a new folder under `app/src/main/res/`:
+   ```bash
+   app/src/main/res/values-<locale>/
+   ```
+   *(e.g., `values-es` for Spanish, `values-ru` for Russian, `values-zh-rCN` for Simplified Chinese, `values-pt-rBR` for Brazilian Portuguese)*
+2. Copy the base strings from [`app/src/main/res/values/strings.xml`](app/src/main/res/values/strings.xml) into your new folder: `app/src/main/res/values-<locale>/strings.xml`.
+3. Translate the strings inside `<string name="...">Your Translation</string>`.
+   > **Note:** Keep placeholders like `%s`, `%d`, `%1$s`, HTML tags, and XML entities (`&amp;`, `\'`) unchanged.
+
+#### 3. Register Your Language in Code
+1. In [`app/src/main/res/values/strings.xml`](app/src/main/res/values/strings.xml), add a string resource for your language's name:
+   ```xml
+   <string name="settings_language_spanish">Español</string>
+   ```
+2. In [`app/src/main/kotlin/io/github/rhythmcache/dioxamine/settings/SupportedLanguages.kt`](app/src/main/kotlin/io/github/rhythmcache/dioxamine/settings/SupportedLanguages.kt), add an entry to the `supportedLanguages` list:
+   ```kotlin
+   LanguageOption(R.string.settings_language_spanish, "es"),
+   ```
+
+#### 4. Add Checkmark in README & Open PR
+1. Under the **Translations** section above in `README.md`, add your language checkmark:
+   ```markdown
+   - [x] Spanish (`es`) - @your-github-username
+   ```
+2. Commit your changes, push to your fork, and submit a **Pull Request**:
+   ```bash
+   git add .
+   git commit -m "i18n: add Spanish translation"
+   git push origin translate-spanish
+   ```
+
+</details>
+
 ## Community
 
 - **Telegram Channel**: [t.me/tr1ple_fault](https://t.me/tr1ple_fault)
