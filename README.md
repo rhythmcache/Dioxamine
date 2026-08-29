@@ -106,11 +106,9 @@ We want Dioxamine to be accessible in as many languages as possible.
 
 <!-- Contributors: Add your language checkmark below when submitting a translation -->
 
-<details>
-<summary><b>📖 Instructions: How to Add a Language Translation</b></summary>
+### 🌐 How to Add a Language Translation
 
-<h4 id="-how-to-add-a-language-translation">1. Fork & Clone</h4>
-
+#### 1. Fork & Clone
 Fork this repository and clone your fork locally:
 ```bash
 git clone https://github.com/<your-username>/Dioxamine.git
@@ -149,8 +147,6 @@ git checkout -b translate-<language>
    git commit -m "i18n: add Spanish translation"
    git push origin translate-spanish
    ```
-
-</details>
 
 ## Community
 

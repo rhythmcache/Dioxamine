@@ -235,6 +235,7 @@
     <string name="settings_language_title">Language</string>
     <string name="settings_language_system_default">System Default</string>
     <string name="settings_language_english">English</string>
+    <string name="settings_language_contribute">Contribute to translation</string>
 
     <string name="settings_theme_title">Theme</string>
     <string name="theme_system">Device Default</string>
