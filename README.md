@@ -128,9 +128,9 @@ git checkout -b translate-<language>
    > **Note:** Keep placeholders like `%s`, `%d`, `%1$s`, HTML tags, and XML entities (`&amp;`, `\'`) unchanged.
 
 #### 3. Register Your Language in Code
-1. In [`app/src/main/res/values/strings.xml`](app/src/main/res/values/strings.xml), add a string resource for your language's name:
+1. In [`app/src/main/res/values/strings.xml`](app/src/main/res/values/strings.xml), add a string resource for your language's native name (endonym) with `translatable="false"` (do not translate it in other language folders):
    ```xml
-   <string name="settings_language_spanish">Español</string>
+   <string name="settings_language_spanish" translatable="false">Español</string>
    ```
 2. In [`app/src/main/kotlin/io/github/rhythmcache/dioxamine/settings/SupportedLanguages.kt`](app/src/main/kotlin/io/github/rhythmcache/dioxamine/settings/SupportedLanguages.kt), add an entry to the `supportedLanguages` list:
    ```kotlin
