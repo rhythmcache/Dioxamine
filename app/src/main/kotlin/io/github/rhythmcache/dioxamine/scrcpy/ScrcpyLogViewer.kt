@@ -43,12 +43,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.Typeface
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import io.github.rhythmcache.dioxamine.core.DeviceConnection
+import io.github.rhythmcache.dioxamine.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -123,7 +125,7 @@ fun ScrcpyLogViewer(
                 }
                 exportSuccess = true
             } catch (e: Exception) {
-                exportError = e.message ?: "Export failed"
+                exportError = e.message ?: context.getString(R.string.scrcpy_logs_export_failed)
             } finally {
                 isExporting = false
             }
@@ -141,12 +143,12 @@ fun ScrcpyLogViewer(
             FilterChip(
                 selected = selectedChip == LogChip.CLIENT,
                 onClick = { selectedChip = LogChip.CLIENT },
-                label = { Text("Client") }
+                label = { Text(stringResource(R.string.scrcpy_logs_client)) }
             )
             FilterChip(
                 selected = selectedChip == LogChip.SERVER,
                 onClick = { selectedChip = LogChip.SERVER },
-                label = { Text("Server") }
+                label = { Text(stringResource(R.string.scrcpy_logs_server)) }
             )
 
             Spacer(Modifier.weight(1f))
@@ -158,13 +160,13 @@ fun ScrcpyLogViewer(
                 clipboardManager?.setPrimaryClip(clip)
                 copySuccess = true
             }) {
-                Icon(Icons.Filled.ContentCopy, contentDescription = "Copy logs to clipboard")
+                Icon(Icons.Filled.ContentCopy, contentDescription = stringResource(R.string.cd_copy_logs_to_clipboard))
             }
 
             IconButton(onClick = {
                 AppLogger.clear(if (selectedChip == LogChip.CLIENT) TAG_CLIENT else TAG_SERVER)
             }) {
-                Icon(Icons.Filled.Clear, contentDescription = "Clear logs")
+                Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.cd_clear_logs))
             }
 
             IconButton(
@@ -180,7 +182,7 @@ fun ScrcpyLogViewer(
                 if (isExporting) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                 } else {
-                    Icon(Icons.Filled.FileDownload, contentDescription = "Export logs as zip")
+                    Icon(Icons.Filled.FileDownload, contentDescription = stringResource(R.string.cd_export_logs_zip))
                 }
             }
         }
@@ -195,7 +197,7 @@ fun ScrcpyLogViewer(
         }
         if (exportSuccess) {
             Text(
-                "Logs exported",
+                stringResource(R.string.scrcpy_logs_exported),
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 16.dp)

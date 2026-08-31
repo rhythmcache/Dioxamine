@@ -5,7 +5,6 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -54,7 +53,6 @@ import io.github.rhythmcache.dioxamine.plugin.PluginPermission
 import io.github.rhythmcache.dioxamine.plugin.PermissionPolicy
 import io.github.rhythmcache.dioxamine.plugin.PluginManifest
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun SettingsScreen(vm: AdbViewModel) {
@@ -134,13 +132,13 @@ fun SettingsScreen(vm: AdbViewModel) {
                     if (keyFile.exists() && keyFile.length() > 0) {
                         out.write(keyFile.readBytes())
                     } else {
-                        throw Exception("No ADB key file found")
+                        throw Exception(context.getString(R.string.err_no_adb_key_file))
                     }
                 }
             }.onSuccess {
                 Toast.makeText(context, context.getString(R.string.msg_key_exported), Toast.LENGTH_SHORT).show()
             }.onFailure { e ->
-                Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.msg_export_failed, e.message ?: ""), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -158,7 +156,7 @@ fun SettingsScreen(vm: AdbViewModel) {
             }.onSuccess {
                 Toast.makeText(context, context.getString(R.string.msg_logs_exported), Toast.LENGTH_SHORT).show()
             }.onFailure { e ->
-                Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.msg_export_failed, e.message ?: ""), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -206,7 +204,7 @@ fun SettingsScreen(vm: AdbViewModel) {
                     }
                     Icon(
                         imageVector = if (themeExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (themeExpanded) "Collapse" else "Expand"
+                        contentDescription = stringResource(if (themeExpanded) R.string.cd_collapse else R.string.cd_expand)
                     )
                 }
 
@@ -315,7 +313,7 @@ fun SettingsScreen(vm: AdbViewModel) {
                     }
                     Icon(
                         imageVector = if (languageExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (languageExpanded) "Collapse" else "Expand"
+                        contentDescription = stringResource(if (languageExpanded) R.string.cd_collapse else R.string.cd_expand)
                     )
                 }
 
@@ -524,7 +522,7 @@ fun SettingsScreen(vm: AdbViewModel) {
                     }
                     Icon(
                         imageVector = if (scrcpyExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (scrcpyExpanded) "Collapse" else "Expand"
+                        contentDescription = stringResource(if (scrcpyExpanded) R.string.cd_collapse else R.string.cd_expand)
                     )
                 }
 
@@ -593,7 +591,7 @@ fun SettingsScreen(vm: AdbViewModel) {
                     }
                     Icon(
                         imageVector = if (logsExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (logsExpanded) "Collapse" else "Expand"
+                        contentDescription = stringResource(if (logsExpanded) R.string.cd_collapse else R.string.cd_expand)
                     )
                 }
 

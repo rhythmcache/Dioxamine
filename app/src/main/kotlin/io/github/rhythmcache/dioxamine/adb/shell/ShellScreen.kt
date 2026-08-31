@@ -10,8 +10,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 
 /**
@@ -87,7 +89,7 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = "Shell error: $errorMessage",
+                    text = stringResource(R.string.shell_error_message, errorMessage ?: ""),
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),

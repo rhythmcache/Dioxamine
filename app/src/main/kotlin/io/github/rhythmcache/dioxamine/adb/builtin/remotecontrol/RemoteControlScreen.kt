@@ -118,15 +118,15 @@ fun RemoteControlScreen(
                                 Spacer(Modifier.width(4.dp))
                                 Icon(
                                     imageVector = if (dropdownExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                                    contentDescription = "Select Mode"
+                                    contentDescription = stringResource(R.string.cd_select_mode)
                                 )
                             }
                             Text(
-                                text = if (isDetecting) stringResource(R.string.camera_discovering)
+                                text = if (isDetecting) stringResource(R.string.remote_detecting_device)
                                 else if (effectiveIsTv) {
-                                    if (isTvDetected) "Android TV (Detected)" else "Android TV"
+                                    stringResource(if (isTvDetected) R.string.remote_mode_tv_detected else R.string.remote_mode_tv)
                                 } else {
-                                    if (!isTvDetected) "Standard Android (Detected)" else "Standard Android"
+                                    stringResource(if (!isTvDetected) R.string.remote_mode_standard_detected else R.string.remote_mode_standard)
                                 },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (effectiveIsTv) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -138,8 +138,8 @@ fun RemoteControlScreen(
                         expanded = dropdownExpanded,
                         onDismissRequest = { dropdownExpanded = false }
                     ) {
-                        val tvLabel = if (isTvDetected) "Android TV (Detected)" else "Android TV"
-                        val standardLabel = if (!isTvDetected) "Standard Android (Detected)" else "Standard Android"
+                        val tvLabel = stringResource(if (isTvDetected) R.string.remote_mode_tv_detected else R.string.remote_mode_tv)
+                        val standardLabel = stringResource(if (!isTvDetected) R.string.remote_mode_standard_detected else R.string.remote_mode_standard)
 
                         DropdownMenuItem(
                             text = {
@@ -188,7 +188,7 @@ fun RemoteControlScreen(
                     IconButton(onClick = onOpenTouchpad) {
                         Icon(
                             imageVector = Icons.Filled.Mouse,
-                            contentDescription = "Open TouchPad",
+                            contentDescription = stringResource(R.string.cd_open_touchpad),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -220,23 +220,23 @@ fun RemoteControlScreen(
                 ) {
                     RemoteIconButton(
                         icon = Icons.Filled.PowerSettingsNew,
-                        contentDescription = "Power",
+                        contentDescription = stringResource(R.string.cd_power),
                         tint = MaterialTheme.colorScheme.error,
                         onClick = { sendKeyEvent(26) } // KEYCODE_POWER
                     )
                     RemoteIconButton(
                         icon = Icons.AutoMirrored.Filled.VolumeOff,
-                        contentDescription = "Mute",
+                        contentDescription = stringResource(R.string.cd_mute),
                         onClick = { sendKeyEvent(164) } // KEYCODE_VOLUME_MUTE
                     )
                     RemoteIconButton(
                         icon = Icons.AutoMirrored.Filled.VolumeDown,
-                        contentDescription = "Vol -",
+                        contentDescription = stringResource(R.string.cd_volume_down),
                         onClick = { sendKeyEvent(25) } // KEYCODE_VOLUME_DOWN
                     )
                     RemoteIconButton(
                         icon = Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = "Vol +",
+                        contentDescription = stringResource(R.string.cd_volume_up),
                         onClick = { sendKeyEvent(24) } // KEYCODE_VOLUME_UP
                     )
                 }
@@ -260,7 +260,7 @@ fun RemoteControlScreen(
                             .padding(top = 12.dp)
                             .size(56.dp)
                     ) {
-                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Up", modifier = Modifier.size(36.dp))
+                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = stringResource(R.string.cd_nav_up), modifier = Modifier.size(36.dp))
                     }
 
                     // D-Pad Down
@@ -271,7 +271,7 @@ fun RemoteControlScreen(
                             .padding(bottom = 12.dp)
                             .size(56.dp)
                     ) {
-                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Down", modifier = Modifier.size(36.dp))
+                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(R.string.cd_nav_down), modifier = Modifier.size(36.dp))
                     }
 
                     // D-Pad Left
@@ -282,7 +282,7 @@ fun RemoteControlScreen(
                             .padding(start = 12.dp)
                             .size(56.dp)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Left", modifier = Modifier.size(36.dp))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.cd_nav_left), modifier = Modifier.size(36.dp))
                     }
 
                     // D-Pad Right
@@ -293,7 +293,7 @@ fun RemoteControlScreen(
                             .padding(end = 12.dp)
                             .size(56.dp)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Right", modifier = Modifier.size(36.dp))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.cd_nav_right), modifier = Modifier.size(36.dp))
                     }
 
                     // D-Pad Center (OK / Select)
@@ -305,7 +305,7 @@ fun RemoteControlScreen(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = "OK",
+                                text = stringResource(R.string.btn_ok),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimary
@@ -330,22 +330,22 @@ fun RemoteControlScreen(
                 ) {
                     RemoteIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.cd_nav_back),
                         onClick = { sendKeyEvent(4) } // KEYCODE_BACK
                     )
                     RemoteIconButton(
                         icon = Icons.Filled.RadioButtonUnchecked,
-                        contentDescription = "Home",
+                        contentDescription = stringResource(R.string.cd_nav_home),
                         onClick = { sendKeyEvent(3) } // KEYCODE_HOME
                     )
                     RemoteIconButton(
                         icon = Icons.Filled.CropSquare,
-                        contentDescription = "Recents",
+                        contentDescription = stringResource(R.string.cd_nav_recents),
                         onClick = { sendKeyEvent(187) } // KEYCODE_APP_SWITCH
                     )
                     RemoteIconButton(
                         icon = Icons.Filled.Menu,
-                        contentDescription = "Menu",
+                        contentDescription = stringResource(R.string.cd_nav_menu),
                         onClick = { sendKeyEvent(82) } // KEYCODE_MENU
                     )
                 }
@@ -386,17 +386,17 @@ fun RemoteControlScreen(
                     // Media Playback Controls
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Media Controls", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.remote_media_controls), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(12.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                RemoteIconButton(icon = Icons.Filled.SkipPrevious, contentDescription = "Prev") { sendKeyEvent(88) }
-                                RemoteIconButton(icon = Icons.Filled.FastRewind, contentDescription = "Rewind") { sendKeyEvent(89) }
-                                RemoteIconButton(icon = Icons.Filled.PlayArrow, contentDescription = "Play/Pause", tint = MaterialTheme.colorScheme.primary) { sendKeyEvent(85) }
-                                RemoteIconButton(icon = Icons.Filled.FastForward, contentDescription = "Fast Forward") { sendKeyEvent(90) }
-                                RemoteIconButton(icon = Icons.Filled.SkipNext, contentDescription = "Next") { sendKeyEvent(87) }
+                                RemoteIconButton(icon = Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.cd_previous)) { sendKeyEvent(88) }
+                                RemoteIconButton(icon = Icons.Filled.FastRewind, contentDescription = stringResource(R.string.cd_rewind)) { sendKeyEvent(89) }
+                                RemoteIconButton(icon = Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.cd_play_pause), tint = MaterialTheme.colorScheme.primary) { sendKeyEvent(85) }
+                                RemoteIconButton(icon = Icons.Filled.FastForward, contentDescription = stringResource(R.string.cd_fast_forward)) { sendKeyEvent(90) }
+                                RemoteIconButton(icon = Icons.Filled.SkipNext, contentDescription = stringResource(R.string.cd_next)) { sendKeyEvent(87) }
                             }
                         }
                     }
@@ -424,7 +424,7 @@ fun RemoteControlScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Numeric Keypad", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.remote_numeric_keypad), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(4.dp))
                         val rows = listOf(
                             listOf(7 to 14, 8 to 15, 9 to 16),
@@ -482,7 +482,7 @@ private fun RemoteInputBar(
         leadingIcon = {
             Icon(
                 imageVector = Icons.Filled.Keyboard,
-                contentDescription = "Keyboard icon",
+                contentDescription = stringResource(R.string.cd_keyboard),
                 tint = if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
@@ -492,7 +492,7 @@ private fun RemoteInputBar(
                     IconButton(onClick = onSendText) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send text",
+                            contentDescription = stringResource(R.string.cd_send_text),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -500,7 +500,7 @@ private fun RemoteInputBar(
                 IconButton(onClick = onToggleNumPad) {
                     Icon(
                         imageVector = Icons.Filled.Dialpad,
-                        contentDescription = "Toggle numeric keypad",
+                        contentDescription = stringResource(R.string.cd_toggle_numpad),
                         tint = if (showNumPad) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

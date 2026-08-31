@@ -77,7 +77,7 @@ fun ScreencapScreen(
                     }
                 }.onFailure { err ->
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, err.message ?: "Failed to save file", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, err.message ?: context.getString(R.string.err_save_file_failed), Toast.LENGTH_LONG).show()
                     }
                 }
             }

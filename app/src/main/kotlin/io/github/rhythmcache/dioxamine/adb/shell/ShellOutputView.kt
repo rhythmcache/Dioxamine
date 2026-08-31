@@ -19,11 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.rhythmcache.dioxamine.R
 
 /** Dark background for the terminal surface. */
 val TerminalBackground = Color(0xFF0D1117)
@@ -79,7 +81,7 @@ fun ShellOutputView(
         if (totalCount == 0) {
             // Subtle hint when the terminal is empty
             Text(
-                text = "Don't prefix commands with \"adb shell\" - this is the live shell of the device.",
+                text = stringResource(R.string.shell_live_hint),
                 color = Color(0xFF484F58),
                 fontFamily = monoFamily,
                 fontSize = 13.sp,
@@ -155,7 +157,7 @@ fun ShellOutputView(
             ) {
                 Icon(
                     Icons.Filled.KeyboardArrowDown,
-                    contentDescription = "Scroll to bottom",
+                    contentDescription = stringResource(R.string.cd_scroll_to_bottom),
                     modifier = Modifier.size(20.dp),
                 )
             }

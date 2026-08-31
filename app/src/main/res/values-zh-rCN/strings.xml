@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dioxamine</string>
+
+    <!-- 导航标签 -->
+    <string name="tab_adb">ADB</string>
+    <string name="tab_scrcpy">scrcpy</string>
+    <string name="tab_fastboot">Fastboot</string>
+    <string name="tab_settings">设置</string>
+
+    <!-- ADB 标签页 -->
+    <string name="adb_subtab_builtin">内置工具</string>
+    <string name="adb_subtab_adb_shell">ADB Shell</string>
+    <string name="adb_subtab_plugins">插件</string>
+
+    <string name="adb_shell_title">ADB Shell 支持</string>
+    <string name="feature_coming_soon">此功能即将推出。</string>
+    <string name="adb_shell_info_dialog_title">ADB Shell 提示</string>
+    <string name="adb_shell_info_dialog_msg_before_link">此内置 Shell 是用于运行基本命令的简易终端，功能有限且不提供完整的终端模拟。如需高级或功能完整的终端体验，建议使用</string>
+    <string name="adb_shell_info_dialog_link">终端插件</string>
+    <string name="adb_shell_info_dialog_msg_after_link">。</string>
+    <string name="adb_shell_dont_show_again">不再显示</string>
+
+    <string name="no_devices_connected">未连接设备</string>
+    <plurals name="connected_devices_count">
+        <item quantity="one">已连接 %1$d 台设备</item>
+        <item quantity="other">已连接 %1$d 台设备</item>
+    </plurals>
+    <string name="cd_add_device">添加设备</string>
+    <string name="cd_expand_collapse">展开或折叠</string>
+    <string name="no_devices_added_hint">尚未添加设备。点按“+”连接设备。</string>
+
+    <string name="dialog_add_tcp_title">添加 TCP 设备</string>
+    <string name="label_ip_address">IP 地址</string>
+    <string name="label_port">端口</string>
+    <string name="btn_connect">连接</string>
+    <string name="btn_cancel">取消</string>
+
+    <string name="status_connected">已连接</string>
+    <string name="status_connected_version">已连接 &#8226; Android %1$s</string>
+    <string name="status_connected_api">已连接（API %1$d）</string>
+    <string name="status_connected_version_api">已连接 &#8226; Android %1$s（API %2$d）</string>
+    <string name="status_connecting">正在连接…</string>
+    <string name="cd_remove">移除</string>
+
+    <string name="action_device_info_title">设备信息</string>
+    <string name="action_device_info_desc">查看详细规格、系统版本、电池、CPU、分辨率、运行时间和已安装应用。</string>
+    <string name="dialog_device_info_title">设备信息</string>
+    <string name="btn_close">关闭</string>
+    <string name="cd_open_details">打开详情</string>
+    <string name="action_device_model">设备型号</string>
+    <string name="action_android_version">Android 版本</string>
+    <string name="action_battery_info">电池信息</string>
+    <string name="action_serial_number">序列号</string>
+    <string name="action_cpu_info">CPU 信息</string>
+    <string name="action_uptime">运行时间</string>
+    <string name="action_screen_resolution">屏幕分辨率</string>
+    <string name="action_installed_packages">已安装应用数量</string>
+    <string name="connect_device_warning">请先连接设备以使用这些操作。</string>
+
+    <string name="cd_refresh">刷新</string>
+    <string name="cd_collapse">折叠</string>
+    <string name="cd_expand">展开</string>
+    <string name="status_running_command">正在运行命令…</string>
+    <string name="tap_refresh_hint">点按刷新以执行</string>
+
+    <string name="plugins_title">自定义插件</string>
+    <string name="plugins_description">插件功能允许你安装自己或其他开发者编写的自定义插件。</string>
+    <string name="plugins_docs_prompt">有关插件的说明，请参阅</string>
+    <string name="plugins_docs_link">插件文档</string>
+    <string name="plugins_coming_soon">编写自定义插件功能即将推出。</string>
+    <string name="plugins_no_plugins">未安装插件</string>
+    <string name="plugins_cd_install">安装插件</string>
+    <string name="plugins_msg_installed">已安装 %1$s</string>
+    <string name="plugins_msg_updated">已将 %1$s 更新至 %2$s</string>
+    <string name="plugins_msg_rejected">已安装的版本相同或更新</string>
+    <string name="plugins_msg_error">安装失败：%1$s</string>
+
+    <!-- 插件权限对话框 -->
+    <string name="btn_allow">允许</string>
+    <string name="btn_deny">拒绝</string>
+    <string name="plugin_perm_dialog_title">%1$s 请求权限</string>
+    <string name="plugin_perm_shell">在已连接设备上运行 Shell 命令</string>
+    <string name="plugin_perm_push">向已连接设备上传文件</string>
+    <string name="plugin_perm_pull">从已连接设备下载文件</string>
+    <string name="plugin_perm_install">在已连接设备上安装应用</string>
+    <string name="plugin_perm_forward">创建往返已连接设备的网络端口转发</string>
+    <string name="plugin_perm_reverse">创建从已连接设备到本设备的反向端口映射</string>
+    <string name="plugin_dialog_attribution">插件：%1$s</string>
+    <string name="plugin_runner_not_found">找不到插件</string>
+    <string name="plugin_menu_info">信息</string>
+    <string name="plugin_menu_uninstall">卸载</string>
+    <string name="plugin_info_title">插件详情</string>
+    <string name="plugin_info_id">ID：%1$s</string>
+    <string name="plugin_info_version">版本：%1$s</string>
+    <string name="plugin_info_author">作者：%1$s</string>
+    <string name="plugin_info_entry">入口：%1$s</string>
+    <string name="plugin_info_permissions">权限：%1$s</string>
+    <string name="plugin_uninstall_title">卸载插件</string>
+    <string name="plugin_uninstall_confirm">确定要卸载“%1$s”吗？</string>
+    <string name="plugin_msg_uninstalled">已卸载插件“%1$s”</string>
+    <string name="cd_more_options">更多选项</string>
+
+    <!-- 插件设置和权限管理 -->
+    <string name="settings_plugins_title">插件</string>
+    <string name="settings_plugins_desc">WebView 调试和权限</string>
+    <string name="settings_plugins_webview_debug_title">WebView 调试</string>
+    <string name="settings_plugins_webview_debug_desc">允许通过 chrome://inspect 使用 Chrome DevTools 检查</string>
+    <string name="settings_plugins_take_effect_hint">更改将在下次启动插件时生效</string>
+    <string name="settings_plugins_permissions_title">插件权限</string>
+    <string name="settings_plugins_permissions_desc">管理和撤销已安装插件的权限</string>
+    <string name="settings_plugins_btn_manage">管理</string>
+    <string name="settings_plugins_no_permissions">未声明权限</string>
+    <string name="plugin_policy_ask_default">每次询问（默认）</string>
+    <string name="plugin_policy_ask">每次询问</string>
+    <string name="plugin_policy_always_allow">始终允许</string>
+    <string name="plugin_policy_always_deny">始终拒绝</string>
+    <string name="btn_reset_all">全部重置</string>
+
+    <!-- Fastboot 标签页 -->
+    <string name="fastboot_title">Fastboot 支持</string>
+    <string name="fastboot_no_device_status">USB 检测器已启用 &#8226; 未连接 Fastboot 设备</string>
+
+    <!-- scrcpy 标签页 -->
+    <string name="scrcpy_no_device_title">未选择设备</string>
+    <string name="scrcpy_no_device_desc">请从顶部连接栏连接并选择设备，以配置并启动 scrcpy 屏幕镜像。</string>
+    <string name="scrcpy_invalid_config_prefix">配置无效：\n</string>
+    <string name="scrcpy_mirroring_idle">镜像未启动</string>
+    <string name="scrcpy_title">scrcpy 屏幕镜像</string>
+    <string name="scrcpy_target">目标：%1$s</string>
+    <string name="scrcpy_target_version">目标：%1$s &#8226; Android %2$s</string>
+    <string name="scrcpy_start_mirroring">开始镜像</string>
+    <string name="scrcpy_stop_mirroring">停止镜像</string>
+    <string name="scrcpy_tab_configurator">配置</string>
+    <string name="scrcpy_tab_logs">日志</string>
+    <string name="scrcpy_logs_empty">暂无 scrcpy 日志。</string>
+
+    <string name="section_video_source">视频源</string>
+    <string name="video_source_screen">屏幕</string>
+    <string name="video_source_camera">摄像头</string>
+
+    <string name="section_camera">摄像头</string>
+    <string name="camera_facing_back">后置</string>
+    <string name="camera_facing_front">前置</string>
+    <string name="camera_facing_external">外接</string>
+    <string name="camera_high_speed_title">高速模式</string>
+    <string name="camera_high_speed_subtitle">以 120+ FPS 捕获（需要设备支持）</string>
+    <string name="label_high_speed_fps">高速模式帧率</string>
+    <string name="label_fps_format">%1$d FPS</string>
+    <string name="label_high_speed_res">高速模式分辨率</string>
+    <string name="res_720p">720p</string>
+    <string name="res_1080p">1080p</string>
+    <string name="res_480p">480p</string>
+    <string name="res_auto">自动</string>
+
+    <string name="section_video">视频</string>
+    <string name="video_enable_title">启用视频</string>
+    <string name="video_enable_subtitle">传输屏幕或摄像头画面</string>
+    <string name="scrcpy_audio_only_banner">音频传输已启用</string>
+    <string name="scrcpy_audio_only_desc">纯音频模式（视频流已停用）</string>
+    <string name="label_resolution">最大尺寸</string>
+    <string name="label_add_chip">+ 添加</string>
+    <string name="dialog_add_max_size_title">添加自定义最大尺寸</string>
+    <string name="dialog_add_max_size_msg">输入最大像素尺寸（例如 1440 或 2160）：</string>
+    <string name="dialog_add_fps_title">添加自定义帧率</string>
+    <string name="dialog_add_fps_msg">输入 FPS 帧率（例如 90 或 144）：</string>
+    <string name="dialog_add_bitrate_title">添加自定义码率</string>
+    <string name="dialog_add_bitrate_msg">输入 Mbps 码率（例如 16 或 25）：</string>
+    <string name="btn_add">添加</string>
+
+    <string name="settings_scrcpy_title">scrcpy</string>
+    <string name="settings_scrcpy_subtitle">配置 scrcpy 镜像选项</string>
+    <string name="settings_scrcpy_allow_custom_title">允许在配置中使用自定义值</string>
+    <string name="settings_scrcpy_allow_custom_subtitle">允许添加自定义最大尺寸、帧率和码率选项</string>
+    <string name="camera_discovering">正在检测摄像头功能…</string>
+    <string name="label_frame_rate">帧率</string>
+    <string name="label_bitrate">码率</string>
+    <string name="label_mbps_format">%1$d Mbps</string>
+    <string name="label_codec">编解码器</string>
+    <string name="codec_h264">H.264</string>
+    <string name="codec_h265">H.265</string>
+    <string name="codec_av1">AV1</string>
+    <string name="label_orientation">方向</string>
+    <string name="orient_normal">正常</string>
+    <string name="orient_90">90°</string>
+    <string name="orient_180">180°</string>
+    <string name="orient_270">270°</string>
+    <string name="orient_flip_0">水平翻转</string>
+    <string name="orient_flip_90">翻转 90°</string>
+    <string name="orient_flip_180">翻转 180°</string>
+    <string name="orient_flip_270">翻转 270°</string>
+
+    <string name="section_audio">音频</string>
+    <string name="audio_enable_title">启用音频</string>
+    <string name="audio_enable_subtitle_ok">传输设备音频</string>
+    <string name="audio_enable_subtitle_req">需要 Android 11+（API 30），当前设备为 API %1$d。</string>
+    <string name="label_audio_source">音频源</string>
+    <string name="audio_source_device">设备音频</string>
+    <string name="audio_source_mic">麦克风</string>
+    <string name="label_audio_format">格式</string>
+    <string name="codec_opus">Opus</string>
+    <string name="codec_aac">AAC</string>
+    <string name="codec_flac">FLAC</string>
+    <string name="audio_dup_title">不将设备静音</string>
+    <string name="audio_dup_subtitle_ok">保持设备扬声器播放</string>
+    <string name="audio_dup_subtitle_req">需要 Android 13+（API 33）</string>
+
+    <string name="section_display">显示和控制</string>
+    <string name="display_screen_off_title">关闭屏幕</string>
+    <string name="display_screen_off_subtitle">镜像时保持设备屏幕熄灭</string>
+    <string name="display_floating_nav_title">悬浮导航栏</string>
+    <string name="display_floating_nav_subtitle">在屏幕上显示垂直排列的返回、主页和最近任务按钮</string>
+    <string name="display_bind_volume_title">转发音量键</string>
+    <string name="display_bind_volume_subtitle">将本机实体音量键映射到被镜像设备</string>
+
+    <string name="cd_toggle_torch">开关闪光灯</string>
+    <string name="cd_toggle_fullscreen">切换全屏</string>
+    <string name="cd_stop_mirroring">停止镜像</string>
+    <string name="cd_nav_back">返回</string>
+    <string name="cd_nav_home">主页</string>
+    <string name="cd_nav_recents">最近任务</string>
+
+    <!-- 设置标签页 -->
+    <string name="settings_title">设置</string>
+    <string name="settings_key_title">ADB 身份验证密钥</string>
+    <string name="settings_key_desc">管理此应用用于获得设备授权的 RSA 密钥对。</string>
+    <string name="settings_fingerprint_label">指纹：</string>
+    <string name="settings_no_key">尚未生成密钥。</string>
+    <string name="settings_btn_regen_key">重新生成授权密钥</string>
+    <string name="settings_btn_load_custom_key">加载自定义密钥</string>
+    <string name="dialog_regen_key_title">重新生成密钥？</string>
+    <string name="dialog_regen_key_msg">这将删除当前 ADB 密钥对并生成新密钥。你需要在所有此前信任的设备上重新授权。</string>
+    <string name="btn_regenerate">重新生成</string>
+
+    <string name="settings_language_title">语言</string>
+    <string name="settings_language_system_default">跟随系统</string>
+    <string name="settings_language_english">英语</string>
+    <string name="settings_language_simplified_chinese">简体中文</string>
+    <string name="settings_language_contribute">参与翻译</string>
+
+    <string name="settings_theme_title">主题</string>
+    <string name="theme_system">跟随设备</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_amoled">AMOLED</string>
+
+    <string name="settings_logs_title">应用日志</string>
+    <string name="settings_logs_subtitle">导出或清除持久化的应用日志</string>
+    <string name="settings_enable_logging_title">启用日志记录</string>
+    <string name="settings_enable_logging_subtitle">将内部日志事件记录到内存和磁盘</string>
+    <string name="settings_btn_export_all_logs">导出日志</string>
+    <string name="settings_btn_clear_logs">清除日志</string>
+    <string name="dialog_clear_logs_title">清除全部日志？</string>
+    <string name="dialog_clear_logs_msg">这将永久删除磁盘上所有持久化日志文件，并清除当前内存中的日志。</string>
+    <string name="btn_clear">清除</string>
+    <string name="msg_logs_cleared">已清除所有日志文件和内存缓冲区。</string>
+    <string name="msg_logs_exported">日志已成功导出。</string>
+
+    <!-- ViewModel 状态和错误消息 -->
+    <string name="msg_new_key_generated">已生成新密钥。</string>
+    <string name="msg_custom_key_loaded">已加载自定义密钥。</string>
+    <string name="err_usb_connection_lost">USB 连接已断开，请重新连接。</string>
+    <string name="err_connection_lost">连接已断开：%1$s</string>
+    <string name="err_connection_failed">连接失败</string>
+    <string name="err_usb_connection_failed">USB 连接失败</string>
+    <string name="err_failed_prefix">失败：%1$s</string>
+    <string name="err_shell_format">错误（%1$d）：%2$s</string>
+    <string name="err_command_timed_out">命令超时，设备可能已断开连接</string>
+
+    <!-- 文件管理器 -->
+    <string name="file_manager_title">设备文件管理器</string>
+    <string name="file_manager_subtitle">浏览、查看、上传、下载和管理已连接设备上的文件</string>
+    <string name="file_manager_empty">文件夹为空</string>
+    <string name="file_manager_parent_dir">..</string>
+    <string name="file_manager_search_hint">在当前文件夹中搜索…</string>
+    <string name="file_manager_write_denied">无法写入此目录（权限被拒绝）</string>
+    <string name="file_manager_action_properties">查看属性</string>
+    <string name="file_manager_action_download">下载（Pull）</string>
+    <string name="file_manager_action_rename">重命名/移动</string>
+    <string name="file_manager_action_delete">删除</string>
+    <string name="file_manager_properties_title">文件属性</string>
+    <string name="file_manager_new_folder">新建文件夹</string>
+    <string name="file_manager_create_folder_title">新建文件夹</string>
+    <string name="file_manager_create_folder_msg">输入新文件夹名称：</string>
+    <string name="file_manager_rename_title">重命名项目</string>
+    <string name="file_manager_rename_msg">输入新路径或名称：</string>
+    <string name="file_manager_delete_title">删除项目？</string>
+    <string name="file_manager_delete_msg">确定要删除“%1$s”吗？此操作无法撤销。</string>
+    <string name="file_manager_downloading_folder">正在下载文件夹…</string>
+
+    <!-- ADB、设备连接和模式 -->
+    <string name="err_invalid_ip_format">IPv4 地址格式无效</string>
+    <string name="err_invalid_port_range">端口必须介于 1 和 65535 之间</string>
+    <string name="mode_sideload">Sideload 模式</string>
+    <string name="mode_recovery">恢复模式</string>
+    <string name="mode_rescue">救援模式</string>
+    <string name="status_connected_mode">已连接［%1$s］</string>
+    <string name="status_connected_recovery_version_api">已连接［恢复模式 &#8226; Android %1$s（API %2$d）］</string>
+    <string name="status_connected_recovery_version">已连接［恢复模式 &#8226; Android %1$s］</string>
+    <string name="status_connected_recovery_api">已连接［恢复模式 &#8226; API %1$d］</string>
+    <string name="sideload_description">设备处于 Sideload 模式。请选择要刷入的 OTA ZIP 文件。</string>
+    <string name="btn_choose_file">选择文件</string>
+    <string name="btn_starting">正在启动…</string>
+    <string name="btn_sideload">Sideload</string>
+    <string name="msg_flash_complete">刷入完成</string>
+    <string name="btn_done">完成</string>
+    <string name="btn_try_again">重试</string>
+    <string name="btn_wipe_userdata">清除用户数据</string>
+    <string name="dialog_wipe_userdata_title">清除用户数据？</string>
+    <string name="dialog_wipe_userdata_msg">这将清除设备上的所有用户数据，且无法撤销。</string>
+    <string name="btn_wipe">清除</string>
+
+    <!-- scrcpy 补充 -->
+    <string name="dialog_add_audio_bitrate_title">添加自定义音频码率</string>
+    <string name="dialog_add_audio_bitrate_msg">输入自定义音频码率，单位 Kbps（例如 192、256、320）：</string>
+    <string name="scrcpy_mirroring_failed">镜像失败</string>
+    <string name="btn_dismiss">关闭</string>
+    <string name="label_audio_bitrate">音频码率</string>
+    <string name="codec_raw_pcm">RAW（PCM）</string>
+    <string name="err_invalid_positive_number">请输入有效的正数</string>
+    <string name="scrcpy_mode_not_supported">%1$s 模式不支持 scrcpy</string>
+    <string name="scrcpy_mode_not_supported_desc">屏幕镜像需要标准 ADB 模式，连接设备处于 %1$s 模式时不可用。</string>
+    <string name="scrcpy_server_start_failed">无法在目标设备上启动 scrcpy 服务。请检查权限或设备兼容性。</string>
+    <string name="scrcpy_server_terminated">目标设备上的 scrcpy 服务进程意外终止。</string>
+
+    <!-- 文件管理器补充 -->
+    <string name="file_manager_push_file">上传文件</string>
+    <string name="file_manager_upload_failed">上传 %1$s 失败：%2$s</string>
+    <string name="file_manager_download_success">已成功下载 %1$s</string>
+    <string name="file_manager_download_failed">下载失败：%1$s</string>
+    <string name="file_manager_folder_download_unsupported">单文件保存功能不支持下载文件夹</string>
+    <string name="file_manager_prop_name">名称</string>
+    <string name="file_manager_prop_path">路径</string>
+    <string name="file_manager_prop_type">类型</string>
+    <string name="file_manager_prop_link_target">链接目标</string>
+    <string name="file_manager_prop_size">大小</string>
+    <string name="file_manager_prop_mode">模式</string>
+    <string name="file_manager_prop_type_symlink">符号链接（%1$s）</string>
+    <string name="file_manager_prop_type_dir">文件夹</string>
+    <string name="file_manager_prop_type_file">文件</string>
+    <string name="file_manager_retry">重试</string>
+    <string name="file_manager_create">创建</string>
+    <string name="file_manager_rename">重命名</string>
+
+    <!-- 应用管理器 -->
+    <string name="pkg_manager_title">应用管理器</string>
+    <string name="pkg_manager_subtitle">管理已安装应用、提取 APK/APKS、启用/停用或安装应用</string>
+    <string name="pkg_manager_search_hint">按名称或软件包名搜索应用…</string>
+    <string name="pkg_manager_filter_all">全部应用</string>
+    <string name="pkg_manager_filter_user">用户应用</string>
+    <string name="pkg_manager_filter_system">系统应用</string>
+    <string name="pkg_manager_filter_disabled">已停用应用</string>
+    <string name="pkg_manager_action_enable">启用应用</string>
+    <string name="pkg_manager_action_disable">停用应用</string>
+    <string name="pkg_manager_action_pull">提取应用（导出 APK）</string>
+    <string name="pkg_manager_action_uninstall">卸载应用</string>
+    <string name="pkg_manager_action_force_stop">强制停止</string>
+    <string name="pkg_manager_force_stop_success">已强制停止 %1$s</string>
+    <string name="pkg_manager_action_info">应用信息</string>
+    <string name="pkg_manager_install_apks">安装 APK</string>
+    <string name="pkg_manager_installing">正在设备上安装应用…</string>
+    <string name="pkg_manager_install_success">应用安装成功</string>
+    <string name="pkg_manager_install_failed">安装失败：%1$s</string>
+    <string name="pkg_manager_pulling">正在提取应用…</string>
+    <string name="pkg_manager_pull_success">已成功提取 %1$s</string>
+    <string name="pkg_manager_pull_failed">提取失败：%1$s</string>
+    <string name="pkg_manager_uninstall_confirm_title">卸载应用？</string>
+    <string name="pkg_manager_uninstall_confirm_msg">确定要从目标设备卸载 %1$s（%2$s）吗？</string>
+    <string name="pkg_manager_uninstall_success">已成功卸载 %1$s</string>
+    <string name="pkg_manager_uninstall_failed">卸载失败：%1$s</string>
+    <string name="pkg_manager_disable_success">已停用 %1$s</string>
+    <string name="pkg_manager_enable_success">已启用 %1$s</string>
+    <string name="settings_btn_export_key">导出身份验证密钥</string>
+    <string name="msg_key_exported">ADB 身份验证密钥已成功导出</string>
+    <string name="pkg_manager_empty">未找到应用</string>
+
+    <!-- ADB 重启选项 -->
+    <string name="adb_reboot_tile_title">重启选项</string>
+    <string name="adb_reboot_tile_desc">重启至系统、引导加载程序、恢复模式、Fastboot，或关机</string>
+    <string name="adb_reboot_system_title">重启系统</string>
+    <string name="adb_reboot_system_desc">正常重启进入 Android 系统</string>
+    <string name="adb_reboot_bootloader_title">重启至引导加载程序</string>
+    <string name="adb_reboot_bootloader_desc">重启进入引导加载程序/Fastboot 模式</string>
+    <string name="adb_reboot_recovery_title">重启至恢复模式</string>
+    <string name="adb_reboot_recovery_desc">重启进入恢复模式</string>
+    <string name="adb_reboot_fastboot_title">重启至 Fastboot</string>
+    <string name="adb_reboot_fastboot_desc">重启进入 fastbootd（用户空间 Fastboot）</string>
+    <string name="adb_reboot_shutdown_title">关机</string>
+    <string name="adb_reboot_shutdown_desc">关闭设备电源</string>
+    <string name="adb_reboot_executing">正在执行%1$s…</string>
+
+    <!-- ADB 截图 -->
+    <string name="adb_screenshot_tile_title">截图</string>
+    <string name="adb_screenshot_tile_desc">截取设备屏幕并查看或保存图像</string>
+    <string name="adb_screenshot_take_btn">截取屏幕</string>
+    <string name="adb_screenshot_capturing">正在截取屏幕…</string>
+    <string name="adb_screenshot_save_btn">保存截图</string>
+    <string name="adb_screenshot_saved">截图已成功保存</string>
+    <string name="adb_screenshot_failed">截取屏幕失败：%1$s</string>
+    <string name="adb_screenshot_empty">点按“截取屏幕”以截取已连接设备的画面。</string>
+
+    <!-- Fastboot 标签页 -->
+    <string name="fastboot_tab_actions">操作</string>
+    <string name="fastboot_tab_shell">Shell</string>
+    <string name="fastboot_connected">已连接</string>
+    <string name="fastboot_detected_not_connected">已检测到 &#8212; 未连接</string>
+    <string name="fastboot_retry">重试</string>
+    <string name="fastboot_disconnect">断开连接</string>
+    <string name="fastboot_no_device_warning">未连接 Fastboot 设备。请连接处于 Fastboot 模式的设备以使用这些操作。</string>
+    <string name="fastboot_tile_reboot_title">重启</string>
+    <string name="fastboot_tile_reboot_desc">重启进入系统、引导加载程序、恢复模式或 fastbootd</string>
+    <string name="fastboot_tile_flash_title">刷入镜像</string>
+    <string name="fastboot_tile_flash_desc">通过文件选择器选择镜像并刷入分区</string>
+    <string name="fastboot_tile_boot_title">启动镜像</string>
+    <string name="fastboot_tile_boot_desc">加载并启动镜像，但不将其刷入设备</string>
+    <string name="fastboot_tile_lock_title">锁定状态</string>
+    <string name="fastboot_tile_lock_desc">解锁或锁定引导加载程序</string>
+    <string name="fastboot_tile_vars_title">设备变量</string>
+    <string name="fastboot_tile_vars_desc">通过 getvar 读取引导加载程序变量</string>
+    <string name="fastboot_log_title">日志</string>
+    <string name="fastboot_clear_log">清除日志</string>
+    <string name="fastboot_shell_hint">在下方输入命令，或点按 help。</string>
+
+    <string name="fastboot_reboot_title">重启</string>
+    <string name="fastboot_reboot_system_title">重启系统</string>
+    <string name="fastboot_reboot_system_desc">正常重启进入操作系统</string>
+    <string name="fastboot_reboot_bootloader_title">重启至引导加载程序</string>
+    <string name="fastboot_reboot_bootloader_desc">重启回到引导加载程序</string>
+    <string name="fastboot_reboot_recovery_title">重启至恢复模式</string>
+    <string name="fastboot_reboot_recovery_desc">重启进入恢复模式</string>
+    <string name="fastboot_reboot_fastboot_title">重启至 Fastboot</string>
+    <string name="fastboot_reboot_fastboot_desc">重启进入 fastbootd（用户空间 Fastboot）</string>
+    <string name="fastboot_continue_boot_title">继续启动</string>
+    <string name="fastboot_continue_boot_desc">不重启，直接从引导加载程序继续正常启动</string>
+    <string name="fastboot_shutdown_title">关机</string>
+    <string name="fastboot_shutdown_desc">关闭设备电源</string>
+    <string name="fastboot_lock_title">引导加载程序锁定状态</string>
+    <string name="fastboot_lock_warning">解锁或锁定引导加载程序可能会清除设备上的用户数据。</string>
+    <string name="fastboot_unlock_bootloader_title">解锁引导加载程序</string>
+    <string name="fastboot_lock_bootloader_title">锁定引导加载程序</string>
+    <string name="fastboot_unlock_critical_title">解锁关键分区</string>
+    <string name="fastboot_lock_critical_title">锁定关键分区</string>
+    <string name="fastboot_check_unlock_title">检查是否允许解锁</string>
+
+    <string name="fastboot_vars_title">设备变量</string>
+    <string name="fastboot_vars_desc">读取指定的引导加载程序变量，或一次获取全部变量。</string>
+    <string name="fastboot_var_name_label">变量名称（例如 product、version-bootloader）</string>
+    <string name="fastboot_btn_get_all">全部获取</string>
+    <string name="fastboot_btn_get_var">获取变量</string>
+
+    <string name="fastboot_working_placeholder">正在处理…</string>
+    <string name="fastboot_op_in_progress">操作进行中…</string>
+    <string name="fastboot_op_done">%1$s完成</string>
+    <string name="fastboot_op_failed">%1$s失败</string>
+    <string name="fastboot_flash_title">刷入镜像</string>
+    <string name="fastboot_flash_desc">选择要刷入设备分区的镜像文件。分区名称会根据文件名预先填写，也可以编辑。</string>
+    <string name="fastboot_choose_image">选择镜像</string>
+    <string name="fastboot_no_file_selected">未选择文件</string>
+    <string name="fastboot_dialog_flash_partition_title">刷入分区</string>
+    <string name="fastboot_dialog_flash_partition_msg">输入要刷入“%1$s”的分区名称。</string>
+    <string name="fastboot_partition_name_label">分区名称</string>
+    <string name="fastboot_btn_flash">刷入</string>
+    <string name="fastboot_btn_cancel">取消</string>
+    <string name="fastboot_boot_title">启动镜像</string>
+    <string name="fastboot_boot_desc">将镜像加载到设备并仅启动一次，而不刷入任何分区。</string>
+    <string name="fastboot_choose_image_and_boot">选择镜像并启动</string>
+
+    <string name="fastboot_shell_placeholder">reboot、getvar product、flash boot、help …</string>
+    <string name="fastboot_raw_path_warning_title">检测到原始路径</string>
+    <string name="fastboot_raw_path_warning_msg">不支持“%1$s”&#8212; 此应用无法读取任意文件路径。请改用附件按钮选择文件。</string>
+    <string name="fastboot_proceed_anyway">仍要继续</string>
+
+    <!-- 遥控器 -->
+    <string name="remote_control_title">遥控器</string>
+    <string name="remote_control_desc">模拟适用于标准 Android 和 Android TV 设备的实体遥控器</string>
+    <string name="remote_mode_auto">自动检测</string>
+    <string name="remote_mode_tv">Android TV</string>
+    <string name="remote_mode_standard">标准 Android</string>
+    <string name="remote_detected_tv">检测到 Android TV</string>
+    <string name="remote_detected_standard">标准 Android</string>
+    <string name="remote_section_navigation">方向键</string>
+    <string name="remote_section_system">系统和播放</string>
+    <string name="remote_section_tv_controls">电视控制</string>
+    <string name="remote_section_text_input">文本输入</string>
+    <string name="remote_btn_send_text">发送文本</string>
+    <string name="remote_text_placeholder">输入要发送到当前文本框的文字…</string>
+    <string name="remote_tv_guide">节目指南</string>
+    <string name="remote_tv_input">信号源</string>
+    <string name="remote_tv_ch_up">频道 +</string>
+    <string name="remote_tv_ch_down">频道 -</string>
+    <string name="remote_tv_search">搜索</string>
+
+    <!-- 触控板和虚拟鼠标/键盘 -->
+    <string name="touchpad_title">触控板和鼠标</string>
+    <string name="touchpad_desc">使用虚拟触控板和实体键盘控制目标设备的光标</string>
+    <string name="tab_touchpad">触控板</string>
+    <string name="tab_keyboard">电脑键盘</string>
+    <string name="touchpad_connecting">正在初始化虚拟输入设备…</string>
+    <string name="touchpad_connected">虚拟鼠标和键盘已启用</string>
+    <string name="touchpad_surface_hint">滑动移动 &#8226; 点按左键单击 &#8226; 长按右键单击 &#8226; 双指滚动</string>
+    <string name="touchpad_btn_left">左键</string>
+    <string name="touchpad_btn_right">右键</string>
+    <string name="touchpad_btn_middle">中键</string>
+    <string name="touchpad_sensitivity">指针灵敏度</string>
+    <string name="touchpad_keyboard_section">实体键盘</string>
+    <string name="touchpad_modifiers">修饰键</string>
+    <string name="touchpad_functions">功能键</string>
+    <string name="touchpad_shortcuts">快捷键</string>
+    <string name="touchpad_navigation">导航</string>
+    <string name="touchpad_numpad">数字键盘</string>
+    <string name="touchpad_soft_keyboard">软键盘</string>
+    <string name="touchpad_toggle_ime">开关键盘</string>
+    <string name="touchpad_type_here">在此输入，按键会实时发送…</string>
+    <string name="touchpad_realtime_typing_hint">实时输入已启用，字符和退格操作将即时发送。</string>
+    <string name="touchpad_error_title">虚拟输入错误</string>
+    <string name="touchpad_error_desc">无法初始化虚拟鼠标/键盘（/dev/uhid）。如果适用，请确认已启用“开发者选项 &gt; USB 调试（安全设置）”。</string>
+
+    <!-- 守护进程控制和连接 -->
+    <string name="daemon_dialog_title">守护进程响应</string>
+    <string name="btn_ok">确定</string>
+    <string name="btn_restart">重启</string>
+    <string name="cd_daemon_options">守护进程选项</string>
+    <string name="action_switch_tcpip">切换至 TCP/IP</string>
+    <string name="action_root_daemon">以 Root 权限运行守护进程</string>
+    <string name="action_unroot_daemon">取消守护进程的 Root 权限</string>
+    <string name="dialog_tcpip_title">以 TCP/IP 模式重启 adbd</string>
+    <string name="dialog_tcpip_msg">输入无线 ADB 端口：</string>
+    <string name="cd_pair_qr">使用二维码配对</string>
+    <string name="cd_close">关闭</string>
+
+    <!-- 设备发现面板 -->
+    <string name="discovery_title">发现设备</string>
+    <string name="discovery_searching">正在搜索已启用无线调试的设备…</string>
+    <string name="discovery_no_devices_found">尚未找到设备</string>
+    <string name="discovery_network_hint">请确保无线调试已启用，并且两台设备位于同一网络</string>
+    <string name="discovery_btn_manual_entry">手动输入连接信息</string>
+    <string name="discovery_conn_type">连接类型</string>
+    <string name="discovery_plain_tcp">普通 TCP（旧版，端口 5555）</string>
+    <string name="discovery_wireless_tls">无线调试（TLS）</string>
+    <string name="discovery_connect_tcp">通过 TCP 连接</string>
+    <string name="discovery_wireless_debugging">无线调试</string>
+    <string name="discovery_pair_first_hint">如果尚未配对此设备，请先完成配对。</string>
+    <string name="discovery_pair_with_code">使用配对码配对</string>
+    <string name="discovery_connect_already_paired">连接（已配对）</string>
+    <string name="discovery_connect_tls">连接（TLS）</string>
+    <string name="discovery_paired_success_connecting">配对成功！正在连接发现的无线调试端点…</string>
+    <string name="discovery_pair_instead">改为配对</string>
+    <string name="discovery_pair_device">配对设备</string>
+    <string name="discovery_pairing_port">配对端口</string>
+    <string name="discovery_pairing_code">配对码</string>
+    <string name="discovery_btn_pair">配对</string>
+
+    <!-- 二维码配对 -->
+    <string name="qr_starting_server">正在启动配对服务器…</string>
+    <string name="cd_qr_code">配对二维码</string>
+    <string name="qr_instruction">在设备上依次打开“设置 &gt; 开发者选项 &gt; 无线调试 &gt; 使用二维码配对设备”，然后扫描此二维码。</string>
+    <string name="qr_wifi_hint">两台设备必须连接到同一 Wi-Fi 网络。</string>
+    <string name="qr_paired_success">配对成功</string>
+    <string name="qr_connecting">正在连接…</string>
+    <string name="qr_waiting_discoverable">正在等待设备变为可发现状态…</string>
+    <string name="qr_pairing_failed">配对失败</string>
+
+    <!-- 关于 -->
+    <string name="settings_about_title">关于</string>
+    <string name="settings_about_desc">应用信息、社交链接和代码仓库</string>
+    <string name="settings_about_version">版本 %1$s</string>
+    <string name="settings_about_source_code">源代码</string>
+    <string name="cd_github">GitHub</string>
+    <string name="cd_telegram">Telegram</string>
+
+    <!-- 补充界面和无障碍文本 -->
+    <string name="cd_run">运行</string>
+    <string name="cd_send">发送</string>
+    <string name="cd_scroll_to_bottom">滚动到底部</string>
+    <string name="cd_restart_shell">重启 Shell</string>
+    <string name="cd_select_mode">选择模式</string>
+    <string name="cd_open_touchpad">打开触控板</string>
+    <string name="cd_power">电源</string>
+    <string name="cd_mute">静音</string>
+    <string name="cd_volume_down">降低音量</string>
+    <string name="cd_volume_up">提高音量</string>
+    <string name="cd_nav_menu">菜单</string>
+    <string name="cd_nav_up">上</string>
+    <string name="cd_nav_down">下</string>
+    <string name="cd_nav_left">左</string>
+    <string name="cd_nav_right">右</string>
+    <string name="cd_previous">上一个</string>
+    <string name="cd_rewind">快退</string>
+    <string name="cd_play_pause">播放或暂停</string>
+    <string name="cd_fast_forward">快进</string>
+    <string name="cd_next">下一个</string>
+    <string name="cd_keyboard">键盘</string>
+    <string name="cd_send_text">发送文本</string>
+    <string name="cd_toggle_numpad">开关数字键盘</string>
+    <string name="cd_sensitivity_settings">灵敏度设置</string>
+    <string name="cd_hide_keyboard">隐藏键盘</string>
+    <string name="cd_symlink">符号链接</string>
+    <string name="cd_actions">操作</string>
+    <string name="cd_copy_logs_to_clipboard">将日志复制到剪贴板</string>
+    <string name="cd_clear_logs">清除日志</string>
+    <string name="cd_export_logs_zip">将日志导出为 ZIP</string>
+
+    <string name="status_disconnected">已断开连接</string>
+    <string name="msg_export_failed">导出失败：%1$s</string>
+    <string name="err_no_adb_key_file">找不到 ADB 密钥文件</string>
+    <string name="err_save_file_failed">保存文件失败</string>
+
+    <string name="camera_selector">摄像头选择</string>
+    <string name="camera_label_format">摄像头 %1$s（%2$s）</string>
+    <string name="camera_resolution">摄像头分辨率</string>
+    <string name="camera_frame_rate">摄像头帧率</string>
+    <string name="scrcpy_logs_client">客户端</string>
+    <string name="scrcpy_logs_server">服务端</string>
+    <string name="scrcpy_logs_exported">日志已导出</string>
+    <string name="scrcpy_logs_export_failed">导出失败</string>
+
+    <string name="pkg_manager_dump_failed">加载应用列表失败：%1$s</string>
+    <string name="pkg_manager_name_copied">软件包名已复制</string>
+    <string name="pkg_manager_copy_package">复制软件包名</string>
+    <string name="pkg_manager_app_settings">应用设置</string>
+    <string name="pkg_info_package_name">软件包名</string>
+    <string name="pkg_info_version_name">版本名称</string>
+    <string name="pkg_info_version_code">版本代码</string>
+    <string name="pkg_info_target_sdk">目标 SDK</string>
+    <string name="pkg_info_min_sdk">最低 SDK</string>
+    <string name="pkg_info_uid">UID</string>
+    <string name="pkg_info_installer">安装来源</string>
+    <string name="pkg_info_source_dir">源文件目录</string>
+    <string name="pkg_info_data_dir">数据目录</string>
+    <string name="pkg_info_first_installed">首次安装时间</string>
+    <string name="pkg_info_last_updated">最后更新时间</string>
+    <string name="pkg_info_split_apks">拆分 APK（%1$d 个）：</string>
+    <string name="pkg_info_not_available">不适用</string>
+
+    <string name="remote_detecting_device">正在检测设备类型…</string>
+    <string name="remote_mode_tv_detected">Android TV（已检测）</string>
+    <string name="remote_mode_standard_detected">标准 Android（已检测）</string>
+    <string name="remote_media_controls">媒体控制</string>
+    <string name="remote_numeric_keypad">数字键盘</string>
+    <string name="touchpad_type">输入</string>
+    <string name="adb_ip_placeholder">192.168.1.100 或 192.168.1.100:5555</string>
+    <string name="cd_choose_save_location">选择保存位置</string>
+    <string name="cd_attach_image">附加镜像</string>
+    <string name="shell_error_message">Shell 错误：%1$s</string>
+    <string name="shell_live_hint">无需在命令前添加“adb shell”，这里已经是设备的实时 Shell。</string>
+    <string name="pkg_badge_system">系统</string>
+    <string name="pkg_badge_disabled">已停用</string>
+    <string name="pkg_badge_splits">拆分（%1$d）</string>
+    <string name="touchpad_error_details">详情：%1$s</string>
+</resources>

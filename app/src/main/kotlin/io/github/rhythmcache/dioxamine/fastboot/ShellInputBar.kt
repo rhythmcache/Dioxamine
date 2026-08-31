@@ -83,7 +83,7 @@ fun ShellInputBar(vm: FastbootViewModel, modifier: Modifier = Modifier) {
                 }) {
                     Icon(
                         imageVector = if (isFetch) Icons.Filled.Save else Icons.Filled.AttachFile,
-                        contentDescription = if (isFetch) "Choose save location" else "Attach image",
+                        contentDescription = stringResource(if (isFetch) R.string.cd_choose_save_location else R.string.cd_attach_image),
                     )
                 }
             }
@@ -106,7 +106,7 @@ fun ShellInputBar(vm: FastbootViewModel, modifier: Modifier = Modifier) {
                     text = ""
                 },
             ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Run")
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.cd_run))
             }
         }
     }

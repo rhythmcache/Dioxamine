@@ -275,7 +275,7 @@ fun DeviceConnectorCard(vm: AdbViewModel) {
                             }
                         },
                         label = { Text(stringResource(R.string.label_ip_address)) },
-                        placeholder = { Text("192.168.1.100 or 192.168.1.100:5555") },
+                        placeholder = { Text(stringResource(R.string.adb_ip_placeholder)) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         isError = !isIpValid,

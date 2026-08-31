@@ -176,7 +176,7 @@ fun TouchpadScreen(
                         Text(
                             text = if (isConnecting) stringResource(R.string.touchpad_connecting)
                             else if (isConnected) stringResource(R.string.touchpad_connected)
-                            else "Disconnected",
+                            else stringResource(R.string.status_disconnected),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -184,14 +184,14 @@ fun TouchpadScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_nav_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showSettings = !showSettings }) {
                         Icon(
                             imageVector = Icons.Filled.Tune,
-                            contentDescription = "Sensitivity Settings",
+                            contentDescription = stringResource(R.string.cd_sensitivity_settings),
                             tint = if (showSettings) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -346,7 +346,7 @@ fun TouchpadScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.touchpad_error_desc))
                     Text(
-                        text = "Details: $errorMessage",
+                        text = stringResource(R.string.touchpad_error_details, errorMessage ?: ""),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -505,13 +505,13 @@ private fun TouchpadTabContent(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Keyboard,
-                        contentDescription = "Toggle Keyboard",
+                        contentDescription = stringResource(R.string.touchpad_toggle_ime),
                         modifier = Modifier.size(16.dp),
                         tint = if (showQuickIme) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        text = "Type",
+                        text = stringResource(R.string.touchpad_type),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = if (showQuickIme) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
@@ -849,7 +849,7 @@ private fun RealTimeImeInterceptor(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.KeyboardHide,
-                        contentDescription = "Hide Keyboard",
+                        contentDescription = stringResource(R.string.cd_hide_keyboard),
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.rhythmcache.dioxamine.R
 
 /**
  * Compact toolbar above the input bar with Ctrl toggle, Tab, Clear, and Restart.
@@ -62,7 +64,7 @@ fun ShellToolbar(
         IconButton(onClick = onClear, modifier = Modifier.size(32.dp)) {
             Icon(
                 Icons.Filled.DeleteOutline,
-                contentDescription = "Clear",
+                contentDescription = stringResource(R.string.btn_clear),
                 modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -72,7 +74,7 @@ fun ShellToolbar(
             IconButton(onClick = onRestart, modifier = Modifier.size(32.dp)) {
                 Icon(
                     Icons.Filled.RestartAlt,
-                    contentDescription = "Restart shell",
+                    contentDescription = stringResource(R.string.cd_restart_shell),
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )
