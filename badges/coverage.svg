@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="369" height="90" viewBox="0 0 369 90" font-family="Verdana,Geneva,DejaVu Sans,sans-serif">
+<rect width="369" height="90" fill="#0d1117" rx="6"/>
+<text x="12" y="20" fill="#c9d1d9" font-size="13" font-weight="bold">Translation Coverage</text>
+<text x="12" y="46" fill="#c9d1d9" font-size="12">hi</text>
+<rect x="102" y="36" width="200" height="10" rx="5" fill="#30363d"/>
+<rect x="102" y="36" width="200" height="10" rx="5" fill="#4c1"/>
+<text x="312" y="46" fill="#8b949e" font-size="12">100%</text>
+<text x="12" y="70" fill="#c9d1d9" font-size="12">zh-CN</text>
+<rect x="102" y="60" width="200" height="10" rx="5" fill="#30363d"/>
+<rect x="102" y="60" width="171" height="10" rx="5" fill="#97ca00"/>
+<text x="312" y="70" fill="#8b949e" font-size="12">86%</text>
+</svg>

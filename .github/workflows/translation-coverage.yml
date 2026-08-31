@@ -1,0 +1,32 @@
+name: Translation Coverage
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/src/main/res/values*/strings.xml'
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Generate translation coverage badge
+        run: |
+          python3 scripts/translation_coverage.py app/src/main/res --combined-svg badges/coverage.svg
+
+      - name: Commit coverage badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update translation coverage badge [skip ci]"
+          file_pattern: badges/coverage.svg
