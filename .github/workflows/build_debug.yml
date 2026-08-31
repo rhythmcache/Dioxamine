@@ -5,13 +5,15 @@ on:
   push:
     branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 env:
   NDK_VERSION: "29.0.14206865"
 
 jobs:
   build:
-    runs-on: macos-latest
+    name: Build & Test
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -43,16 +45,21 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest --no-daemon
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
 
       - name: Upload generated assets
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: generated-assets
