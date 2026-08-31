@@ -138,6 +138,7 @@
     <string name="section_video_source">Video Source</string>
     <string name="video_source_screen">Screen</string>
     <string name="video_source_camera">Camera</string>
+    <string name="camera_source_subtitle_req">Requires Android 12+ (API 31). Device is API %1$d.</string>
 
     <string name="section_camera">Camera</string>
     <string name="camera_facing_back">Back</string>

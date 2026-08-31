@@ -49,6 +49,9 @@ data class ScrcpyConfig(
         }
 
         if (videoEnabled && videoSource == "camera") {
+            if (apiLevel < 31) {
+                errors.add("Camera mirroring requires at least Android 12 (API 31). Target device is API $apiLevel.")
+            }
             if (cameraHighSpeed && (cameraFps == null || cameraFps < 120)) {
                 errors.add("High speed camera mode is enabled, but camera FPS is not set to high-speed (>=120 FPS).")
             }

@@ -133,9 +133,16 @@ fun ScrcpyScreen(
 
     val apiLevel = activeConn?.apiLevel ?: 30
     val supportsAudio = apiLevel >= 30
+    val supportsCamera = apiLevel >= 31
+
+    LaunchedEffect(supportsCamera) {
+        if (!supportsCamera && config.videoSource == "camera") {
+            config = config.copy(videoSource = "display")
+        }
+    }
 
     LaunchedEffect(activeId, config.videoSource) {
-        if (config.videoSource == "camera" && client != null && discoveredCameras.isEmpty() && !isDiscoveringCameras) {
+        if (supportsCamera && config.videoSource == "camera" && client != null && discoveredCameras.isEmpty() && !isDiscoveringCameras) {
             isDiscoveringCameras = true
             withContext(Dispatchers.IO) {
                 runCatching {
@@ -429,6 +436,8 @@ fun ScrcpyScreen(
                                                 config = config,
                                                 isMirroring = isMirroring,
                                                 supportsAudio = supportsAudio,
+                                                supportsCamera = supportsCamera,
+                                                apiLevel = apiLevel,
                                                 allowCustomValues = allowCustomValues,
                                                 customMaxSizes = customMaxSizes,
                                                 customFps = customFps,
@@ -614,6 +623,8 @@ fun ScrcpyScreen(
 private fun VideoSourceSettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
+    supportsCamera: Boolean,
+    apiLevel: Int,
     onConfigChange: (ScrcpyConfig) -> Unit
 ) {
     Text(stringResource(R.string.section_video_source), style = MaterialTheme.typography.labelMedium)
@@ -623,20 +634,31 @@ private fun VideoSourceSettings(
             stringResource(R.string.video_source_screen) to "display",
             stringResource(R.string.video_source_camera) to "camera"
         ).forEach { (label, value) ->
+            val isCamera = value == "camera"
             FilterChip(
                 selected = config.videoSource == value,
                 onClick = {
-                    onConfigChange(
-                        config.copy(
-                            videoSource = value,
-                            maxSize = if (value == "camera" && config.maxSize == 0) 1080 else config.maxSize
+                    if (!isCamera || supportsCamera) {
+                        onConfigChange(
+                            config.copy(
+                                videoSource = value,
+                                maxSize = if (value == "camera" && config.maxSize == 0) 1080 else config.maxSize
+                            )
                         )
-                    )
+                    }
                 },
-                enabled = !isMirroring,
+                enabled = !isMirroring && (!isCamera || supportsCamera),
                 label = { Text(label, style = MaterialTheme.typography.labelSmall) }
             )
         }
+    }
+    if (!supportsCamera) {
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = stringResource(R.string.camera_source_subtitle_req, apiLevel),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.error
+        )
     }
 }
 
@@ -767,6 +789,8 @@ private fun VideoSettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
     supportsAudio: Boolean,
+    supportsCamera: Boolean,
+    apiLevel: Int,
     allowCustomValues: Boolean,
     customMaxSizes: List<Int>,
     customFps: List<Int>,
@@ -813,6 +837,8 @@ private fun VideoSettings(
     VideoSourceSettings(
         config = config,
         isMirroring = isMirroring,
+        supportsCamera = supportsCamera,
+        apiLevel = apiLevel,
         onConfigChange = onConfigChange
     )
 
