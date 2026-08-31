@@ -3,16 +3,21 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Looper;
+import android.util.DisplayMetrics;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class PkgDump {
@@ -33,6 +38,28 @@ public class PkgDump {
             return baos.toByteArray();
         } catch (Exception e) {
             return new byte[0];
+        }
+    }
+
+    static Resources getAppResources(String apkPath, String[] splitDirs) {
+        try {
+            AssetManager assetManager = AssetManager.class.newInstance();
+            Method addAssetPathMethod = AssetManager.class.getMethod("addAssetPath", String.class);
+            addAssetPathMethod.invoke(assetManager, apkPath);
+            if (splitDirs != null) {
+                for (String split : splitDirs) {
+                    if (split != null && !split.isEmpty()) {
+                        addAssetPathMethod.invoke(assetManager, split);
+                    }
+                }
+            }
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            displayMetrics.setToDefaults();
+            Configuration configuration = new Configuration();
+            configuration.setToDefaults();
+            return new Resources(assetManager, displayMetrics, configuration);
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -70,19 +97,27 @@ public class PkgDump {
         for (ApplicationInfo appInfo : apps) {
             try {
                 String packageName = appInfo.packageName;
-
-                String label;
-                try {
-                    label = pm.getApplicationLabel(appInfo).toString();
-                } catch (Exception e) {
-                    label = packageName;
-                }
-
                 String sourceDir = appInfo.sourceDir != null ? appInfo.sourceDir : "";
                 String dataDir = appInfo.dataDir != null ? appInfo.dataDir : "";
 
                 String[] splitDirs = appInfo.splitSourceDirs;
                 int splitCount = splitDirs != null ? splitDirs.length : 0;
+
+                Resources appRes = !sourceDir.isEmpty() ? getAppResources(sourceDir, splitDirs) : null;
+
+                String label = null;
+                if (appRes != null && appInfo.labelRes != 0) {
+                    try {
+                        label = appRes.getString(appInfo.labelRes);
+                    } catch (Exception e) {}
+                }
+                if (label == null || label.trim().isEmpty()) {
+                    try {
+                        label = pm.getApplicationLabel(appInfo).toString();
+                    } catch (Exception e) {
+                        label = packageName;
+                    }
+                }
 
                 boolean isSystem = (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
                 boolean isEnabled = appInfo.enabled;
@@ -120,9 +155,22 @@ public class PkgDump {
 
                 byte[] iconBytes = new byte[0];
                 if (includeIcons) {
-                    try {
-                        iconBytes = renderIconPng(pm.getApplicationIcon(appInfo));
-                    } catch (Exception e) {}
+                    Drawable iconDrawable = null;
+                    if (appRes != null && appInfo.icon != 0) {
+                        try {
+                            iconDrawable = appRes.getDrawable(appInfo.icon);
+                        } catch (Exception e) {}
+                    }
+                    if (iconDrawable == null) {
+                        try {
+                            iconDrawable = pm.getApplicationIcon(appInfo);
+                        } catch (Exception e) {}
+                    }
+                    if (iconDrawable != null) {
+                        try {
+                            iconBytes = renderIconPng(iconDrawable);
+                        } catch (Exception e) {}
+                    }
                 }
 
                 out.writeByte(1);
