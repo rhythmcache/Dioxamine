@@ -12,13 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import io.github.alexzhirkevich.qrose.options.QrBallShape
-import io.github.alexzhirkevich.qrose.options.QrFrameShape
-import io.github.alexzhirkevich.qrose.options.QrPixelShape
-import io.github.alexzhirkevich.qrose.options.circle
-import io.github.alexzhirkevich.qrose.options.roundCorners
-import io.github.alexzhirkevich.qrose.rememberQrCodePainter
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.stringResource
+import io.github.alexzhirkevich.qrose.options.*
+import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.github.rhythmcache.adb.*
 import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
@@ -98,11 +97,11 @@ fun QrPairingScreen(
                 windowInsets = WindowInsets(0, 0, 0, 0)
             )
         }
-    ) { padding ->
+    ) { scaffoldPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(scaffoldPadding)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -115,12 +114,36 @@ fun QrPairingScreen(
                         Spacer(Modifier.height(12.dp))
                         Text(stringResource(R.string.qr_starting_server), style = MaterialTheme.typography.bodyMedium)
                     } else {
+                        val primaryColor = MaterialTheme.colorScheme.primary
+                        val logoPainter = remember(context) {
+                            runCatching {
+                                val drawable = context.packageManager.getApplicationIcon(context.packageName)
+                                val bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                drawable.setBounds(0, 0, 192, 192)
+                                drawable.draw(canvas)
+                                BitmapPainter(bitmap.asImageBitmap())
+                            }.getOrNull()
+                        }
+
                         val painter = rememberQrCodePainter(payload) {
+                            colors {
+                                dark = QrBrush.solid(primaryColor)
+                            }
+                            if (logoPainter != null) {
+                                logo {
+                                    painter = logoPainter
+                                    padding = QrLogoPadding.Natural(0.12f)
+                                    shape = QrLogoShape.circle()
+                                    size = 0.25f
+                                }
+                            }
                             shapes {
                                 ball = QrBallShape.circle()
                                 darkPixel = QrPixelShape.roundCorners()
                                 frame = QrFrameShape.roundCorners(0.25f)
                             }
+                            errorCorrectionLevel = QrErrorCorrectionLevel.High
                         }
                         Surface(
                             color = androidx.compose.ui.graphics.Color.White,
