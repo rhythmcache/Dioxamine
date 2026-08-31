@@ -16,7 +16,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -79,6 +81,7 @@ fun PackageManagerScreen(
     var filterDropdownExpanded by remember { mutableStateOf(false) }
 
     var selectedAppForInfo by remember { mutableStateOf<AppPackageItem?>(null) }
+    var selectedAppForPermissions by remember { mutableStateOf<AppPackageItem?>(null) }
     var selectedAppForUninstall by remember { mutableStateOf<AppPackageItem?>(null) }
 
     var isOperating by remember { mutableStateOf(false) }
@@ -623,6 +626,9 @@ fun PackageManagerScreen(
                             onUninstall = {
                                 selectedAppForUninstall = app
                             },
+                            onPermissions = {
+                                selectedAppForPermissions = app
+                            },
                             onInfo = {
                                 selectedAppForInfo = app
                             }
@@ -681,6 +687,34 @@ fun PackageManagerScreen(
             }
         )
     }
+
+    selectedAppForPermissions?.let { app ->
+        AppPermissionsDialog(
+            app = app,
+            onDismiss = { selectedAppForPermissions = null },
+            onGrantPermission = { name, cmd ->
+                if (client != null && activeConn != null) {
+                    coroutineScope.launch(Dispatchers.IO) {
+                        val out = client.executeShell(cmd, activeConn.supportsShellV2).trim()
+                        val isError = out.contains("Error", ignoreCase = true) ||
+                                out.contains("Exception", ignoreCase = true) ||
+                                out.contains("SecurityException", ignoreCase = true) ||
+                                out.contains("not requested", ignoreCase = true) ||
+                                out.contains("Operation not allowed", ignoreCase = true) ||
+                                out.contains("Failure", ignoreCase = true) ||
+                                out.contains("unknown", ignoreCase = true)
+                        withContext(Dispatchers.Main) {
+                            if (isError) {
+                                Toast.makeText(context, context.getString(R.string.pkg_manager_perm_failed, out), Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, context.getString(R.string.pkg_manager_perm_granted, name), Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -690,6 +724,7 @@ fun AppTileItem(
     onForceStop: () -> Unit,
     onPull: () -> Unit,
     onUninstall: () -> Unit,
+    onPermissions: () -> Unit,
     onInfo: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -846,6 +881,14 @@ fun AppTileItem(
                         )
                     }
                     DropdownMenuItem(
+                        text = { Text(stringResource(R.string.pkg_manager_action_permissions)) },
+                        onClick = {
+                            menuExpanded = false
+                            onPermissions()
+                        },
+                        leadingIcon = { Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                    )
+                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.pkg_manager_action_info)) },
                         onClick = {
                             menuExpanded = false
@@ -990,4 +1033,78 @@ private fun getFileNameFromUri(context: Context, uri: Uri): String? {
         }
     }
     return name ?: uri.lastPathSegment
+}
+
+@Composable
+fun AppPermissionsDialog(
+    app: AppPackageItem,
+    onDismiss: () -> Unit,
+    onGrantPermission: (String, String) -> Unit
+) {
+    val context = LocalContext.current
+    var permissionInput by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Text(stringResource(R.string.pkg_manager_dialog_permissions_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(app.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.pkg_manager_perm_prompt),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                OutlinedTextField(
+                    value = permissionInput,
+                    onValueChange = { permissionInput = it },
+                    placeholder = { Text(stringResource(R.string.pkg_manager_custom_perm_placeholder)) },
+                    label = { Text(stringResource(R.string.pkg_manager_perm_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Text(
+                    text = stringResource(R.string.pkg_manager_perm_manifest_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val trimmed = permissionInput.trim()
+                    if (trimmed.isNotBlank()) {
+                        val fullPerm = if (trimmed.contains('.')) trimmed else "android.permission.$trimmed"
+                        val validRegex = Regex("""^[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+$""")
+                        if (!validRegex.matches(fullPerm)) {
+                            Toast.makeText(context, context.getString(R.string.pkg_manager_perm_invalid_format), Toast.LENGTH_SHORT).show()
+                        } else {
+                            onGrantPermission(fullPerm, "pm grant ${app.packageName} $fullPerm")
+                            onDismiss()
+                        }
+                    }
+                }
+            ) {
+                Text(stringResource(R.string.pkg_manager_btn_grant))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_cancel))
+            }
+        }
+    )
 }

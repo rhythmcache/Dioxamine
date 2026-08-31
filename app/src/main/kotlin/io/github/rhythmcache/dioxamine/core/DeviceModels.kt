@@ -67,29 +67,62 @@ suspend fun fetchDeviceDetails(client: AdbClient): DeviceDetails {
     }
 }
 
-suspend fun AdbClient.executeShell(command: String, supportsShellV2: Boolean): String {
+data class ShellExecResult(
+    val output: String,
+    val isSuccess: Boolean,
+    val exitCode: Int = 0
+)
+
+suspend fun AdbClient.executeShellResult(command: String, supportsShellV2: Boolean): ShellExecResult {
     return try {
         kotlinx.coroutines.withTimeout(10_000) {
             if (supportsShellV2 && deviceMode != AdbDeviceMode.RECOVERY) {
                 try {
                     val result = shell(command)
-                    if (result.isSuccess) result.stdoutText.trim()
-                    else "Error (${result.exitCode}): ${result.stderrText.trim()}"
+                    val text = if (result.isSuccess) {
+                        result.stdoutText.trim()
+                    } else {
+                        result.stderrText.trim().ifBlank { result.stdoutText.trim() }
+                    }
+                    ShellExecResult(
+                        output = text,
+                        isSuccess = result.isSuccess,
+                        exitCode = result.exitCode
+                    )
                 } catch (_: Exception) {
                     open("shell:$command").use { stream ->
                         val bytes = stream.readToEnd()
-                        String(bytes, Charsets.UTF_8).trim()
+                        val text = String(bytes, Charsets.UTF_8).trim()
+                        val isErr = text.startsWith("Error", ignoreCase = true) ||
+                                text.contains("Exception", ignoreCase = true) ||
+                                text.contains("Permission Denial", ignoreCase = true) ||
+                                text.contains("Operation not allowed", ignoreCase = true)
+                        ShellExecResult(output = text, isSuccess = !isErr, exitCode = if (isErr) 1 else 0)
                     }
                 }
             } else {
                 open("shell:$command").use { stream ->
                     val bytes = stream.readToEnd()
-                    String(bytes, Charsets.UTF_8).trim()
+                    val text = String(bytes, Charsets.UTF_8).trim()
+                    val isErr = text.startsWith("Error", ignoreCase = true) ||
+                            text.contains("Exception", ignoreCase = true) ||
+                            text.contains("Permission Denial", ignoreCase = true) ||
+                            text.contains("Operation not allowed", ignoreCase = true)
+                    ShellExecResult(output = text, isSuccess = !isErr, exitCode = if (isErr) 1 else 0)
                 }
             }
         }
     } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
-        throw Exception("Command timed out - device may be disconnected")
+        ShellExecResult(output = "Command timed out - device may be disconnected", isSuccess = false, exitCode = -1)
+    }
+}
+
+suspend fun AdbClient.executeShell(command: String, supportsShellV2: Boolean): String {
+    val res = executeShellResult(command, supportsShellV2)
+    return if (res.isSuccess) {
+        res.output
+    } else {
+        if (res.exitCode != 0) "Error (${res.exitCode}): ${res.output}" else res.output
     }
 }
 
