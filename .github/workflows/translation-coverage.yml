@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'app/src/main/res/values*/strings.xml'
+  workflow_dispatch:
 
 jobs:
   coverage:
