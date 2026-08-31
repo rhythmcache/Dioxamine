@@ -128,7 +128,9 @@ git checkout -b translate-<language>
    *(e.g., `values-es` for Spanish, `values-ru` for Russian, `values-zh-rCN` for Simplified Chinese, `values-pt-rBR` for Brazilian Portuguese)*
 2. Copy the base strings from [`app/src/main/res/values/strings.xml`](app/src/main/res/values/strings.xml) into your new folder: `app/src/main/res/values-<locale>/strings.xml`.
 3. Translate the strings inside `<string name="...">Your Translation</string>`.
-   > **Note:** Keep placeholders like `%s`, `%d`, `%1$s`, HTML tags, and XML entities (`&amp;`, `\'`) unchanged.
+   > **Note:**
+   > - Keep placeholders like `%s`, `%d`, `%1$s`, HTML tags, and XML entities (`&amp;`, `\'`) unchanged.
+   > - **AI / LLM Translations:** Using LLMs (e.g. ChatGPT, Claude, Gemini) to assist or draft translations is totally allowed! However, please **manually review and refine the output**. LLMs often generate overly formal, archaic, or literal translations that aren't commonly spoken in daily conversation or standard mobile apps. Please adapt the phrasing so it feels natural, casual, and intuitive for native speakers.
 
 #### 3. Register Your Language in Code
 1. In [`app/src/main/res/values/strings.xml`](app/src/main/res/values/strings.xml), add a string resource for your language's native name (endonym) with `translatable="false"` (do not translate it in other language folders):
