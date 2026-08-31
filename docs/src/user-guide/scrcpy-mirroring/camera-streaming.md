@@ -2,10 +2,13 @@
 
 In addition to mirroring the display, Scrcpy allows you to stream live video directly from the target device's cameras without installing any camera application on the target phone.
 
+> [!IMPORTANT]
+> **Requirement**: Camera streaming requires the target device to run **Android 12 (API 31)** or newer. If a target device running Android 11 or older is selected, Dioxamine will display an API badge (e.g. `Requires Android 12+ (API 31). Device is API 30.`) and keep the Camera source chip disabled.
+
 ## Switching to Camera Mode
 
 1. Open the **Scrcpy** tab in Dioxamine.
-2. In the **Video Source** section, tap the **Camera** chip.
+2. In the **Video Source** section, tap the **Camera** chip (available when connected to Android 12+).
 3. Dioxamine will automatically query the target device's camera hardware (Camera2 API) and list all available sensors.
 
 ---

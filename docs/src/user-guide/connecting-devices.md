@@ -54,11 +54,11 @@ Android 11 and newer support native Wireless Debugging with QR code pairing.
 ### Step-by-Step Instructions:
 
 1. Connect both devices to the same Wi-Fi network or mobile hotspot.
-2. On the **target device**, open **Settings > Developer Options > Wireless Debugging**.
-3. Tap on **Pair device with QR code**. A QR code will appear on the target device screen.
-4. On your **host device** (running Dioxamine), tap the **QR Code icon** in the top device bar.
-5. Point your host camera at the QR code displayed on the target device.
-6. Once scanned, Dioxamine will automatically pair with the target and establish the secure TLS connection.
+2. In Dioxamine on your **host phone**, tap the **QR Pairing** icon in the top connector bar. Dioxamine starts a local pairing server and presents a styled pairing QR code on screen.
+3. On the **target device**, navigate to **Settings > Developer Options > Wireless Debugging**.
+4. Tap **Pair device with QR code** to open the target device's built-in QR scanner.
+5. Point the target device's camera at the QR code displayed on your host phone screen.
+6. Once scanned, the target authenticates over TLS, and Dioxamine automatically connects to the discovered wireless debugging port.
 
 ---
 

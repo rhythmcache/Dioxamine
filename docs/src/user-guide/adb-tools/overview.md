@@ -8,9 +8,11 @@ When a device is connected and active in the **ADB** tab, Dioxamine offers three
 
 ## Built-in Actions Suite
 
-The **Built-in Actions** sub-tab provides quick access to 8 essential tool tiles:
+The **Built-in Actions** sub-tab provides quick access to 10 essential tool tiles:
 
 - **Device Information**: Quick inspect for hardware model, Android version, battery percentage, serial number, processor details, screen resolution, and installed package counts.
+- **Process Manager**: Live CPU and RAM utilization monitor, process inspector, search filter, Force Stop, and PID termination powered by DioxAgent.
+- **Miscellaneous**: Quick tweaks for display density (DPI), resolution, screen orientation, stay awake, demo mode, touch/pointer visualization, window animations, battery emulation, and deep link launching.
 - **Remote Control**: A directional D-pad remote with power, volume, media playback, TV input switching, and text injection controls tailored for phones and Android TVs.
 - **Touchpad & PC Keyboard**: Transform your phone into a full laptop trackpad and full-featured hardware keyboard with modifier keys, function keys, and live soft typing.
 - **File Manager**: Explore internal storage (`/sdcard`) and root directories, push multiple files from your phone, pull files back, rename, and manage folders.

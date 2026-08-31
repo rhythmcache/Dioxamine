@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-f1e94dcc.js";
+            window.path_to_searchindex_js = "searchindex-46387981.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-7c01cd5f.js"></script>
+        <script src="toc-de870e07.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -244,6 +244,7 @@
 <li><strong>USB Debugging</strong> enabled (for USB OTG or TCP connections).</li>
 <li><strong>Wireless Debugging</strong> enabled (for Android 11+ Wi-Fi connections).</li>
 <li>For Scrcpy audio forwarding: target device must run Android 11 (API 30) or newer.</li>
+<li>For Scrcpy camera streaming: target device must run Android 12 (API 31) or newer.</li>
 <li>For Scrcpy audio duplication without muting the target: target device must run Android 13 (API 33) or newer.</li>
 </ul>
 <h2 id="enabling-developer-options-on-target-device"><a class="header" href="#enabling-developer-options-on-target-device">Enabling Developer Options on Target Device</a></h2>
@@ -311,11 +312,11 @@
 <h3 id="step-by-step-instructions-2"><a class="header" href="#step-by-step-instructions-2">Step-by-Step Instructions:</a></h3>
 <ol>
 <li>Connect both devices to the same Wi-Fi network or mobile hotspot.</li>
-<li>On the <strong>target device</strong>, open <strong>Settings &gt; Developer Options &gt; Wireless Debugging</strong>.</li>
-<li>Tap on <strong>Pair device with QR code</strong>. A QR code will appear on the target device screen.</li>
-<li>On your <strong>host device</strong> (running Dioxamine), tap the <strong>QR Code icon</strong> in the top device bar.</li>
-<li>Point your host camera at the QR code displayed on the target device.</li>
-<li>Once scanned, Dioxamine will automatically pair with the target and establish the secure TLS connection.</li>
+<li>In Dioxamine on your <strong>host phone</strong>, tap the <strong>QR Pairing</strong> icon in the top connector bar. Dioxamine starts a local pairing server and presents a styled pairing QR code on screen.</li>
+<li>On the <strong>target device</strong>, navigate to <strong>Settings &gt; Developer Options &gt; Wireless Debugging</strong>.</li>
+<li>Tap <strong>Pair device with QR code</strong> to open the target device’s built-in QR scanner.</li>
+<li>Point the target device’s camera at the QR code displayed on your host phone screen.</li>
+<li>Once scanned, the target authenticates over TLS, and Dioxamine automatically connects to the discovered wireless debugging port.</li>
 </ol>
 <hr>
 <h2 id="4-manual-pairing-code-android-11"><a class="header" href="#4-manual-pairing-code-android-11">4. Manual Pairing Code (Android 11+)</a></h2>
@@ -432,9 +433,11 @@
 <li><strong>Plugins</strong>: Web-based modular extensions installed into Dioxamine.</li>
 </ol>
 <h2 id="built-in-actions-suite"><a class="header" href="#built-in-actions-suite">Built-in Actions Suite</a></h2>
-<p>The <strong>Built-in Actions</strong> sub-tab provides quick access to 8 essential tool tiles:</p>
+<p>The <strong>Built-in Actions</strong> sub-tab provides quick access to 10 essential tool tiles:</p>
 <ul>
 <li><strong>Device Information</strong>: Quick inspect for hardware model, Android version, battery percentage, serial number, processor details, screen resolution, and installed package counts.</li>
+<li><strong>Process Manager</strong>: Live CPU and RAM utilization monitor, process inspector, search filter, Force Stop, and PID termination powered by DioxAgent.</li>
+<li><strong>Miscellaneous</strong>: Quick tweaks for display density (DPI), resolution, screen orientation, stay awake, demo mode, touch/pointer visualization, window animations, battery emulation, and deep link launching.</li>
 <li><strong>Remote Control</strong>: A directional D-pad remote with power, volume, media playback, TV input switching, and text injection controls tailored for phones and Android TVs.</li>
 <li><strong>Touchpad &amp; PC Keyboard</strong>: Transform your phone into a full laptop trackpad and full-featured hardware keyboard with modifier keys, function keys, and live soft typing.</li>
 <li><strong>File Manager</strong>: Explore internal storage (<code>/sdcard</code>) and root directories, push multiple files from your phone, pull files back, rename, and manage folders.</li>
@@ -475,6 +478,176 @@
 <ul>
 <li><strong>Refresh Button (Top Right)</strong>: Tap the refresh icon in the top app bar to re-query all metrics sequentially from the device.</li>
 <li><strong>Copying Text</strong>: You can long-press and select text within any output card to copy details to your clipboard.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="process-manager"><a class="header" href="#process-manager">Process Manager</a></h1>
+<p>The <strong>Process Manager</strong> provides real-time hardware telemetry and comprehensive process inspection for connected Android devices. Powered by the lightweight <strong>DioxAgent</strong> daemon, it streams live memory, CPU utilization, and running process states with low overhead.</p>
+<hr>
+<h2 id="features--telemetry"><a class="header" href="#features--telemetry">Features &amp; Telemetry</a></h2>
+<h3 id="1-live-memory--cpu-stats-cards"><a class="header" href="#1-live-memory--cpu-stats-cards">1. Live Memory &amp; CPU Stats Cards</a></h3>
+<ul>
+<li><strong>System Memory</strong>: Displays total RAM, currently used RAM, free RAM, and a real-time progress bar with the overall percentage used.</li>
+<li><strong>CPU Usage</strong>: Displays total system CPU utilization percentage along with total CPU core count (e.g. <code>12.5% · 8 Cores</code>).</li>
+<li><strong>Collapsible Cards</strong>: Tap the arrow button in the top action bar to expand or collapse the RAM and CPU progress bars to maximize vertical screen space for process browsing.</li>
+</ul>
+<h3 id="2-live-process-list--badges"><a class="header" href="#2-live-process-list--badges">2. Live Process List &amp; Badges</a></h3>
+<p>For each active process on the target device, the Process Manager displays:</p>
+<ul>
+<li><strong>Application Icon</strong>: Extracted directly from installed APK packages.</li>
+<li><strong>Process Name &amp; Package Name</strong>: Full identifier for the process and its parent package.</li>
+<li><strong>RAM Usage</strong>: Formatted memory usage in MB or GB.</li>
+<li><strong>CPU Percentage</strong>: Real-time normalized CPU percentage used by the process.</li>
+<li><strong>Process Metadata Badges</strong>:
+<ul>
+<li><code>PID</code>: Linux process ID.</li>
+<li><code>UID</code>: Android user/app identifier.</li>
+<li><code>Threads</code>: Total thread count spawned by the process.</li>
+<li><code>System</code> / <code>App</code>: Categorical classification badge.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="filtering-and-sorting"><a class="header" href="#filtering-and-sorting">Filtering and Sorting</a></h2>
+<h3 id="filters"><a class="header" href="#filters">Filters</a></h3>
+<ul>
+<li><strong>All</strong>: Shows all running user applications and system processes.</li>
+<li><strong>Apps</strong>: Filters to third-party and user-installed applications.</li>
+<li><strong>System</strong>: Filters to Android OS daemons and system services.</li>
+</ul>
+<h3 id="sorting-options"><a class="header" href="#sorting-options">Sorting Options</a></h3>
+<ul>
+<li><strong>RAM (High to Low)</strong>: Sort by highest memory consumption.</li>
+<li><strong>CPU (High to Low)</strong>: Sort by highest real-time CPU usage.</li>
+<li><strong>PID (Low to High)</strong>: Sort sequentially by process ID.</li>
+<li><strong>Name (A to Z)</strong>: Sort alphabetically by process name.</li>
+</ul>
+<h3 id="real-time-search"><a class="header" href="#real-time-search">Real-Time Search</a></h3>
+<ul>
+<li>Use the search bar at the top to filter the list dynamically by process name, package name, or numerical PID.</li>
+</ul>
+<hr>
+<h2 id="process-actions"><a class="header" href="#process-actions">Process Actions</a></h2>
+<p>Tap the three-dots menu on any process item to perform actions:</p>
+<ol>
+<li><strong>Force Stop App</strong> (<code>am force-stop</code>):
+<ul>
+<li>Immediately terminates all foreground activities, background services, alarms, and subprocesses associated with the parent app package.</li>
+</ul>
+</li>
+<li><strong>Kill PID</strong> (<code>kill -9</code> / <code>SIGKILL</code>):
+<ul>
+<li>Sends a direct <code>SIGKILL</code> signal to terminate the specific process ID immediately without waiting for graceful shutdown.</li>
+</ul>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="miscellaneous-tools"><a class="header" href="#miscellaneous-tools">Miscellaneous Tools</a></h1>
+<p>The <strong>Miscellaneous</strong> suite brings together essential device tweaks, display modifiers, UI inspector controls, developer toggles, and system shortcuts into an easy one-tap interface.</p>
+<hr>
+<h2 id="1-app--process-actions"><a class="header" href="#1-app--process-actions">1. App &amp; Process Actions</a></h2>
+<ul>
+<li><strong>Kill Foreground App</strong>:
+<ul>
+<li>Automatically queries the active window manager on the target device to find the currently focused foreground package and force-stops it instantly.</li>
+</ul>
+</li>
+<li><strong>Clear Active App Data</strong> (<code>pm clear</code>):
+<ul>
+<li>Prompts for confirmation and resets all application storage, cache, and database logins for the active foreground app.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="2-display--orientation"><a class="header" href="#2-display--orientation">2. Display &amp; Orientation</a></h2>
+<ul>
+<li><strong>Set Screen Orientation</strong>:
+<ul>
+<li>Overrides the display orientation to <strong>0° (Portrait)</strong>, <strong>90° (Landscape Right)</strong>, <strong>180° (Inverted Portrait)</strong>, or <strong>270° (Landscape Left)</strong>.</li>
+</ul>
+</li>
+<li><strong>Toggle Auto-Rotate</strong>:
+<ul>
+<li>Toggles the accelerometer-based display rotation on or off.</li>
+</ul>
+</li>
+<li><strong>Screen Density (DPI)</strong>:
+<ul>
+<li>Inspects the current display density. Allows selecting from preset values or entering a custom DPI between <code>72</code> and <code>1200</code>. Includes a <strong>Reset Default</strong> button to restore factory settings (<code>wm density reset</code>).</li>
+</ul>
+</li>
+<li><strong>Screen Resolution</strong>:
+<ul>
+<li>Queries active screen dimensions and lets you apply custom Width × Height resolutions or reset to device defaults (<code>wm size reset</code>).</li>
+</ul>
+</li>
+<li><strong>Keep Screen Awake (Stay Awake)</strong>:
+<ul>
+<li>Forces the target device’s display to remain awake while connected over USB.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="3-system-ui--notifications"><a class="header" href="#3-system-ui--notifications">3. System UI &amp; Notifications</a></h2>
+<ul>
+<li><strong>Expand Notifications</strong>:
+<ul>
+<li>Pulls down the notification shade.</li>
+</ul>
+</li>
+<li><strong>Expand Quick Settings</strong>:
+<ul>
+<li>Pulls down the full Quick Settings tile panel.</li>
+</ul>
+</li>
+<li><strong>Collapse Status Bar</strong>:
+<ul>
+<li>Dismisses any open notification or Quick Settings shades.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="4-developer--ui-tweaks"><a class="header" href="#4-developer--ui-tweaks">4. Developer &amp; UI Tweaks</a></h2>
+<ul>
+<li><strong>Demo Mode (Clean Status Bar)</strong>:
+<ul>
+<li>Puts the target device into Android Demo Mode with 100% battery indicator, a clean 12:00 clock, full Wi-Fi/mobile signal bars, and hidden notification icons. Perfect for clean screenshots and recordings.</li>
+</ul>
+</li>
+<li><strong>Toggle Show Touches</strong>:
+<ul>
+<li>Enables or disables the visual white touch circle indicator under finger taps (<code>show_touches</code>).</li>
+</ul>
+</li>
+<li><strong>Toggle Pointer Location</strong>:
+<ul>
+<li>Overlays touch coordinates, pressure rulers, and finger path crosshairs on top of the screen (<code>pointer_location</code>).</li>
+</ul>
+</li>
+<li><strong>Window Animation Speed</strong>:
+<ul>
+<li>Adjusts window animation scale, transition animation scale, and animator duration scale between <code>0.0x</code> (instant/disabled), <code>0.5x</code>, <code>1.0x</code> (default), <code>1.5x</code>, and <code>2.0x</code>.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="5-battery-emulation"><a class="header" href="#5-battery-emulation">5. Battery Emulation</a></h2>
+<ul>
+<li><strong>Simulate Battery State</strong>:
+<ul>
+<li>Set custom simulated battery charge percentages (0% to 100%).</li>
+<li>Toggle simulated AC/USB charging or discharging states.</li>
+<li>Includes a <strong>Reset Simulation</strong> button (<code>dumpsys battery reset</code>) to restore real hardware battery monitoring.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="6-intent--deep-links"><a class="header" href="#6-intent--deep-links">6. Intent &amp; Deep Links</a></h2>
+<ul>
+<li><strong>Open URL / Deep Link</strong>:
+<ul>
+<li>Launches any HTTP/HTTPS URL, deep link URI, or custom scheme directly in the target device’s default web browser or assigned handler application.</li>
+</ul>
+</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="file-manager"><a class="header" href="#file-manager">File Manager</a></h1>
@@ -986,10 +1159,14 @@
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="camera-streaming-mode"><a class="header" href="#camera-streaming-mode">Camera Streaming Mode</a></h1>
 <p>In addition to mirroring the display, Scrcpy allows you to stream live video directly from the target device’s cameras without installing any camera application on the target phone.</p>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p><strong>Requirement</strong>: Camera streaming requires the target device to run <strong>Android 12 (API 31)</strong> or newer. If a target device running Android 11 or older is selected, Dioxamine will display an API badge (e.g. <code>Requires Android 12+ (API 31). Device is API 30.</code>) and keep the Camera source chip disabled.</p>
+</blockquote>
 <h2 id="switching-to-camera-mode"><a class="header" href="#switching-to-camera-mode">Switching to Camera Mode</a></h2>
 <ol>
 <li>Open the <strong>Scrcpy</strong> tab in Dioxamine.</li>
-<li>In the <strong>Video Source</strong> section, tap the <strong>Camera</strong> chip.</li>
+<li>In the <strong>Video Source</strong> section, tap the <strong>Camera</strong> chip (available when connected to Android 12+).</li>
 <li>Dioxamine will automatically query the target device’s camera hardware (Camera2 API) and list all available sensors.</li>
 </ol>
 <hr>
@@ -1318,7 +1495,8 @@
 <ul>
 <li><strong>System Default (Default)</strong>: Automatically follows your phone’s system dark/light mode schedule.</li>
 <li><strong>Light Theme</strong>: Forces bright, high-contrast light colors.</li>
-<li><strong>Dark Theme</strong>: Uses deep dark backgrounds optimized for OLED battery savings and nighttime use.</li>
+<li><strong>Dark Theme</strong>: Uses deep dark backgrounds optimized for dark environments.</li>
+<li><strong>AMOLED</strong>: True pure black (<code>#000000</code>) surfaces designed for maximum battery savings on OLED/AMOLED displays.</li>
 </ul>
 <hr>
 <h2 id="language-settings"><a class="header" href="#language-settings">Language Settings</a></h2>
@@ -1326,10 +1504,13 @@
 <li>In the <strong>Settings</strong> tab, tap the <strong>Language</strong> expandable card.</li>
 <li>Choose from:
 <ul>
-<li><strong>System Default</strong>: Follows your Android device locale.</li>
+<li><strong>System Default</strong>: Automatically matches your Android device system locale.</li>
 <li><strong>English (<code>en</code>)</strong>: Forces English across all menus and dialogs.</li>
+<li><strong>Simplified Chinese (<code>zh-CN</code> / 简体中文)</strong>: Chinese localization.</li>
+<li><strong>Hindi (<code>hi</code> / हिन्दी)</strong>: Hindi localization.</li>
 </ul>
 </li>
+<li>Tap <strong>Contribute to translation</strong> to view guidelines on submitting new translations for your language.</li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="application-logs-and-bug-reporting"><a class="header" href="#application-logs-and-bug-reporting">Application Logs and Bug Reporting</a></h1>

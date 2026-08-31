@@ -8,6 +8,8 @@
 - [OEM Setup and Troubleshooting](user-guide/oem-setup.md)
 - [ADB Built-in Tools](user-guide/adb-tools/overview.md)
     - [Device Information](user-guide/adb-tools/device-info.md)
+    - [Process Manager](user-guide/adb-tools/process-manager.md)
+    - [Miscellaneous Tools](user-guide/adb-tools/miscellaneous.md)
     - [File Manager](user-guide/adb-tools/file-manager.md)
     - [Package Manager](user-guide/adb-tools/package-manager.md)
     - [Remote Control](user-guide/adb-tools/remote-control.md)

@@ -28,7 +28,7 @@ It focuses on:
 ### Scrcpy Screen Mirroring and Audio
 - [Real-time display mirroring](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html) with full multi-touch and hardware key control
 - [Audio forwarding](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/settings-tuning.html) (Android 11+)
-- [Camera streaming](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/camera-streaming.html) (front and rear cameras, flashlight/torch toggle, high-FPS modes)
+- [Camera streaming](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/camera-streaming.html) (Android 12+; front and rear cameras, flashlight/torch toggle, high-FPS modes)
 - [Mirroring with target screen off](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html) (saves battery and reduces heat)
 - [Touchpad & PC keyboard mode](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/touchpad-keyboard.html) via UHID simulation
 - Configurable codecs (**H.264**, **H.265 / HEVC**, **AV1**), bitrate, resolution, and FPS
@@ -41,6 +41,8 @@ It focuses on:
 - [Interactive Fastboot shell](https://rhythmcache.github.io/Dioxamine/book/user-guide/fastboot/fastboot-shell.html) for raw commands
 
 ### ADB Management and Diagnostics
+- [Process manager](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/process-manager.html): live CPU & RAM usage telemetry, process inspector, search filter, Force Stop, and PID termination
+- [Miscellaneous tools](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/miscellaneous.html): display density (DPI) & resolution changer, screen orientation, stay awake, demo mode, touch visualization, window animation scale, battery emulation, and deep link URL launcher
 - [File manager](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/file-manager.html): browse target filesystem, upload, download, and manage storage
 - [Package manager](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/package-manager.html): install split APKs, debloat/disable system apps, extract and pull APKs
 - [Reboot menu](https://rhythmcache.github.io/Dioxamine/book/user-guide/adb-tools/reboot-menu.html): one-tap reboot to System, Recovery, Bootloader, FastbootD, EDL, or Power Off
@@ -59,6 +61,7 @@ It focuses on:
 - **Host Device**: Android 7.0+ (API 24+)
 - **Target Device**: Android 5.0+ (API 21+)
   - Audio forwarding requires Android 11+ (API 30+)
+  - Camera streaming requires Android 12+ (API 31+)
   - Wireless ADB QR code pairing requires Android 11+ (API 30+)
 
 Make sure [USB debugging](https://developer.android.com/studio/debug/dev-options#enable) is enabled on the target device.

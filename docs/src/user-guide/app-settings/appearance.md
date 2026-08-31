@@ -19,7 +19,8 @@ Dioxamine supports Material 3 styling, dynamic wallpaper coloring (Monet), and f
 Choose your preferred theme display mode:
 - **System Default (Default)**: Automatically follows your phone's system dark/light mode schedule.
 - **Light Theme**: Forces bright, high-contrast light colors.
-- **Dark Theme**: Uses deep dark backgrounds optimized for OLED battery savings and nighttime use.
+- **Dark Theme**: Uses deep dark backgrounds optimized for dark environments.
+- **AMOLED**: True pure black (`#000000`) surfaces designed for maximum battery savings on OLED/AMOLED displays.
 
 ---
 
@@ -27,5 +28,8 @@ Choose your preferred theme display mode:
 
 1. In the **Settings** tab, tap the **Language** expandable card.
 2. Choose from:
-   - **System Default**: Follows your Android device locale.
+   - **System Default**: Automatically matches your Android device system locale.
    - **English (`en`)**: Forces English across all menus and dialogs.
+   - **Simplified Chinese (`zh-CN` / 简体中文)**: Chinese localization.
+   - **Hindi (`hi` / हिन्दी)**: Hindi localization.
+3. Tap **Contribute to translation** to view guidelines on submitting new translations for your language.

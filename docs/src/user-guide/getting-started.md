@@ -25,6 +25,7 @@ To use Dioxamine effectively, ensure your setup meets the following requirements
 - **USB Debugging** enabled (for USB OTG or TCP connections).
 - **Wireless Debugging** enabled (for Android 11+ Wi-Fi connections).
 - For Scrcpy audio forwarding: target device must run Android 11 (API 30) or newer.
+- For Scrcpy camera streaming: target device must run Android 12 (API 31) or newer.
 - For Scrcpy audio duplication without muting the target: target device must run Android 13 (API 33) or newer.
 
 ## Enabling Developer Options on Target Device
