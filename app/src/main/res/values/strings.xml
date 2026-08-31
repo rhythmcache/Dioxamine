@@ -757,10 +757,49 @@
     <string name="adb_ip_placeholder">192.168.1.100 or 192.168.1.100:5555</string>
     <string name="cd_choose_save_location">Choose save location</string>
     <string name="cd_attach_image">Attach image</string>
+    <string name="touchpad_error_details">Details: %1$s</string>
     <string name="shell_error_message">Shell error: %1$s</string>
     <string name="shell_live_hint">Don\'t prefix commands with &quot;adb shell&quot; — this is the live shell of the device.</string>
     <string name="pkg_badge_system">System</string>
     <string name="pkg_badge_disabled">Disabled</string>
     <string name="pkg_badge_splits">Splits (%1$d)</string>
-    <string name="touchpad_error_details">Details: %1$s</string>
+
+    <string name="btn_refresh">Refresh</string>
+    <string name="btn_retry">Retry</string>
+
+    <!-- Process Manager Strings -->
+    <string name="proc_manager_title">Process Manager</string>
+    <string name="proc_manager_subtitle">Live CPU/RAM monitor, inspect and manage running processes</string>
+    <string name="proc_manager_ram_usage">System Memory</string>
+    <string name="proc_manager_ram_used_format">%1$s / %2$s (%3$d%% Used)</string>
+    <string name="proc_manager_cpu_usage">CPU Usage</string>
+    <string name="proc_manager_cpu_format">%1$s · %2$d Cores</string>
+    <string name="proc_manager_processes_count">%1$d Processes (%2$d Apps, %3$d System)</string>
+    <string name="proc_manager_search_placeholder">Search process, app, or PID…</string>
+    <string name="proc_filter_all">All (%1$d)</string>
+    <string name="proc_filter_apps">Apps (%1$d)</string>
+    <string name="proc_filter_system">System (%1$d)</string>
+    <string name="proc_sort_ram">RAM (High to Low)</string>
+    <string name="proc_sort_cpu">CPU (High to Low)</string>
+    <string name="proc_sort_pid">PID (Low to High)</string>
+    <string name="proc_sort_name">Name (A to Z)</string>
+    <string name="proc_action_force_stop">Force Stop</string>
+    <string name="proc_action_kill_pid">Kill PID</string>
+    <string name="proc_btn_force_stop">Force Stop</string>
+    <string name="proc_btn_kill">Kill</string>
+    <string name="proc_dialog_force_stop_title">Force Stop %1$s?</string>
+    <string name="proc_dialog_force_stop_msg">Force stopping this app will immediately terminate all its active processes and background services.</string>
+    <string name="proc_dialog_kill_pid_title">Kill Process %1$s (PID %2$d)?</string>
+    <string name="proc_dialog_kill_pid_msg">Sending SIGKILL (signal 9) will immediately terminate this process. Unsaved data may be lost.</string>
+    <string name="proc_toast_force_stop_success">Force stopped %1$s</string>
+    <string name="proc_toast_force_stop_failed">Failed to force stop %1$s: %2$s</string>
+    <string name="proc_toast_kill_success">Terminated PID %1$d</string>
+    <string name="proc_toast_kill_failed">Failed to terminate PID %1$d: %2$s</string>
+    <string name="proc_auto_refresh_on">Auto-Refresh (ON)</string>
+    <string name="proc_auto_refresh_off">Auto-Refresh (OFF)</string>
+    <string name="proc_empty_list">No matching processes found.</string>
+    <string name="proc_loading">Connecting to DioxAgent &amp; loading processes…</string>
+    <string name="proc_badge_threads">%1$d threads</string>
+    <string name="proc_badge_pid">PID: %1$d</string>
+    <string name="proc_badge_uid">UID: %1$d</string>
 </resources>

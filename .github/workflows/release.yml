@@ -118,7 +118,7 @@ jobs:
           name: generated-assets-${{ matrix.build_type }}
           path: |
             app/src/main/assets/dxls/*
-            app/src/main/assets/pkg-dump.jar
+            app/src/main/assets/diox-agent.jar
             app/src/main/assets/scrcpy-server.jar
 
   release:

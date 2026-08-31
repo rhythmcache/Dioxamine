@@ -359,17 +359,17 @@ fun PackageManagerScreen(
         coroutineScope.launch(Dispatchers.IO) {
             runCatching {
                 runCatching {
-                    val killStream = client.open("shell:pkill -f PkgDump || killall PkgDump")
+                    val killStream = client.open("shell:pkill -f DioxAgent || killall DioxAgent || pkill -f PkgDump")
                     val buf = ByteArray(256)
                     while (killStream.read(buf) > 0) { /* drain */ }
                     killStream.close()
                 }
 
-                context.assets.open("pkg-dump.jar").use { input ->
-                    client.sync.push(input, "${Constants.DEVICE_TMP_DIR}/pkgdump.jar")
+                context.assets.open("diox-agent.jar").use { input ->
+                    client.sync.push(input, "${Constants.DEVICE_TMP_DIR}/diox-agent.jar")
                 }
 
-                val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/pkgdump.jar app_process / PkgDump --icons"
+                val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/diox-agent.jar app_process / DioxAgent --icons"
                 val stream = client.open("exec:$cmd")
                 val stdoutStream = RawStdoutStream(stream)
 

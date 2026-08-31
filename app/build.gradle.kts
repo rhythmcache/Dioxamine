@@ -237,7 +237,8 @@ val buildScrcpyServer =
     }
 
 // -----------------------------------------------------------------------------
-// Compile PkgDump.java -> dex -> pkg-dump.jar
+// -----------------------------------------------------------------------------
+// Compile DioxAgent.java -> dex -> diox-agent.jar
 //
 // Compiled against:
 //   - compileSdk android.jar
@@ -246,14 +247,14 @@ val buildScrcpyServer =
 // javac is invoked through the same JDK that Gradle itself is running on.
 // -----------------------------------------------------------------------------
 
-val pkgDumpStubClassesDir =
-    layout.buildDirectory.dir("pkgdump-stub-classes")
+val dioxAgentStubClassesDir =
+    layout.buildDirectory.dir("dioxagent-stub-classes")
 
-val pkgDumpClassesDir =
-    layout.buildDirectory.dir("pkgdump-classes")
+val dioxAgentClassesDir =
+    layout.buildDirectory.dir("dioxagent-classes")
 
-val pkgDumpDexDir =
-    layout.buildDirectory.dir("pkgdump-dex")
+val dioxAgentDexDir =
+    layout.buildDirectory.dir("dioxagent-dex")
 
 // -----------------------------------------------------------------------------
 // Compile hidden API stubs.
@@ -263,8 +264,8 @@ val pkgDumpDexDir =
 // That means it does NOT try to locate/provision another JDK.
 // -----------------------------------------------------------------------------
 
-val compilePkgDumpStub =
-    tasks.register<JavaExec>("compilePkgDumpStub") {
+val compileDioxAgentStub =
+    tasks.register<JavaExec>("compileDioxAgentStub") {
 
         // Use javac from the same JDK running Gradle.
         mainClass.set("com.sun.tools.javac.Main")
@@ -275,7 +276,7 @@ val compilePkgDumpStub =
 
         doFirst {
             val classesDir =
-                pkgDumpStubClassesDir
+                dioxAgentStubClassesDir
                     .get()
                     .asFile
                     .apply { mkdirs() }
@@ -327,16 +328,16 @@ val compilePkgDumpStub =
 // Package hidden API stubs into a jar.
 // -----------------------------------------------------------------------------
 
-val jarPkgDumpStub =
-    tasks.register<Exec>("jarPkgDumpStub") {
-        dependsOn(compilePkgDumpStub)
+val jarDioxAgentStub =
+    tasks.register<Exec>("jarDioxAgentStub") {
+        dependsOn(compileDioxAgentStub)
 
         val stubJarFile =
-            layout.buildDirectory.file("pkgdump-stub.jar")
+            layout.buildDirectory.file("dioxagent-stub.jar")
 
         doFirst {
             val classesDir =
-                pkgDumpStubClassesDir
+                dioxAgentStubClassesDir
                     .get()
                     .asFile
 
@@ -373,14 +374,14 @@ val jarPkgDumpStub =
     }
 
 // -----------------------------------------------------------------------------
-// Compile PkgDump.java.
+// Compile DioxAgent.java.
 //
-// Uses the same android.jar lookup as compilePkgDumpStub.
+// Uses the same android.jar lookup as compileDioxAgentStub.
 // -----------------------------------------------------------------------------
 
-val compilePkgDumpJava =
-    tasks.register<JavaExec>("compilePkgDumpJava") {
-        dependsOn(jarPkgDumpStub)
+val compileDioxAgentJava =
+    tasks.register<JavaExec>("compileDioxAgentJava") {
+        dependsOn(jarDioxAgentStub)
 
         // Same JDK as Gradle.
         mainClass.set("com.sun.tools.javac.Main")
@@ -391,7 +392,7 @@ val compilePkgDumpJava =
 
         doFirst {
             val classesDir =
-                pkgDumpClassesDir
+                dioxAgentClassesDir
                     .get()
                     .asFile
                     .apply { mkdirs() }
@@ -411,12 +412,12 @@ val compilePkgDumpJava =
 
             val stubJar =
                 layout.buildDirectory
-                    .file("pkgdump-stub.jar")
+                    .file("dioxagent-stub.jar")
                     .get()
                     .asFile
 
             val src =
-                rootProject.file("src_ext/PkgDump.java")
+                rootProject.file("src_ext/DioxAgent.java")
 
             args =
                 listOf(
@@ -432,21 +433,21 @@ val compilePkgDumpJava =
     }
 
 // -----------------------------------------------------------------------------
-// Dex PkgDump.class using d8.
+// Dex DioxAgent.class using d8.
 // -----------------------------------------------------------------------------
 
-val dexPkgDump =
-    tasks.register<Exec>("dexPkgDump") {
-        dependsOn(compilePkgDumpJava)
+val dexDioxAgent =
+    tasks.register<Exec>("dexDioxAgent") {
+        dependsOn(compileDioxAgentJava)
 
         doFirst {
             val classesDir =
-                pkgDumpClassesDir
+                dioxAgentClassesDir
                     .get()
                     .asFile
 
             val dexOutDir =
-                pkgDumpDexDir
+                dioxAgentDexDir
                     .get()
                     .asFile
                     .apply { mkdirs() }
@@ -484,6 +485,12 @@ val dexPkgDump =
                     }
                     .toList()
 
+            val androidJar =
+                findAndroidJar(
+                    sdkDir,
+                    android.compileSdk,
+                )
+
             commandLine(
                 listOf(
                     d8.absolutePath,
@@ -491,32 +498,37 @@ val dexPkgDump =
                     dexOutDir.absolutePath,
                     "--min-api",
                     "21",
+                    "--lib",
+                    androidJar.absolutePath,
                 ) + classFiles,
             )
         }
 
         doLast {
             val dexOut =
-                pkgDumpDexDir
+                dioxAgentDexDir
                     .get()
                     .file("classes.dex")
                     .asFile
 
             val dest =
                 assetsDir
-                    .file("pkg-dump.jar")
+                    .file("diox-agent.jar")
                     .asFile
 
             dest.parentFile.mkdirs()
             dexOut.copyTo(dest, overwrite = true)
 
-            logger.lifecycle("pkg-dump.jar -> $dest")
+            // Remove legacy pkg-dump.jar if present
+            assetsDir.file("pkg-dump.jar").asFile.delete()
+
+            logger.lifecycle("diox-agent.jar -> $dest")
         }
     }
 
-val buildPkgDumpJar =
-    tasks.register("buildPkgDumpJar") {
-        dependsOn(dexPkgDump)
+val buildDioxAgentJar =
+    tasks.register("buildDioxAgentJar") {
+        dependsOn(dexDioxAgent)
     }
 
 // -----------------------------------------------------------------------------
@@ -701,7 +713,7 @@ val buildDxlsNative =
 tasks.named("preBuild") {
     dependsOn(
         buildScrcpyServer,
-        buildPkgDumpJar,
+        buildDioxAgentJar,
         buildDxlsNative,
     )
 }
