@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dioxamine</string>
+
+    <!-- Navigation Tabs -->
+    <string name="tab_adb">ADB</string>
+    <string name="tab_scrcpy">scrcpy</string>
+    <string name="tab_fastboot">Fastboot</string>
+    <string name="tab_settings">सेटिंग्स</string>
+
+    <!-- ADB Tab -->
+    <string name="adb_subtab_builtin">इन-बिल्ट</string>
+    <string name="adb_subtab_adb_shell">ADB शेल</string>
+    <string name="adb_subtab_plugins">प्लगइन्स</string>
+    
+    <string name="adb_shell_title">ADB शेल सहायता</string>
+    <string name="feature_coming_soon">यह सुविधा जल्द ही आ रही है।</string>
+    <string name="adb_shell_info_dialog_title">ADB शेल सूचना</string>
+    <string name="adb_shell_info_dialog_msg_before_link">"यह इन-बिल्ट शेल बुनियादी कमांड चलाने के लिए एक न्यूनतम टर्मिनल है। इसकी क्षमताएं सीमित हैं और इसमें पूर्ण टर्मिनल इम्यूलेशन नहीं है। उन्नत या पूर्ण टर्मिनल अनुभव के लिए, यह उपयोग करने की सलाह दी जाती है: "</string>
+    <string name="adb_shell_info_dialog_link">टर्मिनल प्लगइन</string>
+    <string name="adb_shell_info_dialog_msg_after_link">।</string>
+    <string name="adb_shell_dont_show_again">"दोबारा न दिखाएं"</string>
+
+    <string name="no_devices_connected">कोई डिवाइस कनेक्ट नहीं है</string>
+    <plurals name="connected_devices_count">
+        <item quantity="one">%1$d डिवाइस कनेक्टेड</item>
+        <item quantity="other">%1$d डिवाइस कनेक्टेड</item>
+    </plurals>
+    <string name="cd_add_device">डिवाइस जोड़ें</string>
+    <string name="cd_expand_collapse">विस्तार करें या समेटें</string>
+    <string name="no_devices_added_hint">अभी तक कोई डिवाइस नहीं जोड़ा गया। डिवाइस कनेक्ट करने के लिए \'+\' दबाएं।</string>
+    
+    <string name="dialog_add_tcp_title">TCP डिवाइस जोड़ें</string>
+    <string name="label_ip_address">IP पता</string>
+    <string name="label_port">पोर्ट</string>
+    <string name="btn_connect">कनेक्ट करें</string>
+    <string name="btn_cancel">रद्द करें</string>
+
+    <string name="status_connected">कनेक्टेड</string>
+    <string name="status_connected_version">कनेक्टेड &#8226; Android %1$s</string>
+    <string name="status_connected_api">कनेक्टेड (API %1$d)</string>
+    <string name="status_connected_version_api">कनेक्टेड &#8226; Android %1$s (API %2$d)</string>
+    <string name="status_connecting">कनेक्ट हो रहा है…</string>
+    <string name="cd_remove">हटाएं</string>
+
+    <string name="action_device_info_title">डिवाइस जानकारी</string>
+    <string name="action_device_info_desc">विस्तृत विवरण, संस्करण, बैटरी, CPU जानकारी, रिज़ॉल्यूशन, अपटाइम और इंस्टॉल किए गए पैकेज देखें।</string>
+    <string name="dialog_device_info_title">डिवाइस जानकारी</string>
+    <string name="btn_close">बंद करें</string>
+    <string name="cd_open_details">विवरण खोलें</string>
+    <string name="action_device_model">डिवाइस मॉडल</string>
+    <string name="action_android_version">Android संस्करण</string>
+    <string name="action_battery_info">बैटरी जानकारी</string>
+    <string name="action_serial_number">सीरियल नंबर</string>
+    <string name="action_cpu_info">CPU जानकारी</string>
+    <string name="action_uptime">अपटाइम</string>
+    <string name="action_screen_resolution">स्क्रीन रिज़ॉल्यूशन</string>
+    <string name="action_installed_packages">इंस्टॉल किए गए पैकेजों की संख्या</string>
+    <string name="connect_device_warning">इन क्रियाओं का उपयोग करने के लिए डिवाइस कनेक्ट करें।</string>
+
+    <string name="cd_refresh">रिफ्रेश करें</string>
+    <string name="cd_collapse">समेटें</string>
+    <string name="cd_expand">विस्तार करें</string>
+    <string name="status_running_command">कमांड चल रहा है…</string>
+    <string name="tap_refresh_hint">चलाने के लिए रिफ्रेश दबाएं</string>
+
+    <string name="plugins_title">कस्टम प्लगइन्स</string>
+    <string name="plugins_description">"प्लगइन्स आपको अपने या अन्य डेवलपर्स द्वारा बनाए गए कस्टम प्लगइन्स इंस्टॉल करने की सुविधा देते हैं।"</string>
+    <string name="plugins_docs_prompt">"प्लगइन दस्तावेज़ के लिए, देखें: "</string>
+    <string name="plugins_docs_link">"प्लगइन दस्तावेज़"</string>
+    <string name="plugins_coming_soon">अपने प्लगइन्स लिखना - जल्द आ रहा है।</string>
+    <string name="plugins_no_plugins">कोई प्लगइन इंस्टॉल नहीं है</string>
+    <string name="plugins_cd_install">प्लगइन इंस्टॉल करें</string>
+    <string name="plugins_msg_installed">%1$s इंस्टॉल हो गया</string>
+    <string name="plugins_msg_updated">%1$s को %2$s में अपडेट किया गया</string>
+    <string name="plugins_msg_rejected">इंस्टॉल किया गया संस्करण नया या समान है</string>
+    <string name="plugins_msg_error">इंस्टॉलेशन विफल: %1$s</string>
+
+    <!-- Plugin Permission Dialog Strings -->
+    <string name="btn_allow">अनुमति दें</string>
+    <string name="btn_deny">अस्वीकार करें</string>
+    <string name="plugin_perm_dialog_title">%1$s अनुमति चाहता है</string>
+    <string name="plugin_perm_shell">कनेक्टेड डिवाइस पर शेल कमांड चलाएं</string>
+    <string name="plugin_perm_push">कनेक्टेड डिवाइस पर फाइलें अपलोड करें</string>
+    <string name="plugin_perm_pull">कनेक्टेड डिवाइस से फाइलें डाउनलोड करें</string>
+    <string name="plugin_perm_install">कनेक्टेड डिवाइस पर पैकेज इंस्टॉल करें</string>
+    <string name="plugin_perm_forward">कनेक्टेड डिवाइस से/तक नेटवर्क पोर्ट फॉरवर्ड बनाएं</string>
+    <string name="plugin_perm_reverse">कनेक्टेड डिवाइस से इस डिवाइस तक रिवर्स पोर्ट मैपिंग बनाएं</string>
+    <string name="plugin_dialog_attribution">प्लगइन: %1$s</string>
+    <string name="plugin_runner_not_found">प्लगइन नहीं मिला</string>
+    <string name="plugin_menu_info">जानकारी</string>
+    <string name="plugin_menu_uninstall">अनइंस्टॉल करें</string>
+    <string name="plugin_info_title">प्लगइन विवरण</string>
+    <string name="plugin_info_id">ID: %1$s</string>
+    <string name="plugin_info_version">संस्करण: %1$s</string>
+    <string name="plugin_info_author">लेखक: %1$s</string>
+    <string name="plugin_info_entry">एंट्री: %1$s</string>
+    <string name="plugin_info_permissions">अनुमतियां: %1$s</string>
+    <string name="plugin_uninstall_title">प्लगइन अनइंस्टॉल करें</string>
+    <string name="plugin_uninstall_confirm">क्या आप वाकई \"%1$s\" को अनइंस्टॉल करना चाहते हैं?</string>
+    <string name="plugin_msg_uninstalled">प्लगइन \"%1$s\" अनइंस्टॉल हो गया</string>
+    <string name="cd_more_options">अधिक विकल्प</string>
+
+    <!-- Plugin Settings & Permission Manager Strings -->
+    <string name="settings_plugins_title">प्लगइन्स</string>
+    <string name="settings_plugins_desc">WebView डीबगिंग और अनुमतियां</string>
+    <string name="settings_plugins_webview_debug_title">WebView डीबगिंग</string>
+    <string name="settings_plugins_webview_debug_desc">chrome://inspect के माध्यम से Chrome DevTools निरीक्षण की अनुमति दें</string>
+    <string name="settings_plugins_take_effect_hint">परिवर्तन अगली बार प्लगइन शुरू होने पर प्रभावी होंगे</string>
+    <string name="settings_plugins_permissions_title">प्लगइन अनुमतियां</string>
+    <string name="settings_plugins_permissions_desc">इंस्टॉल किए गए प्लगइन्स के लिए अनुमतियां प्रबंधित करें और निरस्त करें</string>
+    <string name="settings_plugins_btn_manage">प्रबंधित करें</string>
+    <string name="settings_plugins_no_permissions">कोई अनुमति घोषित नहीं है</string>
+    <string name="plugin_policy_ask_default">हर बार पूछें (डिफ़ॉल्ट)</string>
+    <string name="plugin_policy_ask">हर बार पूछें</string>
+    <string name="plugin_policy_always_allow">हमेशा अनुमति दें</string>
+    <string name="plugin_policy_always_deny">हमेशा अस्वीकार करें</string>
+    <string name="btn_reset_all">सभी रीसेट करें</string>
+
+    <!-- Fastboot Tab -->
+    <string name="fastboot_title">Fastboot सहायता</string>
+    <string name="fastboot_no_device_status">USB डिटेक्टर सक्रिय &#8226; कोई Fastboot डिवाइस कनेक्ट नहीं है</string>
+
+    <!-- Scrcpy Tab -->
+    <string name="scrcpy_no_device_title">कोई डिवाइस नहीं चुना गया</string>
+    <string name="scrcpy_no_device_desc">scrcpy स्क्रीन मिररिंग कॉन्फ़िगर और शुरू करने के लिए शीर्ष कनेक्टर बार से एक डिवाइस कनेक्ट करें और चुनें।</string>
+    <string name="scrcpy_invalid_config_prefix">अमान्य कॉन्फ़िगरेशन:\n</string>
+    <string name="scrcpy_mirroring_idle">मिररिंग निष्क्रिय</string>
+    <string name="scrcpy_title">scrcpy स्क्रीन मिररिंग</string>
+    <string name="scrcpy_target">लक्ष्य: %1$s</string>
+    <string name="scrcpy_target_version">लक्ष्य: %1$s &#8226; Android %2$s</string>
+    <string name="scrcpy_start_mirroring">मिररिंग शुरू करें</string>
+    <string name="scrcpy_stop_mirroring">मिररिंग बंद करें</string>
+    <string name="scrcpy_tab_configurator">कॉन्फ़िगरेशन</string>
+    <string name="scrcpy_tab_logs">लॉग्स</string>
+    <string name="scrcpy_logs_empty">अभी तक कोई scrcpy लॉग नहीं है।</string>
+
+    <string name="section_video_source">वीडियो स्रोत</string>
+    <string name="video_source_screen">स्क्रीन</string>
+    <string name="video_source_camera">कैमरा</string>
+    <string name="camera_source_subtitle_req">Android 12+ (API 31) की आवश्यकता है। डिवाइस API %1$d पर है।</string>
+
+    <string name="section_camera">कैमरा</string>
+    <string name="camera_facing_back">पिछला</string>
+    <string name="camera_facing_front">सामने</string>
+    <string name="camera_facing_external">बाहरी</string>
+    <string name="camera_high_speed_title">हाई स्पीड मोड</string>
+    <string name="camera_high_speed_subtitle">120+ FPS कैप्चर (डिवाइस समर्थन आवश्यक)</string>
+    <string name="label_high_speed_fps">हाई स्पीड FPS</string>
+    <string name="label_fps_format">%1$d FPS</string>
+    <string name="label_high_speed_res">हाई स्पीड रिज़ॉल्यूशन</string>
+    <string name="res_720p">720p</string>
+    <string name="res_1080p">1080p</string>
+    <string name="res_480p">480p</string>
+    <string name="res_auto">ऑटो</string>
+
+    <string name="section_video">वीडियो</string>
+    <string name="video_enable_title">वीडियो सक्षम करें</string>
+    <string name="video_enable_subtitle">स्क्रीन या कैमरा डिस्प्ले स्ट्रीम करें</string>
+    <string name="scrcpy_audio_only_banner">ऑडियो स्ट्रीमिंग सक्रिय</string>
+    <string name="scrcpy_audio_only_desc">केवल ऑडियो मोड (वीडियो स्ट्रीम अक्षम)</string>
+    <string name="label_resolution">अधिकतम आकार</string>
+    <string name="label_add_chip">+ जोड़ें</string>
+    <string name="dialog_add_max_size_title">कस्टम अधिकतम आकार जोड़ें</string>
+    <string name="dialog_add_max_size_msg">पिक्सेल में अधिकतम आकार दर्ज करें (उदा. 1440 या 2160):</string>
+    <string name="dialog_add_fps_title">कस्टम फ्रेम रेट जोड़ें</string>
+    <string name="dialog_add_fps_msg">FPS में फ्रेम रेट दर्ज करें (उदा. 90 या 144):</string>
+    <string name="dialog_add_bitrate_title">कस्टम बिटरेट जोड़ें</string>
+    <string name="dialog_add_bitrate_msg">Mbps में बिटरेट दर्ज करें (उदा. 16 या 25):</string>
+    <string name="btn_add">जोड़ें</string>
+
+    <string name="settings_scrcpy_title">scrcpy</string>
+    <string name="settings_scrcpy_subtitle">scrcpy मिररिंग विकल्प कॉन्फ़िगर करें</string>
+    <string name="settings_scrcpy_allow_custom_title">कॉन्फ़िगरेशन में कस्टम मानों की अनुमति दें</string>
+    <string name="settings_scrcpy_allow_custom_subtitle">कस्टम अधिकतम आकार, फ्रेम रेट और बिटरेट विकल्प जोड़ने की सुविधा सक्षम करें</string>
+    <string name="camera_discovering">कैमरा क्षमताओं की खोज की जा रही है…</string>
+    <string name="label_frame_rate">फ्रेम रेट</string>
+    <string name="label_bitrate">बिटरेट</string>
+    <string name="label_mbps_format">%1$d Mbps</string>
+    <string name="label_codec">कोडेक</string>
+    <string name="codec_h264">H.264</string>
+    <string name="codec_h265">H.265</string>
+    <string name="codec_av1">AV1</string>
+    <string name="label_orientation">दिशा (ओरिएंटेशन)</string>
+    <string name="orient_normal">सामान्य</string>
+    <string name="orient_90">90°</string>
+    <string name="orient_180">180°</string>
+    <string name="orient_270">270°</string>
+    <string name="orient_flip_0">क्षैतिज उलटें</string>
+    <string name="orient_flip_90">90° उलटें</string>
+    <string name="orient_flip_180">180° उलटें</string>
+    <string name="orient_flip_270">270° उलटें</string>
+
+    <string name="section_audio">ऑडियो</string>
+    <string name="audio_enable_title">ऑडियो सक्षम करें</string>
+    <string name="audio_enable_subtitle_ok">डिवाइस ऑडियो स्ट्रीम करें</string>
+    <string name="audio_enable_subtitle_req">Android 11+ (API 30) आवश्यक है। डिवाइस API %1$d है।</string>
+    <string name="label_audio_source">स्रोत</string>
+    <string name="audio_source_device">डिवाइस ऑडियो</string>
+    <string name="audio_source_mic">माइक्रोफ़ोन</string>
+    <string name="label_audio_format">प्रारूप (फॉर्मेट)</string>
+    <string name="codec_opus">Opus</string>
+    <string name="codec_aac">AAC</string>
+    <string name="codec_flac">FLAC</string>
+    <string name="audio_dup_title">डिवाइस म्यूट न करें</string>
+    <string name="audio_dup_subtitle_ok">डिवाइस स्पीकर चालू रखें</string>
+    <string name="audio_dup_subtitle_req">Android 13+ (API 33) आवश्यक है</string>
+
+    <string name="section_display">डिस्प्ले और नियंत्रण</string>
+    <string name="display_screen_off_title">स्क्रीन बंद करें</string>
+    <string name="display_screen_off_subtitle">मिररिंग के दौरान डिवाइस स्क्रीन बंद रखें</string>
+    <string name="display_floating_nav_title">फ्लोटिंग नेविगेशन बार</string>
+    <string name="display_floating_nav_subtitle">स्क्रीन पर बैक, होम और रीसेंट्स बटन दिखाएं</string>
+    <string name="display_bind_volume_title">वॉल्यूम बटन अग्रेषित करें</string>
+    <string name="display_bind_volume_subtitle">हार्डवेयर वॉल्यूम बटन को कनेक्टेड डिवाइस से जोड़ें</string>
+
+    <string name="cd_toggle_torch">टॉर्च टॉगल करें</string>
+    <string name="cd_toggle_fullscreen">फुलस्क्रीन टॉगल करें</string>
+    <string name="cd_stop_mirroring">मिररिंग रोकें</string>
+    <string name="cd_nav_back">पीछे</string>
+    <string name="cd_nav_home">होम</string>
+    <string name="cd_nav_recents">हालिया ऐप्स</string>
+
+    <!-- Settings Tab -->
+    <string name="settings_title">सेटिंग्स</string>
+    <string name="settings_key_title">ADB प्रमाणीकरण कुंजी</string>
+    <string name="settings_key_desc">डिवाइसों के साथ इस ऐप को प्रमाणित करने के लिए उपयोग की जाने वाली RSA कुंजी जोड़ी प्रबंधित करें।</string>
+    <string name="settings_fingerprint_label">फ़िंगरप्रिंट:</string>
+    <string name="settings_no_key">अभी तक कोई कुंजी उत्पन्न नहीं हुई।</string>
+    <string name="settings_btn_regen_key">प्रमाणीकरण कुंजी पुनः उत्पन्न करें</string>
+    <string name="settings_btn_load_custom_key">कस्टम कुंजी लोड करें</string>
+    <string name="dialog_regen_key_title">कुंजी पुनः उत्पन्न करें?</string>
+    <string name="dialog_regen_key_msg">यह वर्तमान ADB कुंजी जोड़ी को हटा देगा और एक नई उत्पन्न करेगा। आपको सभी पूर्व-विश्वसनीय डिवाइसों पर पुनः प्रमाणित करना होगा।</string>
+    <string name="btn_regenerate">पुनः उत्पन्न करें</string>
+
+    <string name="settings_language_title">भाषा</string>
+    <string name="settings_language_system_default">सिस्टम डिफ़ॉल्ट</string>
+    <string name="settings_language_contribute">अनुवाद में योगदान दें</string>
+
+    <string name="settings_theme_title">थीम</string>
+    <string name="theme_system">डिवाइस डिफ़ॉल्ट</string>
+    <string name="theme_light">लाइट</string>
+    <string name="theme_dark">डार्क</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="settings_theme_dynamic_title">डायनामिक कलर्स (Monet)</string>
+    <string name="settings_theme_dynamic_desc">सिस्टम वॉलपेपर रंगों का उपयोग करें</string>
+    <string name="settings_theme_dynamic_req">Android 12+ आवश्यक है</string>
+    <string name="settings_theme_mode_header">थीम मोड</string>
+
+    <string name="settings_logs_title">ऐप लॉग्स</string>
+    <string name="settings_logs_subtitle">स्थायी एप्लिकेशन लॉग निर्यात करें या साफ़ करें</string>
+    <string name="settings_enable_logging_title">लॉगिंग सक्षम करें</string>
+    <string name="settings_enable_logging_subtitle">आंतरिक लॉग घटनाओं को मेमोरी और डिस्क में रिकॉर्ड करें</string>
+    <string name="settings_btn_export_all_logs">लॉग निर्यात करें</string>
+    <string name="settings_btn_clear_logs">लॉग साफ़ करें</string>
+    <string name="dialog_clear_logs_title">सभी लॉग साफ़ करें?</string>
+    <string name="dialog_clear_logs_msg">यह स्थायी रूप से डिस्क से सभी सहेजे गए लॉग फ़ाइलों को हटा देगा और वर्तमान इन-मेमोरी लॉग को साफ़ करेगा।</string>
+    <string name="btn_clear">साफ़ करें</string>
+    <string name="msg_logs_cleared">सभी लॉग फ़ाइलें और मेमोरी बफ़र साफ़ कर दिए गए।</string>
+    <string name="msg_logs_exported">लॉग सफलतापूर्वक निर्यात किए गए।</string>
+
+    <!-- ViewModel State / Error Messages -->
+    <string name="msg_new_key_generated">नई कुंजी उत्पन्न हो गई।</string>
+    <string name="msg_custom_key_loaded">कस्टम कुंजी लोड हो गई।</string>
+    <string name="err_usb_connection_lost">USB कनेक्शन टूट गया। कृपया पुनः कनेक्ट करें।</string>
+    <string name="err_connection_lost">कनेक्शन टूट गया: %1$s</string>
+    <string name="err_connection_failed">कनेक्शन विफल</string>
+    <string name="err_usb_connection_failed">USB कनेक्शन विफल</string>
+    <string name="err_failed_prefix">विफल: %1$s</string>
+    <string name="err_shell_format">त्रुटि (%1$d): %2$s</string>
+    <string name="err_command_timed_out">कमांड का समय समाप्त हो गया - डिवाइस डिस्कनेक्ट हो सकता है</string>
+
+    <!-- File Manager -->
+    <string name="file_manager_title">डिवाइस फाइल मैनेजर</string>
+    <string name="file_manager_subtitle">कनेक्टेड डिवाइस पर फाइलें ब्राउज़, देखें, अपलोड, डाउनलोड और प्रबंधित करें</string>
+    <string name="file_manager_empty">निर्देशिका (डायरेक्टरी) खाली है</string>
+    <string name="file_manager_parent_dir">..</string>
+    <string name="file_manager_search_hint">वर्तमान फ़ोल्डर में खोजें…</string>
+    <string name="file_manager_write_denied">इस निर्देशिका में लिखने की अनुमति नहीं है (Permission Denied)</string>
+    <string name="file_manager_action_properties">गुण (प्रॉपर्टीज) देखें</string>
+    <string name="file_manager_action_download">डाउनलोड (पुल)</string>
+    <string name="file_manager_action_rename">नाम बदलें / स्थानांतरित करें</string>
+    <string name="file_manager_action_delete">हटाएं</string>
+    <string name="file_manager_properties_title">फाइल गुण</string>
+    <string name="file_manager_new_folder">नया फ़ोल्डर</string>
+    <string name="file_manager_create_folder_title">नया फ़ोल्डर बनाएं</string>
+    <string name="file_manager_create_folder_msg">नया फ़ोल्डर नाम दर्ज करें:</string>
+    <string name="file_manager_rename_title">आइटम का नाम बदलें</string>
+    <string name="file_manager_rename_msg">नया पथ या नाम दर्ज करें:</string>
+    <string name="file_manager_delete_title">आइटम हटाएं?</string>
+    <string name="file_manager_delete_msg">क्या आप वाकई "%1$s" को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।</string>
+    <string name="file_manager_downloading_folder">फ़ोल्डर डाउनलोड हो रहा है…</string>
+
+    <!-- Adb / Device Connect / Modes -->
+    <string name="err_invalid_ip_format">अमान्य IPv4 पता प्रारूप</string>
+    <string name="err_invalid_port_range">पोर्ट 1 और 65535 के बीच होना चाहिए</string>
+    <string name="mode_sideload">साइडलोड मोड</string>
+    <string name="mode_recovery">रिकवरी मोड</string>
+    <string name="mode_rescue">रेस्क्यू मोड</string>
+    <string name="status_connected_mode">कनेक्टेड [%1$s]</string>
+    <string name="status_connected_recovery_version_api">कनेक्टेड [रिकवरी मोड &#8226; Android %1$s (API %2$d)]</string>
+    <string name="status_connected_recovery_version">कनेक्टेड [रिकवरी मोड &#8226; Android %1$s]</string>
+    <string name="status_connected_recovery_api">कनेक्टेड [रिकवरी मोड &#8226; API %1$d]</string>
+    <string name="sideload_description">डिवाइस साइडलोड मोड में है। फ्लैश करने के लिए एक OTA zip चुनें।</string>
+    <string name="btn_choose_file">फाइल चुनें</string>
+    <string name="btn_starting">शुरू हो रहा है…</string>
+    <string name="btn_sideload">साइडलोड करें</string>
+    <string name="msg_flash_complete">फ्लैश पूर्ण हुआ</string>
+    <string name="btn_done">हो गया</string>
+    <string name="btn_try_again">पुनः प्रयास करें</string>
+    <string name="btn_wipe_userdata">यूज़रडेटा साफ़ करें</string>
+    <string name="dialog_wipe_userdata_title">यूज़रडेटा साफ़ करें?</string>
+    <string name="dialog_wipe_userdata_msg">यह डिवाइस पर सभी उपयोगकर्ता डेटा मिटा देगा। इसे पूर्ववत नहीं किया जा सकता।</string>
+    <string name="btn_wipe">मिटाएं</string>
+
+    <!-- Scrcpy Additions -->
+    <string name="dialog_add_audio_bitrate_title">कस्टम ऑडियो बिटरेट जोड़ें</string>
+    <string name="dialog_add_audio_bitrate_msg">Kbps में कस्टम ऑडियो बिटरेट दर्ज करें (उदा. 192, 256, 320):</string>
+    <string name="scrcpy_mirroring_failed">मिररिंग विफल</string>
+    <string name="btn_dismiss">खारिज करें</string>
+    <string name="label_audio_bitrate">ऑडियो बिटरेट</string>
+    <string name="codec_raw_pcm">RAW (PCM)</string>
+    <string name="err_invalid_positive_number">कृपया एक मान्य धनात्मक संख्या दर्ज करें</string>
+    <string name="scrcpy_mode_not_supported">scrcpy %1$s मोड में समर्थित नहीं है</string>
+    <string name="scrcpy_mode_not_supported_desc">स्क्रीन मिररिंग के लिए मानक ADB मोड की आवश्यकता होती है और जब कनेक्टेड डिवाइस %1$s मोड में हो तो यह अनुपलब्ध होता है।</string>
+    <string name="scrcpy_server_start_failed">लक्ष्य डिवाइस पर scrcpy सर्वर प्रारंभ करने में विफल। अनुमतियां या डिवाइस संगतता जांचें।</string>
+    <string name="scrcpy_server_terminated">लक्ष्य डिवाइस पर scrcpy सर्वर प्रक्रिया अप्रत्याशित रूप से समाप्त हो गई।</string>
+
+    <!-- File Manager Additions -->
+    <string name="file_manager_push_file">फाइल पुश (अपलोड) करें</string>
+    <string name="file_manager_upload_failed">%1$s के लिए अपलोड विफल: %2$s</string>
+    <string name="file_manager_download_success">%1$s सफलतापूर्वक डाउनलोड किया गया</string>
+    <string name="file_manager_download_failed">डाउनलोड विफल: %1$s</string>
+    <string name="file_manager_folder_download_unsupported">एकल फ़ाइल सहेजने के माध्यम से फ़ोल्डर डाउनलोड समर्थित नहीं है</string>
+    <string name="file_manager_prop_name">नाम</string>
+    <string name="file_manager_prop_path">पथ (पाथ)</string>
+    <string name="file_manager_prop_type">प्रकार</string>
+    <string name="file_manager_prop_link_target">लिंक लक्ष्य</string>
+    <string name="file_manager_prop_size">आकार</string>
+    <string name="file_manager_prop_mode">मोड</string>
+    <string name="file_manager_prop_type_symlink">सिमलिंक (%1$s)</string>
+    <string name="file_manager_prop_type_dir">निर्देशिका (डायरेक्टरी)</string>
+    <string name="file_manager_prop_type_file">फाइल</string>
+    <string name="file_manager_retry">पुनः प्रयास करें</string>
+    <string name="file_manager_create">बनाएं</string>
+    <string name="file_manager_rename">नाम बदलें</string>
+
+    <!-- Package Manager -->
+    <string name="pkg_manager_title">पैकेज प्रबंधक (पैकेज मैनेजर)</string>
+    <string name="pkg_manager_subtitle">इंस्टॉल किए गए ऐप्स प्रबंधित करें, APKs/APKS निकालें, पैकेज सक्षम/अक्षम या इंस्टॉल करें</string>
+    <string name="pkg_manager_search_hint">नाम या पैकेज द्वारा ऐप्स खोजें…</string>
+    <string name="pkg_manager_filter_all">सभी ऐप्स</string>
+    <string name="pkg_manager_filter_user">उपयोगकर्ता ऐप्स</string>
+    <string name="pkg_manager_filter_system">सिस्टम ऐप्स</string>
+    <string name="pkg_manager_filter_disabled">अक्षम ऐप्स</string>
+    <string name="pkg_manager_action_enable">ऐप सक्षम करें</string>
+    <string name="pkg_manager_action_disable">ऐप अक्षम करें</string>
+    <string name="pkg_manager_action_pull">ऐप निकालें (APK एक्सट्रैक्ट करें)</string>
+    <string name="pkg_manager_action_uninstall">ऐप अनइंस्टॉल करें</string>
+    <string name="pkg_manager_action_force_stop">फ़ोर्स स्टॉप करें</string>
+    <string name="pkg_manager_action_permissions">अनुमतियां प्रदान करें</string>
+    <string name="pkg_manager_action_info">ऐप जानकारी</string>
+    <string name="pkg_manager_dialog_permissions_title">अनुमतियां प्रदान करें</string>
+    <string name="pkg_manager_custom_perm_placeholder">उदा. android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="pkg_manager_perm_prompt">वह अनुमति नाम दर्ज करें जिसे आप प्रदान करना चाहते हैं:</string>
+    <string name="pkg_manager_perm_label">अनुमति का नाम</string>
+    <string name="pkg_manager_perm_manifest_note">नोट: लक्षित ऐप को अपने AndroidManifest.xml में इस अनुमति की घोषणा करनी होगी।</string>
+    <string name="pkg_manager_perm_invalid_format">अमान्य अनुमति प्रारूप (उदा. android.permission.WRITE_SECURE_SETTINGS)</string>
+    <string name="pkg_manager_btn_grant">प्रदान करें</string>
+    <string name="pkg_manager_perm_granted">%1$s प्रदान की गई</string>
+    <string name="pkg_manager_perm_failed">विफल: %1$s</string>
+    <string name="pkg_manager_force_stop_success">%1$s फ़ोर्स स्टॉप हो गया</string>
+    <string name="pkg_manager_install_apks">APKs इंस्टॉल करें</string>
+    <string name="pkg_manager_installing">डिवाइस पर पैकेज इंस्टॉल हो रहा है…</string>
+    <string name="pkg_manager_install_success">पैकेज सफलतापूर्वक इंस्टॉल हुआ</string>
+    <string name="pkg_manager_install_failed">इंस्टॉलेशन विफल: %1$s</string>
+    <string name="pkg_manager_pulling">पैकेज निकाला जा रहा है…</string>
+    <string name="pkg_manager_pull_success">%1$s सफलतापूर्वक निकाला गया</string>
+    <string name="pkg_manager_pull_failed">निकालना विफल: %1$s</string>
+    <string name="pkg_manager_uninstall_confirm_title">ऐप अनइंस्टॉल करें?</string>
+    <string name="pkg_manager_uninstall_confirm_msg">क्या आप वाकई लक्षित डिवाइस से %1$s (%2$s) को अनइंस्टॉल करना चाहते हैं?</string>
+    <string name="pkg_manager_uninstall_success">%1$s सफलतापूर्वक अनइंस्टॉल हुआ</string>
+    <string name="pkg_manager_uninstall_failed">अनइंस्टॉल विफल: %1$s</string>
+    <string name="pkg_manager_disable_success">%1$s अक्षम किया गया</string>
+    <string name="pkg_manager_enable_success">%1$s सक्षम किया गया</string>
+    <string name="settings_btn_export_key">प्रमाणीकरण कुंजी निर्यात करें</string>
+    <string name="msg_key_exported">ADB प्रमाणीकरण कुंजी सफलतापूर्वक निर्यात की गई</string>
+    <string name="pkg_manager_empty">कोई पैकेज नहीं मिला</string>
+
+    <!-- ADB Reboot Options Strings -->
+    <string name="adb_reboot_tile_title">रीबूट विकल्प</string>
+    <string name="adb_reboot_tile_desc">सिस्टम, बूटलोडर, रिकवरी, फास्टबूट में रीबूट करें या पावर ऑफ करें</string>
+    <string name="adb_reboot_system_title">सिस्टम रीबूट करें</string>
+    <string name="adb_reboot_system_desc">Android OS में सामान्य रीबूट</string>
+    <string name="adb_reboot_bootloader_title">बूटलोडर में रीबूट करें</string>
+    <string name="adb_reboot_bootloader_desc">बूटलोडर / फास्टबूट मोड में रीबूट करें</string>
+    <string name="adb_reboot_recovery_title">रिकवरी में रीबूट करें</string>
+    <string name="adb_reboot_recovery_desc">रिकवरी मोड में रीबूट करें</string>
+    <string name="adb_reboot_fastboot_title">फास्टबूट में रीबूट करें</string>
+    <string name="adb_reboot_fastboot_desc">fastbootd (यूज़रस्पेस फास्टबूट) में रीबूट करें</string>
+    <string name="adb_reboot_shutdown_title">शटडाउन करें</string>
+    <string name="adb_reboot_shutdown_desc">डिवाइस को पावर ऑफ करें</string>
+    <string name="adb_reboot_executing">%1$s निष्पादित किया जा रहा है…</string>
+
+    <!-- ADB Screenshot Strings -->
+    <string name="adb_screenshot_tile_title">स्क्रीनशॉट</string>
+    <string name="adb_screenshot_tile_desc">डिवाइस स्क्रीन कैप्चर करें और छवि देखें या सहेजें</string>
+    <string name="adb_screenshot_take_btn">स्क्रीनशॉट लें</string>
+    <string name="adb_screenshot_capturing">स्क्रीनशॉट लिया जा रहा है…</string>
+    <string name="adb_screenshot_save_btn">स्क्रीनशॉट सहेजें</string>
+    <string name="adb_screenshot_saved">स्क्रीनशॉट सफलतापूर्वक सहेजा गया</string>
+    <string name="adb_screenshot_failed">स्क्रीनशॉट कैप्चर विफल: %1$s</string>
+    <string name="adb_screenshot_empty">कनेक्टेड डिवाइस का डिस्प्ले कैप्चर करने के लिए \'स्क्रीनशॉट लें\' दबाएं।</string>
+
+    <!-- General Buttons -->
+    <string name="btn_back">पीछे</string>
+
+    <!-- ADB Miscellaneous Tools Strings -->
+    <string name="adb_misc_tile_title">विविध उपकरण</string>
+    <string name="adb_misc_tile_desc">डिस्प्ले नियंत्रण, डेवलपर ट्वीक्स और शॉर्टकट</string>
+    <string name="adb_misc_section_app_process">ऐप और प्रक्रिया क्रियाएं</string>
+    <string name="adb_misc_section_display">डिस्प्ले और ओरिएंटेशन</string>
+    <string name="adb_misc_section_system_ui">सिस्टम UI और सूचनाएं</string>
+    <string name="adb_misc_section_dev_tweaks">डेवलपर और UI ट्वीक्स</string>
+    <string name="adb_misc_section_battery">बैटरी सिमुलेशन</string>
+    <string name="adb_misc_section_intent_url">इंटेंट और URL</string>
+
+    <string name="adb_misc_kill_app_title">फ़ोरग्राउंड ऐप बंद करें (Kill)</string>
+    <string name="adb_misc_kill_app_desc">लक्षित स्क्रीन पर वर्तमान में खुले ऐप को फ़ोर्स स्टॉप करता है</string>
+    <string name="adb_misc_clear_app_title">फ़ोरग्राउंड ऐप डेटा साफ़ करें</string>
+    <string name="adb_misc_clear_app_desc">वर्तमान में सक्रिय ऐप के लिए एप्लिकेशन डेटा और कैश रीसेट करता है</string>
+
+    <string name="adb_misc_orientation_title">स्क्रीन ओरिएंटेशन सेट करें</string>
+    <string name="adb_misc_orientation_desc">0° पोर्ट्रेट, 90° लैंडस्केप, 180° उल्टा, या 270° लैंडस्केप फ़ोर्स करें</string>
+    <string name="adb_misc_auto_rotate_title">ऑटो-रोटेट टॉगल करें</string>
+    <string name="adb_misc_auto_rotate_desc">एक्सेलेरोमीटर स्क्रीन रोटेशन को चालू/बंद करें</string>
+    <string name="adb_misc_density_title">स्क्रीन घनत्व (DPI)</string>
+    <string name="adb_misc_density_desc">डिस्प्ले DPI स्केलिंग बदलें या डिफ़ॉल्ट पर रीसेट करें</string>
+    <string name="adb_misc_density_current">वर्तमान: %1$s</string>
+    <string name="adb_misc_density_placeholder">उदा. 420</string>
+    <string name="adb_misc_resolution_title">स्क्रीन रिज़ॉल्यूशन</string>
+    <string name="adb_misc_resolution_desc">स्क्रीन रिज़ॉल्यूशन आयाम (चौड़ाई x ऊंचाई) बदलें या रीसेट करें</string>
+    <string name="adb_misc_size_current">वर्तमान: %1$s</string>
+    <string name="adb_misc_size_placeholder">उदा. 1080x2400</string>
+    <string name="adb_misc_stay_awake_title">स्क्रीन सक्रिय रखें (Stay Awake)</string>
+    <string name="adb_misc_stay_awake_desc">USB कनेक्ट होने के दौरान लक्षित डिवाइस स्क्रीन को सोने से रोकें</string>
+
+    <string name="adb_misc_expand_notifs_title">सूचनाएं खोलें</string>
+    <string name="adb_misc_expand_notifs_desc">नोटिफिकेशन शेड को नीचे खींचता है</string>
+    <string name="adb_misc_expand_qs_title">क्विक सेटिंग्स खोलें</string>
+    <string name="adb_misc_expand_qs_desc">क्विक सेटिंग्स टाइल पैनल को नीचे खींचता है</string>
+    <string name="adb_misc_collapse_statusbar_title">स्टेटस बार समेटें</string>
+    <string name="adb_misc_collapse_statusbar_desc">खुले हुए नोटिफिकेशन या क्विक सेटिंग्स शेड को बंद करता है</string>
+
+    <string name="adb_misc_demo_mode_title">डेमो मोड (साफ़ स्टेटस बार)</string>
+    <string name="adb_misc_demo_mode_desc">100% बैटरी, 12:00 घड़ी, पूर्ण सिग्नल प्रदर्शित करता है और सूचनाएं छुपाता है</string>
+    <string name="adb_misc_show_touches_title">टच दिखाएं (Show Touches)</string>
+    <string name="adb_misc_show_touches_desc">उंगलियों के टैप के नीचे दृश्यमान टच सर्कल संकेतक दिखाता है</string>
+    <string name="adb_misc_pointer_location_title">पॉइंटर स्थान टॉगल करें</string>
+    <string name="adb_misc_pointer_location_desc">टच निर्देशांक रूलर और पथ ओवरले प्रदर्शित करता है</string>
+    <string name="adb_misc_anim_scale_title">विंडो एनिमेशन गति</string>
+    <string name="adb_misc_anim_scale_desc">विंडो, ट्रांज़िशन और एनिमेटर अवधि स्केल समायोजित करें (0x से 2x)</string>
+
+    <string name="adb_misc_battery_sim_title">बैटरी स्थिति का अनुकरण करें</string>
+    <string name="adb_misc_battery_sim_desc">बैटरी स्तर, चार्जिंग/डिस्चार्जिंग स्थिति का अनुकरण करें या रीसेट करें</string>
+    <string name="adb_misc_open_url_title">URL / डीप लिंक खोलें</string>
+    <string name="adb_misc_open_url_desc">लक्षित डिवाइस के ब्राउज़र में कोई भी वेबपेज या डीप लिंक लॉन्च करें</string>
+    <string name="adb_misc_open_url_placeholder">https://example.com</string>
+
+    <string name="adb_misc_dialog_clear_title">सक्रिय ऐप डेटा साफ़ करें?</string>
+    <string name="adb_misc_dialog_clear_msg">क्या आप वाकई पैकेज के लिए सभी ऐप डेटा, लॉगिन और कैश को स्थायी रूप से साफ़ करना चाहते हैं:\n\n%1$s\n\nयह क्रिया पूर्ववत नहीं की जा सकती।</string>
+    <string name="adb_misc_dialog_clear_btn">डेटा साफ़ करें</string>
+    <string name="adb_misc_dialog_orientation_title">ओरिएंटेशन चुनें</string>
+    <string name="adb_misc_orientation_0">0° पोर्ट्रेट</string>
+    <string name="adb_misc_orientation_90">90° लैंडस्केप दायां</string>
+    <string name="adb_misc_orientation_180">180° उल्टा पोर्ट्रेट</string>
+    <string name="adb_misc_orientation_270">270° लैंडस्केप बायां</string>
+    <string name="adb_misc_dialog_density_title">स्क्रीन घनत्व (DPI) सेट करें</string>
+    <string name="adb_misc_density_reading">वर्तमान घनत्व पढ़ा जा रहा है…</string>
+    <string name="adb_misc_density_presets">प्रीसेट</string>
+    <string name="adb_misc_density_custom_label">कस्टम DPI मान (72 - 1200)</string>
+    <string name="adb_misc_density_invalid">कृपया 72 और 1200 के बीच एक मान्य DPI दर्ज करें</string>
+    <string name="adb_misc_btn_apply">लागू करें</string>
+    <string name="adb_misc_btn_reset_default">डिफ़ॉल्ट पर रीसेट करें</string>
+    <string name="adb_misc_dialog_resolution_title">स्क्रीन रिज़ॉल्यूशन सेट करें</string>
+    <string name="adb_misc_resolution_reading">वर्तमान रिज़ॉल्यूशन पढ़ा जा रहा है…</string>
+    <string name="adb_misc_resolution_width">चौड़ाई</string>
+    <string name="adb_misc_resolution_height">ऊंचाई</string>
+    <string name="adb_misc_resolution_invalid">कृपया 240 और 10000 के बीच मान्य आयाम दर्ज करें</string>
+    <string name="adb_misc_dialog_stay_awake_title">स्क्रीन सक्रिय रखें</string>
+    <string name="adb_misc_dialog_stay_awake_msg">चुनें कि क्या USB से कनेक्ट रहने पर डिवाइस स्क्रीन को चालू रहने के लिए बाध्य करना है।</string>
+    <string name="adb_misc_btn_stay_awake_enable">सक्षम करें (Stay Awake)</string>
+    <string name="adb_misc_btn_stay_awake_disable">अक्षम करें</string>
+    <string name="adb_misc_dialog_demo_mode_title">डेमो मोड (साफ़ स्टेटस बार)</string>
+    <string name="adb_misc_dialog_demo_mode_msg">स्टेटस बार आइकन को 100% बैटरी, 12:00 घड़ी और पूर्ण सिग्नल पर सेट करें, या सामान्य स्टेटस बार पुनर्स्थापित करें।</string>
+    <string name="adb_misc_btn_demo_mode_enter">डेमो मोड दर्ज करें</string>
+    <string name="adb_misc_btn_demo_mode_exit">डेमो मोड से बाहर निकलें</string>
+    <string name="adb_misc_dialog_anim_scale_title">एनिमेशन गति चुनें</string>
+    <string name="adb_misc_dialog_battery_title">बैटरी स्थिति का अनुकरण करें</string>
+    <string name="adb_misc_battery_level_label">स्तर का अनुकरण करें</string>
+    <string name="adb_misc_battery_charging_label">चार्जिंग स्थिति का अनुकरण करें</string>
+    <string name="adb_misc_battery_btn_charging">चार्जिंग</string>
+    <string name="adb_misc_battery_btn_discharging">डिस्चार्जिंग</string>
+    <string name="adb_misc_battery_btn_reset">सिमुलेशन रीसेट करें</string>
+    <string name="adb_misc_dialog_open_url_title">डिवाइस पर URL खोलें</string>
+    <string name="adb_misc_dialog_open_url_msg">लक्षित डिवाइस के ब्राउज़र में खोलने के लिए एक वेब पता या डीप लिंक दर्ज करें:</string>
+    <string name="adb_misc_btn_open">खोलें</string>
+
+    <string name="adb_misc_status_success">स्थिति: सफल</string>
+    <string name="adb_misc_status_failed">स्थिति: विफल</string>
+    <string name="adb_misc_status_dismiss">खारिज करें</string>
+    <string name="adb_misc_not_connected">डिवाइस कनेक्ट नहीं है</string>
+    <string name="adb_misc_no_foreground_app">लक्षित डिवाइस पर सक्रिय फ़ोरग्राउंड ऐप का पता नहीं लगाया जा सका।</string>
+    <string name="adb_misc_state_enabled">सक्षम (चालू)</string>
+    <string name="adb_misc_state_disabled">अक्षम (बंद)</string>
+    <string name="adb_misc_executed_success">सफलतापूर्वक निष्पादित।</string>
+    <string name="adb_misc_btn_reset">रीसेट करें</string>
+
+    <!-- Fastboot Tab Strings -->
+    <string name="fastboot_tab_actions">क्रियाएं</string>
+    <string name="fastboot_tab_shell">शेल</string>
+    <string name="fastboot_connected">कनेक्टेड</string>
+    <string name="fastboot_detected_not_connected">डिटेक्ट हुआ &#8212; कनेक्ट नहीं है</string>
+    <string name="fastboot_retry">पुनः प्रयास करें</string>
+    <string name="fastboot_disconnect">डिस्कनेक्ट करें</string>
+    <string name="fastboot_no_device_warning">कोई Fastboot डिवाइस कनेक्ट नहीं है। इन क्रियाओं का उपयोग करने के लिए Fastboot मोड में डिवाइस कनेक्ट करें।</string>
+    <string name="fastboot_tile_reboot_title">रीबूट</string>
+    <string name="fastboot_tile_reboot_desc">सिस्टम, बूटलोडर, रिकवरी, या fastbootd में रीबूट करें</string>
+    <string name="fastboot_tile_flash_title">इमेज फ्लैश करें</string>
+    <string name="fastboot_tile_flash_desc">फ़ाइल पिकर से एक इमेज चुनें और इसे पार्टीशन पर फ्लैश करें</string>
+    <string name="fastboot_tile_boot_title">इमेज बूट करें</string>
+    <string name="fastboot_tile_boot_desc">फ्लैश किए बिना एक इमेज को स्टेज और बूट करें</string>
+    <string name="fastboot_tile_lock_title">लॉक स्थिति</string>
+    <string name="fastboot_tile_lock_desc">बूटलोडर को अनलॉक या लॉक करें</string>
+    <string name="fastboot_tile_vars_title">डिवाइस वेरिएबल्स</string>
+    <string name="fastboot_tile_vars_desc">getvar के माध्यम से बूटलोडर वेरिएबल्स पढ़ें</string>
+    <string name="fastboot_log_title">लॉग</string>
+    <string name="fastboot_clear_log">लॉग साफ़ करें</string>
+    <string name="fastboot_shell_hint">नीचे कमांड टाइप करें, या सहायता दबाएं।</string>
+
+    <string name="fastboot_reboot_title">रीबूट</string>
+    <string name="fastboot_reboot_system_title">सिस्टम रीबूट करें</string>
+    <string name="fastboot_reboot_system_desc">OS में सामान्य रीबूट</string>
+    <string name="fastboot_reboot_bootloader_title">बूटलोडर में रीबूट करें</string>
+    <string name="fastboot_reboot_bootloader_desc">वापस बूटलोडर में रीबूट करें</string>
+    <string name="fastboot_reboot_recovery_title">रिकवरी में रीबूट करें</string>
+    <string name="fastboot_reboot_recovery_desc">रिकवरी मोड में रीबूट करें</string>
+    <string name="fastboot_reboot_fastboot_title">फास्टबूट में रीबूट करें</string>
+    <string name="fastboot_reboot_fastboot_desc">fastbootd (यूज़रस्पेस फास्टबूट) में रीबूट करें</string>
+    <string name="fastboot_continue_boot_title">बूट जारी रखें</string>
+    <string name="fastboot_continue_boot_desc">रीबूट किए बिना बूटलोडर से सामान्य बूट फिर से शुरू करें</string>
+    <string name="fastboot_shutdown_title">शटडाउन करें</string>
+    <string name="fastboot_shutdown_desc">डिवाइस को पावर ऑफ करें</string>
+    <string name="fastboot_lock_title">बूटलोडर लॉक स्थिति</string>
+    <string name="fastboot_lock_warning">बूटलोडर को अनलॉक या लॉक करने से डिवाइस का उपयोगकर्ता डेटा मिट सकता है।</string>
+    <string name="fastboot_unlock_bootloader_title">बूटलोडर अनलॉक करें</string>
+    <string name="fastboot_lock_bootloader_title">बूटलोडर लॉक करें</string>
+    <string name="fastboot_unlock_critical_title">क्रिटिकल अनलॉक करें</string>
+    <string name="fastboot_lock_critical_title">क्रिटिकल लॉक करें</string>
+    <string name="fastboot_check_unlock_title">अनलॉक क्षमता जांचें</string>
+
+    <string name="fastboot_vars_title">डिवाइस वेरिएबल्स</string>
+    <string name="fastboot_vars_desc">विशिष्ट बूटलोडर वेरिएबल पढ़ें, या उन सभी को एक बार में प्राप्त करें।</string>
+    <string name="fastboot_var_name_label">वेरिएबल नाम (उदा. product, version-bootloader)</string>
+    <string name="fastboot_btn_get_all">सभी प्राप्त करें</string>
+    <string name="fastboot_btn_get_var">वेरिएबल प्राप्त करें</string>
+
+    <string name="fastboot_working_placeholder">काम कर रहा है…</string>
+    <string name="fastboot_op_in_progress">ऑपरेशन प्रगति पर है…</string>
+    <string name="fastboot_op_done">%1$s पूर्ण हुआ</string>
+    <string name="fastboot_op_failed">%1$s विफल हुआ</string>
+    <string name="fastboot_flash_title">इमेज फ्लैश करें</string>
+    <string name="fastboot_flash_desc">डिवाइस के पार्टीशन पर फ्लैश करने के लिए एक इमेज फ़ाइल चुनें। फ़ाइल नाम से पार्टीशन नाम पहले से भरा होता है लेकिन इसे संपादित किया जा सकता है।</string>
+    <string name="fastboot_choose_image">इमेज चुनें</string>
+    <string name="fastboot_no_file_selected">कोई फ़ाइल नहीं चुनी गई</string>
+    <string name="fastboot_dialog_flash_partition_title">पार्टीशन पर फ्लैश करें</string>
+    <string name="fastboot_dialog_flash_partition_msg">\"%1$s\" को फ्लैश करने के लिए पार्टीशन नाम दर्ज करें।</string>
+    <string name="fastboot_partition_name_label">पार्टीशन नाम</string>
+    <string name="fastboot_btn_flash">फ्लैश करें</string>
+    <string name="fastboot_btn_cancel">रद्द करें</string>
+    <string name="fastboot_boot_title">इमेज बूट करें</string>
+    <string name="fastboot_boot_desc">डिवाइस पर एक इमेज को स्टेज करता है और किसी पार्टीशन पर फ्लैश किए बिना इसे एक बार बूट करता है।</string>
+    <string name="fastboot_choose_image_and_boot">इमेज चुनें और बूट करें</string>
+
+    <string name="fastboot_shell_placeholder">reboot, getvar product, flash boot, help ...</string>
+    <string name="fastboot_raw_path_warning_title">कच्चा पाथ (Raw path) मिला</string>
+    <string name="fastboot_raw_path_warning_msg">\"%1$s\" समर्थित नहीं है &#8212; यह ऐप मनमानी फ़ाइल पथ नहीं पढ़ सकता। इसके बजाय फ़ाइल चुनने के लिए अटैच बटन का उपयोग करें।</string>
+    <string name="fastboot_proceed_anyway">फिर भी आगे बढ़ें</string>
+
+    <!-- Remote Control Strings -->
+    <string name="remote_control_title">रिमोट कंट्रोल</string>
+    <string name="remote_control_desc">मानक Android और Android TV डिवाइसों के लिए भौतिक रिमोट का अनुकरण करें</string>
+    <string name="remote_mode_auto">ऑटो डिटेक्ट</string>
+    <string name="remote_mode_tv">Android TV</string>
+    <string name="remote_mode_standard">मानक Android</string>
+    <string name="remote_detected_tv">Android TV मिला</string>
+    <string name="remote_detected_standard">मानक Android मिला</string>
+    <string name="remote_section_navigation">नेविगेशन पैड</string>
+    <string name="remote_section_system">सिस्टम और प्लेबैक</string>
+    <string name="remote_section_tv_controls">TV नियंत्रण</string>
+    <string name="remote_section_text_input">टेक्स्ट इनपुट इंजेक्शन</string>
+    <string name="remote_btn_send_text">टेक्स्ट भेजें</string>
+    <string name="remote_text_placeholder">सक्रिय फ़ील्ड में भेजने के लिए टेक्स्ट टाइप करें…</string>
+    <string name="remote_tv_guide">गाइड</string>
+    <string name="remote_tv_input">सोर्स (इनपुट)</string>
+    <string name="remote_tv_ch_up">चैनल +</string>
+    <string name="remote_tv_ch_down">चैनल -</string>
+    <string name="remote_tv_search">खोजें</string>
+
+    <!-- Touchpad & Virtual Mouse/Keyboard Strings -->
+    <string name="touchpad_title">टचपैड और माउस</string>
+    <string name="touchpad_desc">वर्चुअल टचपैड और हार्डवेयर कीबोर्ड से लक्षित डिवाइस कर्सर को नियंत्रित करें</string>
+    <string name="tab_touchpad">टचपैड</string>
+    <string name="tab_keyboard">PC कीबोर्ड</string>
+    <string name="touchpad_connecting">वर्चुअल इनपुट डिवाइस प्रारंभ हो रहे हैं…</string>
+    <string name="touchpad_connected">वर्चुअल माउस और कीबोर्ड सक्रिय</string>
+    <string name="touchpad_surface_hint">हिलाने के लिए स्वाइप करें &#8226; लेफ्ट क्लिक के लिए टैप करें &#8226; राइट क्लिक के लिए दबाए रखें &#8226; 2 उंगलियों से स्क्रॉल करें</string>
+    <string name="touchpad_btn_left">बायां</string>
+    <string name="touchpad_btn_right">दायां</string>
+    <string name="touchpad_btn_middle">मध्य</string>
+    <string name="touchpad_sensitivity">पॉइंटर संवेदनशीलता</string>
+    <string name="touchpad_keyboard_section">हार्डवेयर कीबोर्ड</string>
+    <string name="touchpad_modifiers">मॉडिफायर्स</string>
+    <string name="touchpad_functions">फ़ंक्शन कुंजियां</string>
+    <string name="touchpad_shortcuts">शॉर्टकट्स</string>
+    <string name="touchpad_navigation">नेविगेशन</string>
+    <string name="touchpad_numpad">नंपैड</string>
+    <string name="touchpad_soft_keyboard">सॉफ्ट कीबोर्ड</string>
+    <string name="touchpad_toggle_ime">कीबोर्ड टॉगल करें</string>
+    <string name="touchpad_type_here">तत्काल रियल-टाइम कीस्ट्रोक्स के लिए यहां टाइप करें…</string>
+    <string name="touchpad_realtime_typing_hint">रियल-टाइम टाइपिंग सक्षम। वर्ण और बैकस्पेस तुरंत स्ट्रीम होते हैं।</string>
+    <string name="touchpad_error_title">वर्चुअल इनपुट त्रुटि</string>
+    <string name="touchpad_error_desc">वर्चुअल माउस/कीबोर्ड (/dev/uhid) प्रारंभ नहीं किया जा सका। सुनिश्चित करें कि डेवलपर विकल्प &gt; USB डीबगिंग (सुरक्षा सेटिंग्स) सक्षम है।</string>
+
+    <!-- Daemon Control & Connection Strings -->
+    <string name="daemon_dialog_title">डेमन प्रतिक्रिया</string>
+    <string name="btn_ok">ठीक है</string>
+    <string name="btn_restart">पुनः प्रारंभ करें</string>
+    <string name="cd_daemon_options">डेमन विकल्प</string>
+    <string name="action_switch_tcpip">TCP/IP पर स्विच करें</string>
+    <string name="action_root_daemon">रूट डेमन (Root)</string>
+    <string name="action_unroot_daemon">अन-रूट डेमन (Unroot)</string>
+    <string name="dialog_tcpip_title">TCP/IP पर adbd पुनरारंभ करें</string>
+    <string name="dialog_tcpip_msg">वायरलेस ADB के लिए पोर्ट दर्ज करें:</string>
+    <string name="cd_pair_qr">QR कोड से पेयर करें</string>
+    <string name="cd_close">बंद करें</string>
+
+    <!-- Discovery Sheet Strings -->
+    <string name="discovery_title">डिवाइस खोजें</string>
+    <string name="discovery_searching">वायरलेस डीबगिंग सक्षम डिवाइस खोजे जा रहे हैं…</string>
+    <string name="discovery_no_devices_found">अभी तक कोई डिवाइस नहीं मिला</string>
+    <string name="discovery_network_hint">सुनिश्चित करें कि वायरलेस डीबगिंग चालू है और दोनों डिवाइस एक ही नेटवर्क पर हैं</string>
+    <string name="discovery_btn_manual_entry">कनेक्शन जानकारी मैन्युअल रूप से दर्ज करें</string>
+    <string name="discovery_conn_type">कनेक्शन प्रकार</string>
+    <string name="discovery_plain_tcp">सादा TCP (पारंपरिक, पोर्ट 5555)</string>
+    <string name="discovery_wireless_tls">वायरलेस डीबगिंग (TLS)</string>
+    <string name="discovery_connect_tcp">TCP पर कनेक्ट करें</string>
+    <string name="discovery_wireless_debugging">वायरलेस डीबगिंग</string>
+    <string name="discovery_pair_first_hint">यदि यह डिवाइस अभी तक पेयर नहीं हुआ है, तो पहले इसे पेयर करें।</string>
+    <string name="discovery_pair_with_code">कोड से पेयर करें</string>
+    <string name="discovery_connect_already_paired">कनेक्ट करें (पहले से पेयर किया हुआ)</string>
+    <string name="discovery_connect_tls">कनेक्ट करें (TLS)</string>
+    <string name="discovery_paired_success_connecting">सफलतापूर्वक पेयर हो गया! खोजे गए वायरलेस डीबगिंग एंडपॉइंट से कनेक्ट हो रहा है…</string>
+    <string name="discovery_pair_instead">इसके बजाय पेयर करें</string>
+    <string name="discovery_pair_device">डिवाइस पेयर करें</string>
+    <string name="discovery_pairing_port">पेयरिंग पोर्ट</string>
+    <string name="discovery_pairing_code">पेयरिंग कोड</string>
+    <string name="discovery_btn_pair">पेयर करें</string>
+
+    <!-- QR Code Pairing Strings -->
+    <string name="qr_starting_server">पेयरिंग सर्वर प्रारंभ हो रहा है…</string>
+    <string name="cd_qr_code">पेयरिंग QR कोड</string>
+    <string name="qr_instruction">अपने डिवाइस पर, सेटिंग्स &gt; डेवलपर विकल्प &gt; वायरलेस डीबगिंग &gt; QR कोड से डिवाइस पेयर करें पर जाएं, फिर इसे स्कैन करें।</string>
+    <string name="qr_wifi_hint">दोनों डिवाइस एक ही Wi-Fi नेटवर्क पर होने चाहिए।</string>
+    <string name="qr_paired_success">सफलतापूर्वक पेयर हो गया</string>
+    <string name="qr_connecting">कनेक्ट हो रहा है…</string>
+    <string name="qr_waiting_discoverable">डिवाइस के खोजने योग्य होने की प्रतीक्षा की जा रही है…</string>
+    <string name="qr_pairing_failed">पेयरिंग विफल</string>
+
+    <!-- About Section Strings -->
+    <string name="settings_about_title">के बारे में</string>
+    <string name="settings_about_desc">ऐप जानकारी, सोशल लिंक और रिपॉजिटरी</string>
+    <string name="settings_about_version">संस्करण %1$s</string>
+    <string name="settings_about_source_code">सोर्स कोड</string>
+    <string name="cd_github">GitHub</string>
+    <string name="cd_telegram">Telegram</string>
+
+    <!-- Additional localized UI and accessibility strings -->
+    <string name="cd_run">चलाएं</string>
+    <string name="cd_send">भेजें</string>
+    <string name="cd_scroll_to_bottom">नीचे स्क्रॉल करें</string>
+    <string name="cd_restart_shell">शेल पुनरारंभ करें</string>
+    <string name="cd_select_mode">मोड चुनें</string>
+    <string name="cd_open_touchpad">टचपैड खोलें</string>
+    <string name="cd_power">पावर</string>
+    <string name="cd_mute">म्यूट</string>
+    <string name="cd_volume_down">वॉल्यूम कम करें</string>
+    <string name="cd_volume_up">वॉल्यूम बढ़ाएं</string>
+    <string name="cd_nav_menu">मेनू</string>
+    <string name="cd_nav_up">ऊपर</string>
+    <string name="cd_nav_down">नीचे</string>
+    <string name="cd_nav_left">बाएं</string>
+    <string name="cd_nav_right">दाएं</string>
+    <string name="cd_previous">पिछला</string>
+    <string name="cd_rewind">रिवाइंड</string>
+    <string name="cd_play_pause">चलाएं या रोकें</string>
+    <string name="cd_fast_forward">फास्ट फॉरवर्ड</string>
+    <string name="cd_next">अगला</string>
+    <string name="cd_keyboard">कीबोर्ड</string>
+    <string name="cd_send_text">टेक्स्ट भेजें</string>
+    <string name="cd_toggle_numpad">न्यूमेरिक कीपैड टॉगल करें</string>
+    <string name="cd_sensitivity_settings">संवेदनशीलता सेटिंग्स</string>
+    <string name="cd_hide_keyboard">कीबोर्ड छुपाएं</string>
+    <string name="cd_symlink">सिंबॉलिक लिंक</string>
+    <string name="cd_actions">क्रियाएं</string>
+    <string name="cd_copy_logs_to_clipboard">लॉग क्लिपबोर्ड पर कॉपी करें</string>
+    <string name="cd_clear_logs">लॉग साफ़ करें</string>
+    <string name="cd_export_logs_zip">लॉग को ZIP के रूप में निर्यात करें</string>
+
+    <string name="status_disconnected">डिस्कनेक्टेड</string>
+    <string name="msg_export_failed">निर्यात विफल: %1$s</string>
+    <string name="err_no_adb_key_file">कोई ADB कुंजी फ़ाइल नहीं मिली</string>
+    <string name="err_save_file_failed">फ़ाइल सहेजने में विफल</string>
+
+    <string name="camera_selector">कैमरा चयनकर्ता</string>
+    <string name="camera_label_format">कैमरा %1$s (%2$s)</string>
+    <string name="camera_resolution">कैमरा रिज़ॉल्यूशन</string>
+    <string name="camera_frame_rate">कैमरा फ्रेम रेट</string>
+    <string name="scrcpy_logs_client">क्लाइंट</string>
+    <string name="scrcpy_logs_server">सर्वर</string>
+    <string name="scrcpy_logs_exported">लॉग निर्यात हो गए</string>
+    <string name="scrcpy_logs_export_failed">निर्यात विफल हुआ</string>
+
+    <string name="pkg_manager_dump_failed">पैकेज लोड करने में विफल: %1$s</string>
+    <string name="pkg_manager_name_copied">पैकेज नाम कॉपी किया गया</string>
+    <string name="pkg_manager_copy_package">पैकेज कॉपी करें</string>
+    <string name="pkg_manager_app_settings">ऐप सेटिंग्स</string>
+    <string name="pkg_info_package_name">पैकेज का नाम</string>
+    <string name="pkg_info_version_name">संस्करण का नाम</string>
+    <string name="pkg_info_version_code">संस्करण कोड</string>
+    <string name="pkg_info_target_sdk">टारगेट SDK</string>
+    <string name="pkg_info_min_sdk">न्यूनतम SDK</string>
+    <string name="pkg_info_uid">UID</string>
+    <string name="pkg_info_installer">इंस्टॉलर</string>
+    <string name="pkg_info_source_dir">स्रोत निर्देशिका (सोर्स पाथ)</string>
+    <string name="pkg_info_data_dir">डेटा निर्देशिका (डेटा पाथ)</string>
+    <string name="pkg_info_first_installed">पहली बार इंस्टॉल हुआ</string>
+    <string name="pkg_info_last_updated">अंतिम बार अपडेट हुआ</string>
+    <string name="pkg_info_split_apks">स्प्लिट APKs (%1$d):</string>
+    <string name="pkg_info_not_available">उपलब्ध नहीं (N/A)</string>
+
+    <string name="remote_detecting_device">डिवाइस प्रकार का पता लगाया जा रहा है…</string>
+    <string name="remote_mode_tv_detected">Android TV (डिटेक्ट हुआ)</string>
+    <string name="remote_mode_standard_detected">मानक Android (डिटेक्ट हुआ)</string>
+    <string name="remote_media_controls">मीडिया नियंत्रण</string>
+    <string name="remote_numeric_keypad">न्यूमेरिक कीपैड</string>
+    <string name="touchpad_type">प्रकार</string>
+    <string name="adb_ip_placeholder">192.168.1.100 या 192.168.1.100:5555</string>
+    <string name="cd_choose_save_location">सहेजने का स्थान चुनें</string>
+    <string name="cd_attach_image">छवि संलग्न करें</string>
+    <string name="touchpad_error_details">विवरण: %1$s</string>
+    <string name="shell_error_message">शेल त्रुटि: %1$s</string>
+    <string name="shell_live_hint">कमांड के आगे &quot;adb shell&quot; न लगाएं — यह डिवाइस का लाइव शेल है।</string>
+    <string name="pkg_badge_system">सिस्टम</string>
+    <string name="pkg_badge_disabled">अक्षम</string>
+    <string name="pkg_badge_splits">स्प्लिट्स (%1$d)</string>
+
+    <string name="btn_refresh">रिफ्रेश करें</string>
+    <string name="btn_retry">पुनः प्रयास करें</string>
+
+    <!-- Process Manager Strings -->
+    <string name="proc_manager_title">प्रोसेस मैनेजर</string>
+    <string name="proc_manager_subtitle">लाइव CPU/RAM मॉनिटर, चल रही प्रक्रियाओं का निरीक्षण और प्रबंधन करें</string>
+    <string name="proc_manager_ram_usage">सिस्टम मेमोरी</string>
+    <string name="proc_manager_ram_used_format">%1$s / %2$s (%3$d%% प्रयुक्त)</string>
+    <string name="proc_manager_cpu_usage">CPU उपयोग</string>
+    <string name="proc_manager_cpu_format">%1$s · %2$d कोर</string>
+    <string name="proc_manager_processes_count">%1$d प्रक्रियाएं (%2$d ऐप्स, %3$d सिस्टम)</string>
+    <string name="proc_manager_search_placeholder">प्रक्रिया, ऐप या PID खोजें…</string>
+    <string name="proc_filter_all">सभी (%1$d)</string>
+    <string name="proc_filter_apps">ऐप्स (%1$d)</string>
+    <string name="proc_filter_system">सिस्टम (%1$d)</string>
+    <string name="proc_sort_ram">RAM (उच्च से निम्न)</string>
+    <string name="proc_sort_cpu">CPU (उच्च से निम्न)</string>
+    <string name="proc_sort_pid">PID (निम्न से उच्च)</string>
+    <string name="proc_sort_name">नाम (A से Z)</string>
+    <string name="proc_action_force_stop">फ़ोर्स स्टॉप करें</string>
+    <string name="proc_action_kill_pid">PID समाप्त करें (Kill)</string>
+    <string name="proc_btn_force_stop">फ़ोर्स स्टॉप</string>
+    <string name="proc_btn_kill">समाप्त करें (Kill)</string>
+    <string name="proc_dialog_force_stop_title">%1$s को फ़ोर्स स्टॉप करें?</string>
+    <string name="proc_dialog_force_stop_msg">इस ऐप को फ़ोर्स स्टॉप करने से इसकी सभी सक्रिय प्रक्रियाएं और बैकग्राउंड सेवाएं तुरंत समाप्त हो जाएंगी।</string>
+    <string name="proc_dialog_kill_pid_title">प्रक्रिया %1$s (PID %2$d) को समाप्त करें?</string>
+    <string name="proc_dialog_kill_pid_msg">SIGKILL (सिग्नल 9) भेजने से यह प्रक्रिया तुरंत समाप्त हो जाएगी। बिना सहेजा डेटा नष्ट हो सकता है।</string>
+    <string name="proc_toast_force_stop_success">%1$s को फ़ोर्स स्टॉप कर दिया गया</string>
+    <string name="proc_toast_force_stop_failed">%1$s को फ़ोर्स स्टॉप करने में विफल: %2$s</string>
+    <string name="proc_toast_kill_success">PID %1$d समाप्त हो गया</string>
+    <string name="proc_toast_kill_failed">PID %1$d समाप्त करने में विफल: %2$s</string>
+    <string name="proc_auto_refresh_on">ऑटो-रिफ्रेश (चालू)</string>
+    <string name="proc_auto_refresh_off">ऑटो-रिफ्रेश (बंद)</string>
+    <string name="proc_empty_list">कोई मेल खाने वाली प्रक्रिया नहीं मिली।</string>
+    <string name="proc_loading">DioxAgent से कनेक्ट हो रहा है और प्रक्रियाएं लोड हो रही हैं…</string>
+    <string name="proc_badge_threads">%1$d थ्रेड्स</string>
+    <string name="proc_badge_pid">PID: %1$d</string>
+    <string name="proc_badge_uid">UID: %1$d</string>
+</resources>

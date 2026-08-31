@@ -222,12 +222,12 @@ fun SettingsScreen(vm: AdbViewModel) {
                         ) {
                             Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
                                 Text(
-                                    "Dynamic Colors (Monet)",
+                                    stringResource(R.string.settings_theme_dynamic_title),
                                     fontWeight = FontWeight.Medium,
                                     color = if (isMonetSupported) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 )
                                 Text(
-                                    if (isMonetSupported) "Use system wallpaper colors" else "Requires Android 12+",
+                                    if (isMonetSupported) stringResource(R.string.settings_theme_dynamic_desc) else stringResource(R.string.settings_theme_dynamic_req),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (isMonetSupported) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
                                 )
@@ -244,7 +244,7 @@ fun SettingsScreen(vm: AdbViewModel) {
 
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Theme Mode",
+                            stringResource(R.string.settings_theme_mode_header),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
