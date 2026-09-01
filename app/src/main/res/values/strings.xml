@@ -807,4 +807,5 @@
     <string name="proc_badge_threads">%1$d threads</string>
     <string name="proc_badge_pid">PID: %1$d</string>
     <string name="proc_badge_uid">UID: %1$d</string>
+    <string name="proc_badge_cpu">%1$s CPU</string>
 </resources>

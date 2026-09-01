@@ -707,7 +707,7 @@ private fun ProcessItemCard(
 
                     // CPU Badge
                     Text(
-                        text = "•  ${item.formattedCpu} CPU",
+                        text = "•  " + stringResource(R.string.proc_badge_cpu, item.formattedCpu),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.tertiary
