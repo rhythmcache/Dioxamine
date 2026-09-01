@@ -808,4 +808,22 @@
     <string name="proc_badge_pid">PID: %1$d</string>
     <string name="proc_badge_uid">UID: %1$d</string>
     <string name="proc_badge_cpu">%1$s CPU</string>
+
+    <!-- Scrcpy Recording -->
+    <string name="scrcpy_tab_recordings">Recordings</string>
+    <string name="scrcpy_recording_started">Recording started</string>
+    <string name="scrcpy_recording_stopped">Recording saved</string>
+    <string name="scrcpy_recording_empty">No recordings yet</string>
+    <string name="scrcpy_recording_empty_subtitle">Recordings will appear here after you record a mirroring session</string>
+    <string name="scrcpy_recording_delete_confirm">Delete this recording?</string>
+    <string name="scrcpy_recording_delete_confirm_msg">This action cannot be undone.</string>
+    <string name="scrcpy_recording_exported">Recording exported</string>
+    <string name="scrcpy_recording_export_failed">Export failed</string>
+    <string name="scrcpy_recording_deleted">Recording deleted</string>
+    <string name="scrcpy_recording_codec_warning">Recording not supported with this codec</string>
+    <string name="scrcpy_recording_elapsed">REC %1$s</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_export">Export</string>
+    <string name="settings_scrcpy_auto_record_title">Auto-record sessions</string>
+    <string name="settings_scrcpy_auto_record_subtitle">Automatically start recording when mirroring begins</string>
 </resources>

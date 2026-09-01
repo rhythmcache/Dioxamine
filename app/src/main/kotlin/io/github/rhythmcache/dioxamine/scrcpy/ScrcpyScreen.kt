@@ -43,7 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-private enum class ScrcpyTab { CONFIGURATOR, LOGS }
+private enum class ScrcpyTab { CONFIGURATOR, LOGS, RECORDINGS }
 private enum class AddCustomDialogType { MAX_SIZE, FPS, BITRATE, AUDIO_BITRATE }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +56,7 @@ fun ScrcpyScreen(
     val activeId = vm.activeDeviceId
     val activeConn = activeId?.let { vm.devices[it] }
     val client = vm.activeClient()
+    val isDeviceConnected = activeConn != null && client != null
 
     val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val allowCustomValues = remember(prefs) { prefs.getBoolean("scrcpy_allow_custom_values", false) }
@@ -91,8 +92,21 @@ fun ScrcpyScreen(
 
     var config by remember { mutableStateOf(ScrcpyConfig()) }
     var isMirroring by remember { mutableStateOf(false) }
+    var isRecording by remember { mutableStateOf(false) }
     var isFullScreen by remember { mutableStateOf(false) }
     var showFloatingNav by remember { mutableStateOf(false) }
+    var selectedTab by remember(isDeviceConnected) {
+        mutableStateOf(if (isDeviceConnected) ScrcpyTab.CONFIGURATOR else ScrcpyTab.RECORDINGS)
+    }
+
+    val canRecord = (!config.videoEnabled || config.videoCodec in listOf("h264", "h265")) &&
+            (!config.audioEnabled || config.audioCodec == "aac")
+
+    LaunchedEffect(isDeviceConnected) {
+        if (!isDeviceConnected) {
+            selectedTab = ScrcpyTab.RECORDINGS
+        }
+    }
 
     LaunchedEffect(isFullScreen) {
         onFullScreenChange(isFullScreen)
@@ -114,11 +128,6 @@ fun ScrcpyScreen(
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            onFullScreenChange(false)
-        }
-    }
     var torchOn by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -126,7 +135,6 @@ fun ScrcpyScreen(
     var videoHeight by remember { mutableStateOf(1080) }
 
     var activeSession by remember { mutableStateOf<ScrcpySession?>(null) }
-    var selectedTab by remember { mutableStateOf(ScrcpyTab.CONFIGURATOR) }
 
     var discoveredCameras by remember { mutableStateOf<List<CameraDevice>>(emptyList()) }
     var isDiscoveringCameras by remember { mutableStateOf(false) }
@@ -173,74 +181,12 @@ fun ScrcpyScreen(
         }
     }
 
-    if (activeConn == null || client == null) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.AutoMirrored.Filled.ScreenShare, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(16.dp))
-                Text(stringResource(R.string.scrcpy_no_device_title), style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    stringResource(R.string.scrcpy_no_device_desc),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-            }
-        }
-        return
-    }
-
-    val mode = activeConn.mode
-    if (mode in setOf(AdbDeviceMode.SIDELOAD, AdbDeviceMode.RECOVERY, AdbDeviceMode.RESCUE)) {
-        val modeName = when (mode) {
-            AdbDeviceMode.SIDELOAD -> "Sideload"
-            AdbDeviceMode.RECOVERY -> "Recovery"
-            AdbDeviceMode.RESCUE -> "Rescue"
-            else -> "this"
-        }
-        Box(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.widthIn(max = 400.dp)
-            ) {
-                Surface(
-                    modifier = Modifier.size(80.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    tonalElevation = 4.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ScreenShare,
-                            contentDescription = null,
-                            modifier = Modifier.size(44.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text = stringResource(R.string.scrcpy_mode_not_supported, modeName),
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = stringResource(R.string.scrcpy_mode_not_supported_desc, modeName),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-            }
-        }
-        return
+    val isModeSupported = activeConn == null || activeConn.mode !in setOf(AdbDeviceMode.SIDELOAD, AdbDeviceMode.RECOVERY, AdbDeviceMode.RESCUE)
+    val unsupportedModeName = when (activeConn?.mode) {
+        AdbDeviceMode.SIDELOAD -> "Sideload"
+        AdbDeviceMode.RECOVERY -> "Recovery"
+        AdbDeviceMode.RESCUE -> "Rescue"
+        else -> "this"
     }
 
     fun stopMirroring() {
@@ -248,9 +194,18 @@ fun ScrcpyScreen(
         activeSession = null
         isMirroring = false
         isFullScreen = false
+        isRecording = false
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            stopMirroring()
+            onFullScreenChange(false)
+        }
     }
 
     fun startMirroring(holder: SurfaceHolder? = null) {
+        val activeClient = client ?: return
         val validationErrors = config.validate(apiLevel)
         if (validationErrors.isNotEmpty()) {
             errorMessage = context.getString(R.string.scrcpy_invalid_config_prefix) + validationErrors.joinToString("\n") { "\u2022 $it" }
@@ -260,7 +215,7 @@ fun ScrcpyScreen(
 
         val session = ScrcpySession(
             context = context,
-            client = client,
+            client = activeClient,
             config = config,
             onDimensions = { w, h ->
                 videoWidth = w
@@ -269,10 +224,22 @@ fun ScrcpyScreen(
             onError = { msg ->
                 errorMessage = msg
                 stopMirroring()
+            },
+            onRecordingStateChanged = { recording ->
+                isRecording = recording
             }
         )
         activeSession = session
         session.start(holder)
+    }
+
+    fun toggleRecording() {
+        val session = activeSession ?: return
+        if (isRecording) {
+            session.stopRecording()
+        } else {
+            session.startRecording()
+        }
     }
 
     val fixedPlayerHeight = 280.dp
@@ -302,6 +269,9 @@ fun ScrcpyScreen(
                             bindVolumeKeys = config.bindVolumeKeys,
                             videoSourceIsCamera = config.videoSource == "camera",
                             torchOn = torchOn,
+                            isRecording = isRecording,
+                            canRecord = canRecord,
+                            onToggleRecord = { toggleRecording() },
                             onToggleTorch = {
                                 torchOn = !torchOn
                                 activeSession?.sendCameraSetTorch(torchOn)
@@ -332,6 +302,9 @@ fun ScrcpyScreen(
                         ScrcpyAudioOnlyPlayer(
                             modifier = Modifier.fillMaxSize(),
                             config = config,
+                            isRecording = isRecording,
+                            canRecord = canRecord,
+                            onToggleRecord = { toggleRecording() },
                             onStop = { stopMirroring() }
                         )
                     }
@@ -367,6 +340,60 @@ fun ScrcpyScreen(
                             Text(stringResource(R.string.btn_dismiss), color = MaterialTheme.colorScheme.error)
                         }
                     }
+                } else if (!isDeviceConnected) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ScreenShare,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            stringResource(R.string.scrcpy_no_device_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            stringResource(R.string.scrcpy_no_device_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                } else if (!isModeSupported) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ScreenShare,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            stringResource(R.string.scrcpy_mode_not_supported, unsupportedModeName),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            stringResource(R.string.scrcpy_mode_not_supported_desc, unsupportedModeName),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
                 } else {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -397,10 +424,12 @@ fun ScrcpyScreen(
                     Column(modifier = Modifier.fillMaxSize()) {
                         Text(stringResource(R.string.scrcpy_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                         Text(
-                            if (activeConn.androidVersion != null) {
+                            if (activeConn?.androidVersion != null) {
                                 stringResource(R.string.scrcpy_target_version, activeConn.label, activeConn.androidVersion)
-                            } else {
+                            } else if (activeConn != null) {
                                 stringResource(R.string.scrcpy_target, activeConn.label)
+                            } else {
+                                stringResource(R.string.no_devices_connected)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -412,13 +441,20 @@ fun ScrcpyScreen(
                         PrimaryTabRow(selectedTabIndex = selectedTab.ordinal) {
                             Tab(
                                 selected = selectedTab == ScrcpyTab.CONFIGURATOR,
-                                onClick = { selectedTab = ScrcpyTab.CONFIGURATOR },
+                                onClick = { if (isDeviceConnected) selectedTab = ScrcpyTab.CONFIGURATOR },
+                                enabled = isDeviceConnected,
                                 text = { Text(stringResource(R.string.scrcpy_tab_configurator)) }
                             )
                             Tab(
                                 selected = selectedTab == ScrcpyTab.LOGS,
-                                onClick = { selectedTab = ScrcpyTab.LOGS },
+                                onClick = { if (isDeviceConnected) selectedTab = ScrcpyTab.LOGS },
+                                enabled = isDeviceConnected,
                                 text = { Text(stringResource(R.string.scrcpy_tab_logs)) }
+                            )
+                            Tab(
+                                selected = selectedTab == ScrcpyTab.RECORDINGS,
+                                onClick = { selectedTab = ScrcpyTab.RECORDINGS },
+                                text = { Text(stringResource(R.string.scrcpy_tab_recordings)) }
                             )
                         }
 
@@ -504,6 +540,7 @@ fun ScrcpyScreen(
                                                         }
                                                     }
                                                 },
+                                                enabled = isDeviceConnected && isModeSupported,
                                                 modifier = Modifier.fillMaxWidth()
                                             ) {
                                                 Icon(if (isMirroring) Icons.Filled.Stop else Icons.AutoMirrored.Filled.ScreenShare, contentDescription = null)
@@ -521,6 +558,12 @@ fun ScrcpyScreen(
                                         .padding(horizontal = 16.dp, vertical = 8.dp),
                                     activeConn = activeConn,
                                     config = config
+                                )
+                            }
+                            ScrcpyTab.RECORDINGS -> {
+                                ScrcpyRecordingsViewer(
+                                    modifier = Modifier.fillMaxSize(),
+                                    isRecording = isRecording
                                 )
                             }
                         }
@@ -994,6 +1037,14 @@ private fun VideoSettings(
             )
         }
     }
+    if (config.videoCodec == "av1") {
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = stringResource(R.string.scrcpy_recording_codec_warning),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
 
     Spacer(Modifier.height(8.dp))
     Text(stringResource(R.string.label_orientation), style = MaterialTheme.typography.labelMedium)
@@ -1096,6 +1147,14 @@ private fun AudioSettings(
                     label = { Text(label, style = MaterialTheme.typography.labelSmall) }
                 )
             }
+        }
+        if (config.audioCodec != "aac") {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = stringResource(R.string.scrcpy_recording_codec_warning),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         if (config.audioCodec == "opus" || config.audioCodec == "aac") {
@@ -1308,6 +1367,9 @@ private fun ScrcpyVideoPlayer(
     bindVolumeKeys: Boolean,
     videoSourceIsCamera: Boolean,
     torchOn: Boolean,
+    isRecording: Boolean,
+    canRecord: Boolean,
+    onToggleRecord: () -> Unit,
     onToggleTorch: () -> Unit,
     onToggleFullScreen: () -> Unit,
     onStop: () -> Unit,
@@ -1414,6 +1476,20 @@ private fun ScrcpyVideoPlayer(
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (canRecord) {
+                IconButton(
+                    onClick = onToggleRecord,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = if (isRecording) Color.Red.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
+                    )
+                ) {
+                    Icon(
+                        if (isRecording) Icons.Filled.Stop else Icons.Filled.FiberManualRecord,
+                        contentDescription = stringResource(if (isRecording) R.string.scrcpy_recording_stopped else R.string.scrcpy_recording_started),
+                        tint = if (isRecording) Color.White else Color.Red
+                    )
+                }
+            }
             if (videoSourceIsCamera) {
                 IconButton(
                     onClick = onToggleTorch,
@@ -1461,6 +1537,9 @@ private fun ScrcpyVideoPlayer(
 private fun ScrcpyAudioOnlyPlayer(
     modifier: Modifier = Modifier,
     config: ScrcpyConfig,
+    isRecording: Boolean,
+    canRecord: Boolean,
+    onToggleRecord: () -> Unit,
     onStop: () -> Unit
 ) {
     Box(
@@ -1521,14 +1600,32 @@ private fun ScrcpyAudioOnlyPlayer(
             }
         }
 
-        IconButton(
-            onClick = onStop,
-            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f)),
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(12.dp)
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_stop_mirroring), tint = Color.White)
+            if (canRecord) {
+                IconButton(
+                    onClick = onToggleRecord,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = if (isRecording) Color.Red.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
+                    )
+                ) {
+                    Icon(
+                        if (isRecording) Icons.Filled.Stop else Icons.Filled.FiberManualRecord,
+                        contentDescription = stringResource(if (isRecording) R.string.scrcpy_recording_stopped else R.string.scrcpy_recording_started),
+                        tint = if (isRecording) Color.White else Color.Red
+                    )
+                }
+            }
+            IconButton(
+                onClick = onStop,
+                colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+            ) {
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_stop_mirroring), tint = Color.White)
+            }
         }
     }
 }

@@ -804,4 +804,22 @@
     <string name="proc_badge_pid">PID: %1$d</string>
     <string name="proc_badge_uid">UID: %1$d</string>
     <string name="proc_badge_cpu">%1$s CPU</string>
+
+    <!-- Scrcpy Recording -->
+    <string name="scrcpy_tab_recordings">रिकॉर्डिंग</string>
+    <string name="scrcpy_recording_started">रिकॉर्डिंग शुरू हुई</string>
+    <string name="scrcpy_recording_stopped">रिकॉर्डिंग सहेजी गई</string>
+    <string name="scrcpy_recording_empty">अभी तक कोई रिकॉर्डिंग नहीं है</string>
+    <string name="scrcpy_recording_empty_subtitle">मिररिंग सत्र रिकॉर्ड करने के बाद रिकॉर्डिंग यहाँ दिखाई देंगी</string>
+    <string name="scrcpy_recording_delete_confirm">यह रिकॉर्डिंग हटाएं?</string>
+    <string name="scrcpy_recording_delete_confirm_msg">यह क्रिया पूर्ववत नहीं की जा सकती।</string>
+    <string name="scrcpy_recording_exported">रिकॉर्डिंग निर्यात की गई</string>
+    <string name="scrcpy_recording_export_failed">निर्यात विफल रहा</string>
+    <string name="scrcpy_recording_deleted">रिकॉर्डिंग हटाई गई</string>
+    <string name="scrcpy_recording_codec_warning">इस कोडेक के साथ रिकॉर्डिंग समर्थित नहीं है</string>
+    <string name="scrcpy_recording_elapsed">REC %1$s</string>
+    <string name="btn_delete">हटाएं</string>
+    <string name="btn_export">निर्यात करें</string>
+    <string name="settings_scrcpy_auto_record_title">सत्र स्वतः रिकॉर्ड करें</string>
+    <string name="settings_scrcpy_auto_record_subtitle">मिररिंग शुरू होने पर स्वतः रिकॉर्डिंग शुरू करें</string>
 </resources>

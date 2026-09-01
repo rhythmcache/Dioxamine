@@ -81,6 +81,9 @@ fun SettingsScreen(vm: AdbViewModel) {
     var allowCustomValues by remember {
         mutableStateOf(prefs.getBoolean("scrcpy_allow_custom_values", false))
     }
+    var autoRecord by remember {
+        mutableStateOf(prefs.getBoolean("scrcpy_auto_record", false))
+    }
 
     var themeExpanded by remember { mutableStateOf(false) }
     var scrcpyExpanded by remember { mutableStateOf(false) }
@@ -553,6 +556,35 @@ fun SettingsScreen(vm: AdbViewModel) {
                                 onCheckedChange = { checked ->
                                     allowCustomValues = checked
                                     prefs.edit().putBoolean("scrcpy_allow_custom_values", checked).apply()
+                                }
+                            )
+                        }
+
+                        Spacer(Modifier.height(4.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                                Text(
+                                    stringResource(R.string.settings_scrcpy_auto_record_title),
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    stringResource(R.string.settings_scrcpy_auto_record_subtitle),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = autoRecord,
+                                onCheckedChange = { checked ->
+                                    autoRecord = checked
+                                    prefs.edit().putBoolean("scrcpy_auto_record", checked).apply()
                                 }
                             )
                         }

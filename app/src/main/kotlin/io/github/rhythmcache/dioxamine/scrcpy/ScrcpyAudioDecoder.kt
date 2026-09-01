@@ -33,6 +33,20 @@ class ScrcpyAudioDecoder {
         private const val PACKET_FLAG_CONFIG = 1L shl 62
     }
 
+    var recorder: ScrcpyRecorder? = null
+    private var isAAC = false
+    private var lastCsdBytes: ByteArray? = null
+    private var lastSampleRate: Int = 48000
+    private var lastChannelCount: Int = 2
+
+    fun attachRecorder(rec: ScrcpyRecorder) {
+        this.recorder = rec
+        val csd = lastCsdBytes
+        if (isAAC && csd != null) {
+            rec.setAudioFormat(lastSampleRate, lastChannelCount, csd)
+        }
+    }
+
     suspend fun decodeAudioStream(stream: AdbStream) = withContext(Dispatchers.IO) {
         AppLogger.i(TAG, "ScrcpyAudioDecoder: Starting audio stream decoding...")
         try {
@@ -59,6 +73,8 @@ class ScrcpyAudioDecoder {
             val isRaw = fourCC == "raw"
             var sampleRate = 48000
             var channelCount = 2
+            lastSampleRate = sampleRate
+            lastChannelCount = channelCount
 
             recreateAudioTrack(sampleRate, channelCount)
 
@@ -85,6 +101,7 @@ class ScrcpyAudioDecoder {
                 }
                 if (firstIsConfig && firstPayloadSize in 1..4096) {
                     csdBytes = payload
+                    lastCsdBytes = payload
                     packetCount++
                     AppLogger.i(TAG, "ScrcpyAudioDecoder: Got CSD-0, ${csdBytes.size} bytes: ${csdBytes.joinToString(" ") { "%02x".format(it) }}")
                 } else {
@@ -99,6 +116,7 @@ class ScrcpyAudioDecoder {
                     "flac" -> MediaFormat.MIMETYPE_AUDIO_FLAC
                     else -> MediaFormat.MIMETYPE_AUDIO_AAC
                 }
+                isAAC = (mimeType == MediaFormat.MIMETYPE_AUDIO_AAC)
                 val format = MediaFormat.createAudioFormat(mimeType, sampleRate, channelCount)
                 if (csdBytes != null) {
                     if (mimeType == MediaFormat.MIMETYPE_AUDIO_FLAC) {
@@ -132,6 +150,11 @@ class ScrcpyAudioDecoder {
                 mediaCodec.start()
                 codec = mediaCodec
                 AppLogger.i(TAG, "ScrcpyAudioDecoder: $fourCC decoder and AudioTrack started successfully")
+
+                // Tee audio format to recorder (only for AAC)
+                if (isAAC && csdBytes != null) {
+                    recorder?.setAudioFormat(sampleRate, channelCount, csdBytes)
+                }
             } else {
                 AppLogger.i(TAG, "ScrcpyAudioDecoder: RAW PCM playback and AudioTrack started successfully")
             }
@@ -189,6 +212,12 @@ class ScrcpyAudioDecoder {
                 } else {
                     val isConfigPacket = (ptsAndFlags and PACKET_FLAG_CONFIG) != 0L
                     val flags = if (isConfigPacket) MediaCodec.BUFFER_FLAG_CODEC_CONFIG else 0
+                    val pts = ptsAndFlags and (PACKET_FLAG_CONFIG - 1)
+
+                    // Tee non-config AAC audio samples to recorder
+                    if (isAAC && !isConfigPacket) {
+                        recorder?.writeAudioSample(payloadBuffer, 0, payloadSize, pts)
+                    }
 
                     val mc = mediaCodec ?: break
                     val inIndex = mc.dequeueInputBuffer(10000)

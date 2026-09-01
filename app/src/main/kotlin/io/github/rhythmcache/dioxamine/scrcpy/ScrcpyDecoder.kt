@@ -31,6 +31,9 @@ class ScrcpyDecoder(
     private var currentHeight = 0
     private var mimeType: String = MediaFormat.MIMETYPE_VIDEO_AVC
 
+    var recorder: ScrcpyRecorder? = null
+    private var lastConfigBytes: ByteArray? = null
+
     private val headerBuffer = ByteArray(12)
     private var payloadBuffer = ByteArray(256 * 1024)
     private var pendingConfigBytes: ByteArray? = null
@@ -41,6 +44,16 @@ class ScrcpyDecoder(
         private const val PACKET_FLAG_SESSION = 1L shl 63
         private const val PACKET_FLAG_CONFIG = 1L shl 62
         private const val PACKET_FLAG_KEY_FRAME = 1L shl 61
+    }
+
+    fun attachRecorder(rec: ScrcpyRecorder) {
+        this.recorder = rec
+        val config = lastConfigBytes
+        if (config != null) {
+            val w = if (currentWidth > 0) currentWidth else defaultWidth
+            val h = if (currentHeight > 0) currentHeight else defaultHeight
+            rec.setVideoFormat(mimeType, w, h, config)
+        }
     }
 
     fun setSurface(newSurface: Surface) {
@@ -88,6 +101,8 @@ class ScrcpyDecoder(
             var totalBytesRead = 0L
 
             while (!stream.isClosed) {
+                if (codec == null || isStoppedByUser()) break
+
                 if (!stream.readExactly(headerBuffer)) {
                     if (isStoppedByUser()) {
                         AppLogger.i(TAG, "ScrcpyDecoder: Stream closed (user stop)")
@@ -128,8 +143,14 @@ class ScrcpyDecoder(
                 totalBytesRead += packetSize
 
                 if (isConfigPacket) {
+                    val configData = payloadBuffer.copyOf(packetSize)
+                    lastConfigBytes = configData
+                    val w = if (currentWidth > 0) currentWidth else defaultWidth
+                    val h = if (currentHeight > 0) currentHeight else defaultHeight
+                    recorder?.setVideoFormat(mimeType, w, h, configData)
+
                     if (mustMergeConfigPacket) {
-                        pendingConfigBytes = payloadBuffer.copyOf(packetSize)
+                        pendingConfigBytes = configData
                         AppLogger.i(TAG, "Buffered config packet ($packetSize bytes), waiting for next media packet")
                     } else {
                         val mc = codec ?: continue
@@ -176,15 +197,18 @@ class ScrcpyDecoder(
                         inIndex = try {
                             mc.dequeueInputBuffer(2000)
                         } catch (e: IllegalStateException) {
-                            AppLogger.e(TAG, "dequeueInputBuffer threw ISE on attempt=$retries", e)
                             -2
                         }
-                        if (inIndex == -2) break
-                        if (inIndex < 0) {
+                        if (inIndex == -2) {
+                            if (codec == null || isStoppedByUser()) break
+                            retries++
+                        } else if (inIndex < 0) {
                             drainOutput(mc, bufferInfo)
                             retries++
                         }
                     }
+
+                    if (codec == null || isStoppedByUser()) break
 
                     if (inIndex >= 0) {
                         val inputBuffer = mc.getInputBuffer(inIndex)
@@ -194,6 +218,11 @@ class ScrcpyDecoder(
                             mc.queueInputBuffer(inIndex, 0, finalSize, pts, 0)
                         }
                     }
+
+                    // Tee media packet to recorder
+                    val isKeyFrame = (ptsAndFlags and PACKET_FLAG_KEY_FRAME) != 0L
+                    val recorderFlags = if (isKeyFrame) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0
+                    recorder?.writeVideoSample(finalBuffer, 0, finalSize, pts, recorderFlags)
 
                     drainOutput(mc, bufferInfo)
                 }
@@ -210,8 +239,8 @@ class ScrcpyDecoder(
     }
 
     private fun drainOutput(mc: MediaCodec, bufferInfo: MediaCodec.BufferInfo) {
+        if (codec == null || isStoppedByUser()) return
         var outIndex = try { mc.dequeueOutputBuffer(bufferInfo, 0) } catch (e: IllegalStateException) {
-            AppLogger.e(TAG, "dequeueOutputBuffer threw ISE", e)
             return
         }
         while (true) {
@@ -219,13 +248,14 @@ class ScrcpyDecoder(
                 outIndex >= 0 -> {
                     runCatching { mc.releaseOutputBuffer(outIndex, true) }
                     outIndex = try { mc.dequeueOutputBuffer(bufferInfo, 0) } catch (e: IllegalStateException) {
-                        AppLogger.e(TAG, "dequeueOutputBuffer threw ISE", e)
                         return
                     }
                 }
                 outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
                     AppLogger.i(TAG, "drainOutput: format changed to ${mc.outputFormat}")
-                    outIndex = mc.dequeueOutputBuffer(bufferInfo, 0)
+                    outIndex = try { mc.dequeueOutputBuffer(bufferInfo, 0) } catch (e: IllegalStateException) {
+                        return
+                    }
                 }
                 else -> break
             }

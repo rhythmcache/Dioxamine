@@ -15,7 +15,8 @@ class ScrcpySession(
     private val client: AdbClient,
     private val config: ScrcpyConfig,
     private val onDimensions: (Int, Int) -> Unit,
-    private val onError: (String) -> Unit
+    private val onError: (String) -> Unit,
+    private val onRecordingStateChanged: (Boolean) -> Unit = {}
 ) {
     private val sessionScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var sessionJob: Job? = null
@@ -31,9 +32,12 @@ class ScrcpySession(
     private var videoDecoder: ScrcpyDecoder? = null
     private var audioDecoder: ScrcpyAudioDecoder? = null
     private var control: ScrcpyControl? = null
+    private var recorder: ScrcpyRecorder? = null
 
     private var videoWidth = 486
     private var videoHeight = 1080
+
+    val isRecording: Boolean get() = recorder?.isRecording == true
 
     companion object {
         private const val TAG_CLIENT = "SCRCPY_CLIENT"
@@ -196,9 +200,19 @@ class ScrcpySession(
                         isStoppedByUser = { stoppedByUser }
                     )
                     videoDecoder = decoder
+
+                    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                    if (prefs.getBoolean("scrcpy_auto_record", false)) {
+                        startRecording()
+                    }
+
                     decoder.decodeStream(currentVideoStream)
                 } else if (config.audioEnabled) {
                     AppLogger.i(TAG_CLIENT, "Video disabled - running in audio-only streaming mode")
+                    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                    if (prefs.getBoolean("scrcpy_auto_record", false)) {
+                        startRecording()
+                    }
                     audioJob?.join()
                 } else {
                     awaitCancellation()
@@ -266,8 +280,61 @@ class ScrcpySession(
         control?.sendNavRecents()
     }
 
+    fun startRecording() {
+        if (recorder?.isRecording == true) return
+
+        // Check codec compatibility
+        val videoCompatible = !config.videoEnabled || config.videoCodec in listOf("h264", "h265")
+        val audioCompatible = !config.audioEnabled || config.audioCodec == "aac"
+        if (!videoCompatible) {
+            AppLogger.w(TAG_CLIENT, "Cannot record: video codec ${config.videoCodec} is not supported by MediaMuxer")
+            return
+        }
+
+        if (!RecordingsManager.hasEnoughFreeSpace(context)) {
+            AppLogger.w(TAG_CLIENT, "Cannot start recording: storage is critically low (< 50MB free)")
+            return
+        }
+
+        val outputFile = RecordingsManager.generateRecordingFile(context)
+        val rec = ScrcpyRecorder(outputFile)
+        rec.setAudioExpected(config.audioEnabled && audioCompatible)
+        rec.prepare()
+        recorder = rec
+
+        // Wire recorder to decoders using attachRecorder so cached config/CSD is immediately forwarded
+        videoDecoder?.attachRecorder(rec)
+        if (audioCompatible) {
+            audioDecoder?.attachRecorder(rec)
+        }
+
+        // Request a fresh keyframe from the encoder so recording starts on a clean IDR frame
+        if (config.videoEnabled && config.controlEnabled) {
+            control?.sendResetVideo()
+        }
+
+        AppLogger.i(TAG_CLIENT, "Recording started: ${outputFile.absolutePath}")
+        sessionScope.launch(Dispatchers.Main) {
+            onRecordingStateChanged(true)
+        }
+    }
+
+    fun stopRecording() {
+        val rec = recorder ?: return
+        videoDecoder?.recorder = null
+        audioDecoder?.recorder = null
+        rec.stop()
+        recorder = null
+        AppLogger.i(TAG_CLIENT, "Recording stopped")
+        sessionScope.launch(Dispatchers.Main) {
+            onRecordingStateChanged(false)
+        }
+    }
+
     fun stop() {
         stoppedByUser = true
+        // Stop recording gracefully before tearing down session
+        runCatching { stopRecording() }
         if (config.turnScreenOff) {
             runCatching { control?.sendSetDisplayPower(true) }
         }
@@ -278,6 +345,7 @@ class ScrcpySession(
 
     private fun cleanup() {
         AppLogger.i(TAG_CLIENT, "Cleaning up scrcpy session streams...")
+        runCatching { stopRecording() }
         runCatching { control?.close() }
         runCatching { videoDecoder?.stop() }
         runCatching { audioDecoder?.stop() }
@@ -289,6 +357,7 @@ class ScrcpySession(
         videoDecoder = null
         audioDecoder = null
         control = null
+        recorder = null
         controlStream = null
         audioStream = null
         videoStream = null
