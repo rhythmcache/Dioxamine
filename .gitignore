@@ -11,3 +11,8 @@ local.properties
 .kotlin/
 **/build/
 app/build/**
+
+# Generated asset binaries
+app/src/main/assets/diox-agent.jar
+app/src/main/assets/dxls/
+app/src/main/assets/scrcpy-server.jar
