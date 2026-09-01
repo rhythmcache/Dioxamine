@@ -21,6 +21,7 @@
 - [Scrcpy Screen Mirroring and Camera](user-guide/scrcpy-mirroring/screen-mirroring.md)
     - [Quality and Audio Settings](user-guide/scrcpy-mirroring/settings-tuning.md)
     - [Camera Streaming Mode](user-guide/scrcpy-mirroring/camera-streaming.md)
+    - [Session Recording and Management](user-guide/scrcpy-mirroring/session-recording.md)
     - [Logs and Troubleshooting](user-guide/scrcpy-mirroring/logs-troubleshooting.md)
 - [Fastboot Tools](user-guide/fastboot/getting-started.md)
     - [Flashing Partition Images](user-guide/fastboot/flashing-images.md)
@@ -30,6 +31,7 @@
     - [Fastboot Command Shell](user-guide/fastboot/fastboot-shell.md)
 - [App Settings and Security](user-guide/app-settings/adb-keys.md)
     - [Appearance and Language](user-guide/app-settings/appearance.md)
+    - [Miscellaneous and Keep Alive](user-guide/app-settings/miscellaneous.md)
     - [Application Logs](user-guide/app-settings/logs-export.md)
     - [Plugin Security and Permissions](user-guide/app-settings/plugin-security.md)
 

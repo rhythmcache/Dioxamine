@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-79949c5a.js";
+            window.path_to_searchindex_js = "searchindex-ef7a03c3.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-de870e07.js"></script>
+        <script src="toc-9219018d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1204,6 +1204,59 @@
 <h2 id="audio-in-camera-mode"><a class="header" href="#audio-in-camera-mode">Audio in Camera Mode</a></h2>
 <p>When switching Video Source to <strong>Camera</strong>, Dioxamine automatically defaults the audio source to the target device’s <strong>Microphone</strong> (<code>mic</code>). This allows using the target phone as a remote webcam and microphone pair for monitoring, streaming, or video calls.</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="session-recording-and-management"><a class="header" href="#session-recording-and-management">Session Recording and Management</a></h1>
+<p>Dioxamine allows you to record live Scrcpy mirroring sessions (both video and audio) directly onto your host device in MP4 format.</p>
+<hr>
+<h2 id="starting-a-recording"><a class="header" href="#starting-a-recording">Starting a Recording</a></h2>
+<p>There are two ways to record a screen mirroring session:</p>
+<h3 id="1-manual-recording"><a class="header" href="#1-manual-recording">1. Manual Recording</a></h3>
+<ol>
+<li>Start a mirroring session from the <strong>Scrcpy</strong> tab.</li>
+<li>Tap on the video player overlay to reveal player controls.</li>
+<li>Tap the <strong>Record icon</strong> (circular button).</li>
+<li>The recording starts immediately, and a red <strong>REC timer badge</strong> (<code>REC 00:15</code>) appears in the top corner indicating elapsed recording duration.</li>
+<li>Tap the <strong>Stop Record icon</strong> (or stop mirroring) to finish and save the clip.</li>
+</ol>
+<h3 id="2-auto-record-sessions"><a class="header" href="#2-auto-record-sessions">2. Auto-Record Sessions</a></h3>
+<ol>
+<li>Navigate to the <strong>Settings</strong> tab.</li>
+<li>Expand the <strong>scrcpy</strong> settings card.</li>
+<li>Toggle on <strong>Auto-record sessions</strong> (<code>scrcpy_auto_record</code>).</li>
+<li>Whenever a screen mirroring session begins, Dioxamine will automatically initiate recording without requiring manual interaction.</li>
+</ol>
+<hr>
+<h2 id="managing-and-exporting-recordings"><a class="header" href="#managing-and-exporting-recordings">Managing and Exporting Recordings</a></h2>
+<p>All captured sessions are stored locally and accessible through the <strong>Recordings</strong> sub-tab in the <strong>Scrcpy</strong> screen:</p>
+<ol>
+<li>Tap the <strong>Recordings</strong> sub-tab in the top bar of the Scrcpy screen.</li>
+<li>View your recorded video items with:
+<ul>
+<li>File name and timestamp.</li>
+<li>Total recorded duration.</li>
+<li>File size.</li>
+</ul>
+</li>
+<li><strong>Exporting (Saving) Clips</strong>:
+<ul>
+<li>Tap the <strong>Export (Download)</strong> button on any clip.</li>
+<li>Select a destination folder using Android’s Storage Access Framework (SAF) to save the <code>.mp4</code> video to your phone’s Gallery, Downloads, or SD card.</li>
+</ul>
+</li>
+<li><strong>Deleting Clips</strong>:
+<ul>
+<li>Tap the <strong>Delete (Trash)</strong> button.</li>
+<li>Confirm deletion in the prompt to remove the recording and free up storage.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="technical-notes"><a class="header" href="#technical-notes">Technical Notes</a></h2>
+<ul>
+<li><strong>Container Format</strong>: Video and forwarded audio are muxed into standard <code>.mp4</code> containers.</li>
+<li><strong>Codec Support</strong>: Recording uses the active video codec selected in the Configurator (<strong>H.264</strong> or <strong>H.265/HEVC</strong>). If an unsupported codec configuration is used, a warning banner will inform you.</li>
+<li><strong>Audio Synchronization</strong>: Forwarded device audio (Android 11+) is recorded in sync with the video track.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="scrcpy-logs-and-troubleshooting"><a class="header" href="#scrcpy-logs-and-troubleshooting">Scrcpy Logs and Troubleshooting</a></h1>
 <p>If screen mirroring fails to start, displays a black screen, or lags, use the built-in Scrcpy Logs viewer to identify the exact cause.</p>
 <h2 id="accessing-scrcpy-logs"><a class="header" href="#accessing-scrcpy-logs">Accessing Scrcpy Logs</a></h2>
@@ -1513,6 +1566,48 @@
 </li>
 <li>Tap <strong>Contribute to translation</strong> to view guidelines on submitting new translations for your language.</li>
 </ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="miscellaneous-and-keep-alive"><a class="header" href="#miscellaneous-and-keep-alive">Miscellaneous and Keep Alive</a></h1>
+<p>The <strong>Miscellaneous</strong> card in Settings provides tools to keep Dioxamine connections alive and active in the background when the app is minimized.</p>
+<hr>
+<h2 id="keep-alive-background-service"><a class="header" href="#keep-alive-background-service">Keep Alive Background Service</a></h2>
+<p>By default, modern Android versions (Android 11+) apply aggressive background limits, including the <strong>Cached Apps Freezer</strong> and <strong>Doze Mode</strong>. If an app is minimized without a Foreground Service, the operating system pauses CPU execution, freezing active ADB TCP/USB sockets and fastboot operations.</p>
+<p>The <strong>Keep Alive</strong> feature resolves this by running a dedicated Android Foreground Service with a WakeLock.</p>
+<hr>
+<h2 id="enabling-keep-alive"><a class="header" href="#enabling-keep-alive">Enabling Keep Alive</a></h2>
+<ol>
+<li>Open the <strong>Settings</strong> tab.</li>
+<li>Tap the <strong>Miscellaneous</strong> expandable card.</li>
+<li>Toggle on <strong>Keep Alive</strong>.</li>
+<li>Grant the requested system permissions:
+<ul>
+<li><strong>Notification Permission</strong> (<code>POST_NOTIFICATIONS</code> on Android 13+ / API 33+): Required to show the persistent foreground service notification.</li>
+<li><strong>Battery Optimization Exemption</strong> (Android 6.0+ / API 23+): Prompts you to exempt Dioxamine from battery optimizations to prevent Doze mode from sleeping background network/USB transfers.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="live-status-notification"><a class="header" href="#live-status-notification">Live Status Notification</a></h2>
+<p>While Keep Alive is running, Dioxamine displays an ongoing notification in your notification shade showing real-time connected device metrics:</p>
+<ul>
+<li><strong>Both ADB and Fastboot connected</strong>: e.g., <code>1 ADB device connected, 1 Fastboot device connected</code></li>
+<li><strong>ADB Only</strong>: e.g., <code>1 ADB device connected</code> or <code>2 ADB devices connected</code></li>
+<li><strong>Fastboot Only</strong>: e.g., <code>1 Fastboot device connected</code></li>
+<li><strong>No devices connected</strong>: <code>No devices connected • Active in background</code></li>
+</ul>
+<h3 id="notification-actions"><a class="header" href="#notification-actions">Notification Actions</a></h3>
+<ul>
+<li><strong>Tap Notification</strong>: Instantly brings Dioxamine back to the foreground.</li>
+<li><strong>Stop Action</strong>: Tap the <strong>Stop</strong> button directly on the notification to terminate the background service and release the WakeLock without needing to navigate to the Settings tab.</li>
+</ul>
+<hr>
+<h2 id="about-links"><a class="header" href="#about-links">About Links</a></h2>
+<p>Under <strong>Settings &gt; About</strong>, you can find direct links to external resources:</p>
+<ul>
+<li><strong>Documentation</strong>: Direct hyperlink to the official <a href="https://rhythmcache.github.io/Dioxamine/book/">Dioxamine Documentation Book</a>.</li>
+<li><strong>Source Code</strong>: Direct link to the <a href="https://github.com/rhythmcache/Dioxamine">GitHub Repository</a>.</li>
+<li><strong>Social &amp; Community</strong>: Quick buttons to open the GitHub profile and Telegram group.</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="application-logs-and-bug-reporting"><a class="header" href="#application-logs-and-bug-reporting">Application Logs and Bug Reporting</a></h1>
 <p>Dioxamine maintains an internal diagnostic log system to assist with troubleshooting connection errors, Scrcpy streaming issues, Fastboot flashing failures, and plugin execution bugs.</p>
