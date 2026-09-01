@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../../searchindex-46387981.js";
+            window.path_to_searchindex_js = "../../searchindex-79949c5a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-de870e07.js"></script>
@@ -195,12 +195,13 @@
 </li>
 </ol>
 <hr>
-<h2 id="device-connection-status-strip"><a class="header" href="#device-connection-status-strip">Device Connection Status Strip</a></h2>
-<p>When you open the <strong>Fastboot</strong> tab in Dioxamine:</p>
+<h2 id="device-connector-card"><a class="header" href="#device-connector-card">Device Connector Card</a></h2>
+<p>At the top of the <strong>Fastboot</strong> tab:</p>
 <ul>
-<li><strong>Connected (Green USB icon)</strong>: The target device is detected and communicating with Dioxamine. The device serial or product name is shown in the top strip.</li>
-<li><strong>Detected, Not Connected (Gray USB icon)</strong>: A Fastboot USB interface is present but needs a handshake. Tap the <strong>Retry</strong> button on the right side of the strip.</li>
-<li><strong>Disconnect Button</strong>: Tap <strong>Disconnect</strong> if you wish to close the active Fastboot session.</li>
+<li><strong>No Device Connected</strong>: Displays <code>USB Detector Active • No Fastboot Device Connected</code> while the background USB listener is waiting for a device to be connected.</li>
+<li><strong>Multiple Device Chips</strong>: When one or more devices in Fastboot or Fastbootd mode are plugged in (including multiple devices via a USB-C OTG hub), each device appears as an interactive chip showing its label.</li>
+<li><strong>Switching Devices</strong>: Tap any device chip to immediately switch the active Fastboot session to that target device. The selected device chip is highlighted.</li>
+<li><strong>Expandable Device List</strong>: Tap the expand arrow on the right to view all detected devices, their connection states (<code>Connected</code> or <code>Detected — not connected</code>), and individual <strong>Connect</strong> / <strong>Disconnect</strong> buttons.</li>
 </ul>
 <hr>
 <h2 id="sub-tabs-overview"><a class="header" href="#sub-tabs-overview">Sub-Tabs Overview</a></h2>

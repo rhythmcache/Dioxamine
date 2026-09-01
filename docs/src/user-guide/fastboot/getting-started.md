@@ -14,12 +14,13 @@ Dioxamine includes native Fastboot protocol support over USB OTG. This allows yo
 
 ---
 
-## Device Connection Status Strip
+## Device Connector Card
 
-When you open the **Fastboot** tab in Dioxamine:
-- **Connected (Green USB icon)**: The target device is detected and communicating with Dioxamine. The device serial or product name is shown in the top strip.
-- **Detected, Not Connected (Gray USB icon)**: A Fastboot USB interface is present but needs a handshake. Tap the **Retry** button on the right side of the strip.
-- **Disconnect Button**: Tap **Disconnect** if you wish to close the active Fastboot session.
+At the top of the **Fastboot** tab:
+- **No Device Connected**: Displays `USB Detector Active • No Fastboot Device Connected` while the background USB listener is waiting for a device to be connected.
+- **Multiple Device Chips**: When one or more devices in Fastboot or Fastbootd mode are plugged in (including multiple devices via a USB-C OTG hub), each device appears as an interactive chip showing its label.
+- **Switching Devices**: Tap any device chip to immediately switch the active Fastboot session to that target device. The selected device chip is highlighted.
+- **Expandable Device List**: Tap the expand arrow on the right to view all detected devices, their connection states (`Connected` or `Detected — not connected`), and individual **Connect** / **Disconnect** buttons.
 
 ---
 
