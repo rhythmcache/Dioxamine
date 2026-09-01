@@ -1,9 +1,13 @@
 package io.github.rhythmcache.dioxamine.fastboot
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Terminal
@@ -31,7 +35,7 @@ fun FastbootScreen(vm: FastbootViewModel) {
     var topTab by remember { mutableStateOf(FastbootTopTab.ACTIONS) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        DeviceConnectBar(vm)
+        FastbootDeviceConnectorCard(vm)
 
         PrimaryTabRow(selectedTabIndex = topTab.ordinal) {
             FastbootTopTab.entries.forEach { tab ->
@@ -53,64 +57,153 @@ fun FastbootScreen(vm: FastbootViewModel) {
 }
 
 @Composable
-private fun DeviceConnectBar(vm: FastbootViewModel) {
-    val detectedDevices = vm.devices.values.toList()
+private fun FastbootDeviceConnectorCard(vm: FastbootViewModel) {
+    var expanded by remember { mutableStateOf(false) }
 
-    // Nothing plugged in at all -> no strip to show.
-    if (detectedDevices.isEmpty()) return
-
-    Surface(
-        tonalElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Usb,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (vm.isConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                if (vm.isConnected) {
-                    // Connected -> automatic session is live, show which device.
-                    val device = vm.devices[vm.connectedDeviceId]
-                    Text(
-                        text = device?.label ?: vm.connectedDeviceId.orEmpty(),
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    )
-                    Text(
-                        text = stringResource(R.string.fastboot_connected),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (vm.devices.isEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { expanded = !expanded },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Usb,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            stringResource(R.string.fastboot_no_device_status),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 } else {
-                    // Detected but no live session: either connect() hasn't completed
-                    // yet or it failed (see the Shell log for the error). Offer a retry.
-                    val device = detectedDevices.first()
-                    Text(
-                        text = device.label,
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    )
-                    Text(
-                        text = stringResource(R.string.fastboot_detected_not_connected),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        vm.devices.values.forEach { device ->
+                            val isSelected = device.id == vm.connectedDeviceId && vm.isConnected
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    if (!isSelected) {
+                                        vm.connect(device.id)
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        device.label,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.Usb,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                            contentDescription = stringResource(R.string.cd_expand_collapse)
+                        )
+                    }
                 }
             }
-            if (!vm.isConnected) {
-                TextButton(onClick = { vm.connect(detectedDevices.first().id) }) {
-                    Text(stringResource(R.string.fastboot_retry))
+
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    Spacer(Modifier.height(8.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(8.dp))
+
+                    if (vm.devices.isEmpty()) {
+                        Text(
+                            stringResource(R.string.fastboot_no_device_warning),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        vm.devices.values.forEach { device ->
+                            FastbootDeviceRow(device, vm)
+                            Spacer(Modifier.height(4.dp))
+                        }
+                    }
                 }
-            } else {
+            }
+        }
+    }
+}
+
+@Composable
+private fun FastbootDeviceRow(device: FastbootDevice, vm: FastbootViewModel) {
+    val isCurrent = device.id == vm.connectedDeviceId
+    val isConnected = isCurrent && vm.isConnected
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            Icon(
+                Icons.Filled.Usb,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = if (isConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.width(8.dp))
+            Column {
+                Text(
+                    device.label,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal
+                )
+                Text(
+                    text = if (isConnected) {
+                        stringResource(R.string.fastboot_connected)
+                    } else {
+                        stringResource(R.string.fastboot_detected_not_connected)
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isConnected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isConnected) {
                 TextButton(onClick = { vm.closeSession() }) {
                     Text(stringResource(R.string.fastboot_disconnect))
+                }
+            } else {
+                TextButton(onClick = { vm.connect(device.id) }) {
+                    Text(stringResource(R.string.btn_connect))
                 }
             }
         }

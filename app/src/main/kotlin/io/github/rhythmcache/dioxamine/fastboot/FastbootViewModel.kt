@@ -89,6 +89,7 @@ class FastbootViewModel : ViewModel() {
 
     fun connect(deviceId: String) {
         if (session?.deviceId == deviceId) return
+        closeSession()
         val (usbManager, usbDevice) = connections[deviceId] ?: run {
             log(LogLevel.ERROR, "Cannot connect: device $deviceId no longer present")
             return
