@@ -974,7 +974,7 @@ fun AppInfoDialog(
                     )
                     app.splitDirs.forEach { splitPath ->
                         Text(
-                            text = "• ${splitPath.substringAfterLast('/')}",
+                            text = "\u2022 ${splitPath.substringAfterLast('/')}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

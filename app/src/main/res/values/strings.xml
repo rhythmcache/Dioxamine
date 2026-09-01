@@ -685,6 +685,7 @@
     <string name="settings_about_title">About</string>
     <string name="settings_about_desc">App information, social links, and repository</string>
     <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_documentation">Documentation</string>
     <string name="settings_about_source_code">Source Code</string>
     <string name="cd_github">GitHub</string>
     <string name="cd_telegram">Telegram</string>
@@ -826,4 +827,26 @@
     <string name="btn_export">Export</string>
     <string name="settings_scrcpy_auto_record_title">Auto-record sessions</string>
     <string name="settings_scrcpy_auto_record_subtitle">Automatically start recording when mirroring begins</string>
+
+    <!-- Miscellaneous Settings -->
+    <string name="settings_misc_title">Miscellaneous</string>
+    <string name="settings_misc_desc">Background behavior and general options</string>
+    <string name="settings_keep_alive_title">Keep Alive</string>
+    <string name="settings_keep_alive_desc">Keep background service active to maintain connections when app is minimized</string>
+    <string name="notification_channel_keep_alive_name">Keep Alive Service</string>
+    <string name="notification_channel_keep_alive_desc">Notification displayed while Dioxamine is kept alive in background</string>
+    <string name="notification_keep_alive_title">Dioxamine Keep Alive</string>
+    <string name="notification_keep_alive_text">Dioxamine is active in the background</string>
+    <string name="notification_keep_alive_no_devices">No devices connected &#8226; Active in background</string>
+    <plurals name="notification_adb_devices">
+        <item quantity="one">%1$d ADB device connected</item>
+        <item quantity="other">%1$d ADB devices connected</item>
+    </plurals>
+    <plurals name="notification_fastboot_devices">
+        <item quantity="one">%1$d Fastboot device connected</item>
+        <item quantity="other">%1$d Fastboot devices connected</item>
+    </plurals>
+    <string name="notification_keep_alive_stop_action">Stop</string>
+    <string name="settings_battery_opt_denied_warning">Battery optimization not disabled. Background connections may be suspended during Doze mode.</string>
+    <string name="settings_notif_perm_denied_warning">Notification permission denied. Background status notification will not be visible.</string>
 </resources>

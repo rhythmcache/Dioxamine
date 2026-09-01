@@ -707,7 +707,7 @@ private fun ProcessItemCard(
 
                     // CPU Badge
                     Text(
-                        text = "•  " + stringResource(R.string.proc_badge_cpu, item.formattedCpu),
+                        text = "\u2022  " + stringResource(R.string.proc_badge_cpu, item.formattedCpu),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.tertiary
@@ -715,7 +715,7 @@ private fun ProcessItemCard(
 
                     // PID Badge
                     Text(
-                        text = "•  " + stringResource(R.string.proc_badge_pid, item.pid),
+                        text = "\u2022  " + stringResource(R.string.proc_badge_pid, item.pid),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

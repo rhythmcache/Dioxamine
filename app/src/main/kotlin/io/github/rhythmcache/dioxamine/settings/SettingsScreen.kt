@@ -1,7 +1,13 @@
 package io.github.rhythmcache.dioxamine.settings
 
+import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,46 +19,46 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.ui.res.painterResource
-import io.github.rhythmcache.dioxamine.BuildConfig
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
+import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import io.github.rhythmcache.dioxamine.core.AppTheme
-import java.util.zip.ZipOutputStream
-
-import androidx.compose.material.icons.automirrored.filled.ScreenShare
-import androidx.compose.material.icons.filled.Security
-import io.github.rhythmcache.dioxamine.plugin.PluginPermissionStore
-import io.github.rhythmcache.dioxamine.plugin.PluginRepository
-import io.github.rhythmcache.dioxamine.plugin.PluginPermission
+import io.github.rhythmcache.dioxamine.core.DioxForegroundService
 import io.github.rhythmcache.dioxamine.plugin.PermissionPolicy
 import io.github.rhythmcache.dioxamine.plugin.PluginManifest
+import io.github.rhythmcache.dioxamine.plugin.PluginPermission
+import io.github.rhythmcache.dioxamine.plugin.PluginPermissionStore
+import io.github.rhythmcache.dioxamine.plugin.PluginRepository
 import kotlinx.coroutines.launch
+import java.util.zip.ZipOutputStream
 
 @Composable
 fun SettingsScreen(vm: AdbViewModel) {
@@ -90,8 +96,23 @@ fun SettingsScreen(vm: AdbViewModel) {
     var languageExpanded by remember { mutableStateOf(false) }
     var keyExpanded by remember { mutableStateOf(false) }
     var logsExpanded by remember { mutableStateOf(false) }
-    var aboutExpanded by remember { mutableStateOf(false) }
     var pluginExpanded by remember { mutableStateOf(false) }
+    var miscExpanded by remember { mutableStateOf(false) }
+    var aboutExpanded by remember { mutableStateOf(false) }
+    var keepAlive by remember {
+        mutableStateOf(prefs.getBoolean("keep_alive_enabled", false))
+    }
+
+    DisposableEffect(Unit) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+            if (key == "keep_alive_enabled") {
+                keepAlive = p.getBoolean("keep_alive_enabled", false)
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
     var pluginWebViewDebug by remember {
         mutableStateOf(prefs.getBoolean("plugin_webview_debug", false))
     }
@@ -161,6 +182,62 @@ fun SettingsScreen(vm: AdbViewModel) {
             }.onFailure { e ->
                 Toast.makeText(context, context.getString(R.string.msg_export_failed, e.message ?: ""), Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            AppLogger.i("SettingsScreen", "Notification permission granted")
+        } else {
+            AppLogger.w("SettingsScreen", "Notification permission denied")
+            Toast.makeText(context, context.getString(R.string.settings_notif_perm_denied_warning), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val batteryOptLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
+            val isIgnoring = powerManager.isIgnoringBatteryOptimizations(context.packageName)
+            AppLogger.i("SettingsScreen", "Battery optimization ignoring: $isIgnoring")
+            if (!isIgnoring) {
+                Toast.makeText(context, context.getString(R.string.settings_battery_opt_denied_warning), Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    val onToggleKeepAlive = { enable: Boolean ->
+        if (enable) {
+            // 1. Check and request notification permission (Android 13+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+            // 2. Check and request battery optimization exemption (Android 6.0+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
+                    runCatching {
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                        }
+                        batteryOptLauncher.launch(intent)
+                    }.onFailure { e ->
+                        AppLogger.e("SettingsScreen", "Failed to launch battery optimization intent", e)
+                    }
+                }
+            }
+            keepAlive = true
+            prefs.edit().putBoolean("keep_alive_enabled", true).apply()
+            DioxForegroundService.start(context)
+        } else {
+            keepAlive = false
+            prefs.edit().putBoolean("keep_alive_enabled", false).apply()
+            DioxForegroundService.stop(context)
         }
     }
 
@@ -822,6 +899,74 @@ fun SettingsScreen(vm: AdbViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
+        // -- Miscellaneous Settings Card (Expandable) ----------------
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { miscExpanded = !miscExpanded }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Filled.Tune, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(stringResource(R.string.settings_misc_title), fontWeight = FontWeight.Bold)
+                            Text(
+                                stringResource(R.string.settings_misc_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Icon(
+                        imageVector = if (miscExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = stringResource(if (miscExpanded) R.string.cd_collapse else R.string.cd_expand)
+                    )
+                }
+
+                if (miscExpanded) {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                                Text(
+                                    stringResource(R.string.settings_keep_alive_title),
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    stringResource(R.string.settings_keep_alive_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = keepAlive,
+                                onCheckedChange = { checked ->
+                                    onToggleKeepAlive(checked)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
         // -- About Card (Expandable) --------------------------------
         Card(modifier = Modifier.fillMaxWidth()) {
             Column {
@@ -928,6 +1073,18 @@ fun SettingsScreen(vm: AdbViewModel) {
                             text = stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = stringResource(R.string.settings_about_documentation),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                textDecoration = TextDecoration.Underline
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { openUrl(BuildConfig.DOCUMENTATION_URL) }
                         )
 
                         Spacer(Modifier.height(8.dp))

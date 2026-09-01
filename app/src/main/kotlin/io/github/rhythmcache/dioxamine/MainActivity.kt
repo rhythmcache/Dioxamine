@@ -51,6 +51,11 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         enableEdgeToEdge()
 
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("keep_alive_enabled", false)) {
+            DioxForegroundService.start(this)
+        }
+
         setContent {
             val context = LocalContext.current
             val prefsState = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
@@ -110,6 +115,13 @@ fun DioxamineApp(keyDir: File) {
 
     ListenForUsbDevices(vm)
     ListenForFastbootDevices(fastbootVm)
+
+    val adbConnectedCount = vm.devices.values.count { it.state is ConnectionState.Connected }
+    val fastbootConnectedCount = if (fastbootVm.isConnected) 1 else fastbootVm.devices.size
+
+    LaunchedEffect(adbConnectedCount, fastbootConnectedCount) {
+        DioxForegroundService.updateDeviceCounts(context, adbConnectedCount, fastbootConnectedCount)
+    }
 
     var isScrcpyFullScreen by remember { mutableStateOf(false) }
     var isPluginActive by remember { mutableStateOf(false) }
