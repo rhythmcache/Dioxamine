@@ -5,15 +5,22 @@
 
 **Dioxamine** lets you run **ADB**, **Scrcpy**, and **Fastboot** directly from your Android phone or tablet. Connect another device via USB OTG or [Wireless ADB (Wi-Fi)](https://rhythmcache.github.io/Dioxamine/book/user-guide/connecting-devices.html) to mirror screens with full touch control, flash partitions, sideload, unlock bootloaders, manage files and apps, or run custom plugins. No PC or root required.
 
-<p align="center">
-  <img src="assets/screenshots/adb_management.jpg" width="200" alt="ADB Management" />
-  &nbsp;
-  <img src="assets/screenshots/scrcpy_mirroring.jpg" width="200" alt="Screen Mirroring" />
-  &nbsp;
-  <img src="assets/screenshots/fastboot_flashing.jpg" width="200" alt="Fastboot Flashing" />
-  &nbsp;
-  <img src="assets/screenshots/settings.jpg" width="200" alt="App Settings" />
-</p>
+<table align="center">
+  <tr>
+    <th align="center">ADB Tools</th>
+    <th align="center">Process Telemetry</th>
+    <th align="center">Screen Mirroring</th>
+    <th align="center">Fastboot Flasher</th>
+    <th align="center">App Settings</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/screenshots/adb_management.jpg" width="180" alt="ADB Management" /></td>
+    <td align="center"><img src="assets/screenshots/process_manager.jpg" width="180" alt="Process Telemetry" /></td>
+    <td align="center"><img src="assets/screenshots/scrcpy_mirroring.jpg" width="180" alt="Screen Mirroring" /></td>
+    <td align="center"><img src="assets/screenshots/fastboot_flashing.jpg" width="180" alt="Fastboot Flashing" /></td>
+    <td align="center"><img src="assets/screenshots/settings.jpg" width="180" alt="App Settings" /></td>
+  </tr>
+</table>
 
 It focuses on:
 
