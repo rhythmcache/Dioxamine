@@ -22,6 +22,10 @@
   </tr>
 </table>
 
+<p align="center">
+  <a href="SCREENSHOTS.md"><b>📸 View Full Screenshots Gallery (All 12 Features) →</b></a>
+</p>
+
 It focuses on:
 
  - **PC-free control**: full ADB, Fastboot, and Scrcpy client running phone-to-phone
