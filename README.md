@@ -99,8 +99,10 @@ Full documentation, guides, and API specifications are available in the [Dioxami
 Clone the repository recursively (to include the embedded `scrcpy` submodule):
 
 ```bash
-git clone --recursive https://github.com/rhythmcache/Dioxamine.git
+git clone --depth 1 --recurse-submodules https://github.com/rhythmcache/Dioxamine.git
 cd Dioxamine
+export JAVA_HOME=/path/to/java
+export ANDROID_NDK_ROOT=/path/to/android/ndk
 ./gradlew assembleDebug
 ```
 
