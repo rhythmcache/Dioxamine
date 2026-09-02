@@ -40,10 +40,6 @@ jobs:
     needs: extract-version
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        build_type: [debug, release]
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,57 +61,51 @@ jobs:
           sdkmanager "ndk;${NDK_VERSION}"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
 
-      - name: Decode keystore
-        if: matrix.build_type == 'release'
+      - name: Decode release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
+          set -euo pipefail
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
 
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build APK
+      - name: Build release APK
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
         run: |
           set -euo pipefail
-
-          if [ "${{ matrix.build_type }}" = "release" ]; then
-            export KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
-            ./gradlew assembleRelease --no-daemon
-          else
-            ./gradlew assembleDebug --no-daemon
-          fi
+          ./gradlew assembleRelease --no-daemon
 
       - name: Rename APK
         id: locate
         run: |
           set -euo pipefail
 
-          BUILD_TYPE="${{ matrix.build_type }}"
           VERSION="${{ needs.extract-version.outputs.version_name }}"
 
-          SRC=$(find "app/build/outputs/apk/$BUILD_TYPE" -name "*.apk" | head -n1)
+          SRC=$(find "app/build/outputs/apk/release" -name "*.apk" | head -n1)
 
-          DEST="app/build/outputs/apk/$BUILD_TYPE/Dioxamine-v${VERSION}-${BUILD_TYPE}.apk"
+          DEST="app/build/outputs/apk/release/Dioxamine-v${VERSION}-release.apk"
 
           cp "$SRC" "$DEST"
 
           echo "apk_path=$DEST" >> "$GITHUB_OUTPUT"
 
-      - name: Upload APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-${{ matrix.build_type }}-apk
+          name: app-release-apk
           path: ${{ steps.locate.outputs.apk_path }}
 
       - name: Upload generated assets
         uses: actions/upload-artifact@v4
         with:
-          name: generated-assets-${{ matrix.build_type }}
+          name: generated-assets-release
           path: |
             app/src/main/assets/dxls/*
             app/src/main/assets/diox-agent.jar
@@ -140,11 +130,6 @@ jobs:
         with:
           name: app-release-apk
           path: release-apk
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: app-debug-apk
-          path: debug-apk
 
       - name: Create and push tag
         env:
@@ -187,4 +172,3 @@ jobs:
           body: ${{ steps.changelog.outputs.body }}
           files: |
             release-apk/*.apk
-            debug-apk/*.apk
