@@ -174,6 +174,13 @@ git checkout -b translate-<language>
    git push origin translate-spanish
    ```
 
+## Backends used by this project
+
+- [rhythmcache/adb-kt](https://github.com/rhythmcache/adb-kt)
+- [rhythmcache/fastboot-kt](https://github.com/rhythmcache/fastboot-kt)
+- [Genymobile/scrcpy](https://github.com/Genymobile/scrcpy)
+
+
 ## Community
 
 - **Telegram Channel**: [t.me/tr1ple_fault](https://t.me/tr1ple_fault)
