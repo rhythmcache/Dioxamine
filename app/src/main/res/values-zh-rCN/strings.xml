@@ -23,7 +23,7 @@
 
     <string name="no_devices_connected">未连接设备</string>
     <plurals name="connected_devices_count">
-        <item quantity="one">已连接 %1$d 台设备</item>
+
         <item quantity="other">已连接 %1$d 台设备</item>
     </plurals>
     <string name="cd_add_device">添加设备</string>
@@ -481,7 +481,7 @@
     <string name="adb_misc_dialog_density_title">设置屏幕密度（DPI）</string>
     <string name="adb_misc_density_reading">正在读取当前屏幕密度…</string>
     <string name="adb_misc_density_presets">预设</string>
-    <string name="adb_misc_density_custom_label">自定义 DPI 值（72 - 1200）</string>
+    <string name="adb_misc_density_custom_label">自定义 DPI 值（72 – 1200）</string>
     <string name="adb_misc_density_invalid">请输入 72 到 1200 之间的有效 DPI</string>
     <string name="adb_misc_btn_apply">应用</string>
     <string name="adb_misc_btn_reset_default">恢复默认值</string>
@@ -839,11 +839,11 @@
     <string name="notification_keep_alive_text">Dioxamine 正在后台运行</string>
     <string name="notification_keep_alive_no_devices">未连接设备 &#8226; 正在后台运行</string>
     <plurals name="notification_adb_devices">
-        <item quantity="one">已连接 %1$d 台 ADB 设备</item>
+
         <item quantity="other">已连接 %1$d 台 ADB 设备</item>
     </plurals>
     <plurals name="notification_fastboot_devices">
-        <item quantity="one">已连接 %1$d 台 Fastboot 设备</item>
+
         <item quantity="other">已连接 %1$d 台 Fastboot 设备</item>
     </plurals>
     <string name="notification_keep_alive_stop_action">停止</string>
