@@ -7,6 +7,6 @@
 <text x="312" y="46" fill="#8b949e" font-size="12">100%</text>
 <text x="12" y="70" fill="#c9d1d9" font-size="12">zh-CN</text>
 <rect x="102" y="60" width="200" height="10" rx="5" fill="#30363d"/>
-<rect x="102" y="60" width="152" height="10" rx="5" fill="#dfb317"/>
-<text x="312" y="70" fill="#8b949e" font-size="12">76%</text>
+<rect x="102" y="60" width="200" height="10" rx="5" fill="#4c1"/>
+<text x="312" y="70" fill="#8b949e" font-size="12">100%</text>
 </svg>
