@@ -331,6 +331,10 @@
     <string name="scrcpy_server_start_failed">无法在目标设备上启动 scrcpy 服务。请检查权限或设备兼容性。</string>
     <string name="scrcpy_server_terminated">目标设备上的 scrcpy 服务进程意外终止。</string>
 
+    <!-- 本地 ADB 检测 -->
+    <string name="local_adb_detected_title">检测到本地 ADB</string>
+    <string name="local_adb_detected_msg">Dioxamine 检测到本地无线 ADB 在端口 %1$d 上处于活动状态。是否连接到此设备？</string>
+
     <!-- 文件管理器补充 -->
     <string name="file_manager_push_file">上传文件</string>
     <string name="file_manager_upload_failed">上传 %1$s 失败：%2$s</string>

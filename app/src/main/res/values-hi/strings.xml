@@ -328,6 +328,10 @@
     <string name="scrcpy_server_start_failed">लक्ष्य डिवाइस पर scrcpy सर्वर प्रारंभ करने में विफल। अनुमतियां या डिवाइस संगतता जांचें।</string>
     <string name="scrcpy_server_terminated">लक्ष्य डिवाइस पर scrcpy सर्वर प्रक्रिया अप्रत्याशित रूप से समाप्त हो गई।</string>
 
+    <!-- Local ADB Detection -->
+    <string name="local_adb_detected_title">स्थानीय ADB का पता चला</string>
+    <string name="local_adb_detected_msg">Dioxamine ने पाया कि पोर्ट %1$d पर स्थानीय वायरलेस ADB सक्रिय है। क्या आप इस डिवाइस से कनेक्ट करना चाहते हैं?</string>
+
     <!-- File Manager Additions -->
     <string name="file_manager_push_file">फाइल पुश (अपलोड) करें</string>
     <string name="file_manager_upload_failed">%1$s के लिए अपलोड विफल: %2$s</string>

@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentLinkedQueue
 
 enum class AdbServiceType(val serviceType: String) {
@@ -56,6 +57,23 @@ class NsdAdbDiscovery(private val context: Context) {
         discovered.clear()
         resolveQueue.clear()
         AdbServiceType.values().forEach { startForType(it) }
+        probeLocalhost()
+    }
+
+    private fun probeLocalhost() {
+        scope.launch(Dispatchers.IO) {
+            val target = LocalAdbDetector.detect() ?: return@launch
+            val localDevice = DiscoveredAdbDevice(
+                serviceName = "This Device (localhost:${target.port})",
+                host = "127.0.0.1",
+                port = target.port,
+                type = if (target.isTls) AdbServiceType.TLS_CONNECT else AdbServiceType.TCP,
+                deviceId = "Localhost"
+            )
+            withContext(Dispatchers.Main) {
+                discovered["localhost:${target.port}"] = localDevice
+            }
+        }
     }
 
     fun stop() {

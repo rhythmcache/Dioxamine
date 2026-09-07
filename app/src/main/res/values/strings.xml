@@ -331,6 +331,10 @@
     <string name="scrcpy_server_start_failed">Scrcpy server failed to start on target device. Check permissions or device compatibility.</string>
     <string name="scrcpy_server_terminated">Scrcpy server process terminated unexpectedly on target device.</string>
 
+    <!-- Local ADB Detection -->
+    <string name="local_adb_detected_title">Local ADB Detected</string>
+    <string name="local_adb_detected_msg">Dioxamine detected that local wireless ADB is active on port %1$d. Would you like to connect to this device?</string>
+
     <!-- File Manager Additions -->
     <string name="file_manager_push_file">Push File</string>
     <string name="file_manager_upload_failed">Upload failed for %1$s: %2$s</string>

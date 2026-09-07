@@ -331,6 +331,33 @@ fun DeviceConnectorCard(vm: AdbViewModel) {
             }
         )
     }
+
+    if (!showDiscoverySheet && !showQrPairing) {
+        vm.localAdbPromptTarget?.let { target ->
+            AlertDialog(
+                onDismissRequest = { vm.dismissLocalAdbPrompt(false) },
+                icon = { Icon(Icons.Filled.Devices, contentDescription = null) },
+                title = { Text(stringResource(R.string.local_adb_detected_title)) },
+                text = {
+                    Text(stringResource(R.string.local_adb_detected_msg, target.port))
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        vm.connectLocalAdb(onNotPaired = {
+                            showQrPairing = true
+                        })
+                    }) {
+                        Text(stringResource(R.string.btn_connect))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { vm.dismissLocalAdbPrompt(true) }) {
+                        Text(stringResource(R.string.btn_dismiss))
+                    }
+                }
+            )
+        }
+    }
 }
 
 @Composable

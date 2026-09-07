@@ -19,6 +19,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
+import io.github.rhythmcache.dioxamine.adb.discovery.LocalAdbDetector
+import io.github.rhythmcache.dioxamine.adb.discovery.LocalAdbTarget
 import java.io.File
 
 class AdbViewModel(private val keyDir: File) : ViewModel() {
@@ -51,6 +53,11 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
 
     var daemonDialogMessage by mutableStateOf<String?>(null)
         private set
+
+    var localAdbPromptTarget by mutableStateOf<LocalAdbTarget?>(null)
+        private set
+    private var dismissedLocalPort: Int? = null
+    private var dismissedUntilMs: Long = 0L
 
     var flashState by mutableStateOf<FlashUiState>(FlashUiState.Idle)
         private set
@@ -90,6 +97,67 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
                     }
                 }
             }
+        }
+
+        // Periodic local ADB detection (checks every 10s)
+        viewModelScope.launch(Dispatchers.IO) {
+            kotlinx.coroutines.delay(1000)
+            while (isActive) {
+                if (!isLocalhostConnected() && localAdbPromptTarget == null) {
+                    val target = LocalAdbDetector.detect()
+                    if (target != null) {
+                        val now = System.currentTimeMillis()
+                        val isDismissed = (target.port == dismissedLocalPort && now < dismissedUntilMs)
+                        if (!isDismissed && !isLocalhostConnected()) {
+                            withContext(Dispatchers.Main) {
+                                localAdbPromptTarget = target
+                            }
+                        }
+                    } else {
+                        // Port is closed / adb was toggled off -> reset dismissal for fresh future session
+                        dismissedLocalPort = null
+                        dismissedUntilMs = 0L
+                    }
+                }
+                kotlinx.coroutines.delay(10000)
+            }
+        }
+    }
+
+    fun isLocalhostConnected(): Boolean {
+        return devices.values.any { conn ->
+            val isLocal = conn.transport == DeviceTransport.TCP && (
+                conn.id.startsWith("127.0.0.1:") ||
+                conn.id.startsWith("localhost:") ||
+                conn.id.startsWith("tls:127.0.0.1:") ||
+                conn.id.startsWith("tls:localhost:")
+            )
+            val activeState = conn.state is ConnectionState.Connected || conn.state is ConnectionState.Connecting
+            isLocal && activeState
+        }
+    }
+
+    fun dismissLocalAdbPrompt(rememberDismissal: Boolean = false) {
+        val target = localAdbPromptTarget
+        if (target != null) {
+            dismissedLocalPort = target.port
+            // Temporary dismiss = 2 min cooldown, Remember dismissal = 1 hour
+            dismissedUntilMs = System.currentTimeMillis() + if (rememberDismissal) 3600_000L else 120_000L
+        }
+        localAdbPromptTarget = null
+    }
+
+    fun connectLocalAdb(onNotPaired: (() -> Unit)? = null) {
+        val target = localAdbPromptTarget ?: return
+        localAdbPromptTarget = null
+        if (target.isTls) {
+            connectTls(
+                host = "127.0.0.1",
+                port = target.port,
+                onNotPaired = onNotPaired
+            )
+        } else {
+            connectTcpDirect("127.0.0.1", target.port)
         }
     }
 
@@ -200,7 +268,7 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
                 }
 
                 val details = withContext(Dispatchers.IO) { fetchDeviceDetails(client) }
-                val displayLabel = details.model ?: id
+                val displayLabel = details.model ?: if (host == "127.0.0.1") "This Device ($id)" else id
 
                 devices[id] = DeviceConnection(
                     id = id,
@@ -276,7 +344,12 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
         }
     }
 
-    fun connectTls(host: String, port: Int, onResult: ((Boolean, String?) -> Unit)? = null) {
+    fun connectTls(
+        host: String,
+        port: Int,
+        onNotPaired: (() -> Unit)? = null,
+        onResult: ((Boolean, String?) -> Unit)? = null
+    ) {
         val id = "tls:$host:$port"
         if (devices.containsKey(id) && devices[id]?.state is ConnectionState.Connected) {
             onResult?.invoke(true, null)
@@ -310,6 +383,7 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
                 devices.remove(id)
                 val err = "Device not paired. Pair it first."
                 pairingError = err
+                onNotPaired?.invoke()
                 onResult?.invoke(false, err)
             } catch (e: Exception) {
                 val errMsg = e.message ?: "TLS connection failed"
