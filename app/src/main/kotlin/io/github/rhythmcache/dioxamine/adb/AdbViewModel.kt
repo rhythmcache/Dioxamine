@@ -147,15 +147,11 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
         localAdbPromptTarget = null
     }
 
-    fun connectLocalAdb(onNotPaired: (() -> Unit)? = null) {
+    fun connectLocalAdb() {
         val target = localAdbPromptTarget ?: return
         localAdbPromptTarget = null
         if (target.isTls) {
-            connectTls(
-                host = "127.0.0.1",
-                port = target.port,
-                onNotPaired = onNotPaired
-            )
+            connectTls("127.0.0.1", target.port)
         } else {
             connectTcpDirect("127.0.0.1", target.port)
         }
@@ -344,12 +340,7 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
         }
     }
 
-    fun connectTls(
-        host: String,
-        port: Int,
-        onResult: ((Boolean, String?) -> Unit)? = null,
-        onNotPaired: (() -> Unit)? = null
-    ) {
+    fun connectTls(host: String, port: Int, onResult: ((Boolean, String?) -> Unit)? = null) {
         val id = "tls:$host:$port"
         if (devices.containsKey(id) && devices[id]?.state is ConnectionState.Connected) {
             onResult?.invoke(true, null)
@@ -383,7 +374,6 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
                 devices.remove(id)
                 val err = "Device not paired. Pair it first."
                 pairingError = err
-                onNotPaired?.invoke()
                 onResult?.invoke(false, err)
             } catch (e: Exception) {
                 val errMsg = e.message ?: "TLS connection failed"

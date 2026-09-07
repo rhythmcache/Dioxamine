@@ -342,11 +342,7 @@ fun DeviceConnectorCard(vm: AdbViewModel) {
                     Text(stringResource(R.string.local_adb_detected_msg, target.port))
                 },
                 confirmButton = {
-                    Button(onClick = {
-                        vm.connectLocalAdb(onNotPaired = {
-                            showQrPairing = true
-                        })
-                    }) {
+                    Button(onClick = { vm.connectLocalAdb() }) {
                         Text(stringResource(R.string.btn_connect))
                     }
                 },
