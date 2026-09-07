@@ -36,6 +36,10 @@ It focuses on:
 ## Features
 
 ### Scrcpy Screen Mirroring and Audio
+
+> ⚠️ **Device compatibility notice:** Scrcpy video streaming depends on the capabilities of both the target and slave device. While screen mirroring was successfully tested on the developer's device, it may not work on every Android device. Devices without compatible hardware video decoding support, or configurations that are not supported by the device's decoder, may fail to start streaming or produce decoding errors. If mirroring fails, try changing the video codec, resolution, FPS, or other streaming settings.
+>
+> 
 - [Real-time display mirroring](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html) with full multi-touch and hardware key control
 - [Audio forwarding](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/settings-tuning.html) (Android 11+)
 - [Camera streaming](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/camera-streaming.html) (Android 12+; front and rear cameras, flashlight/torch toggle, high-FPS modes)
