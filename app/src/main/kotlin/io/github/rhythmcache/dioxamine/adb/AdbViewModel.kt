@@ -347,8 +347,8 @@ class AdbViewModel(private val keyDir: File) : ViewModel() {
     fun connectTls(
         host: String,
         port: Int,
-        onNotPaired: (() -> Unit)? = null,
-        onResult: ((Boolean, String?) -> Unit)? = null
+        onResult: ((Boolean, String?) -> Unit)? = null,
+        onNotPaired: (() -> Unit)? = null
     ) {
         val id = "tls:$host:$port"
         if (devices.containsKey(id) && devices[id]?.state is ConnectionState.Connected) {
