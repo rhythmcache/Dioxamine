@@ -16,7 +16,7 @@ import java.util.concurrent.CancellationException
 
 /**
  * Handles video decoding from scrcpy 4.1 framed stream using Android MediaCodec.
- * Supported video codecs: H.264 (AVC), H.265 (HEVC), and AV1.
+ * Supported video codecs: H.264 (AVC), H.265 (HEVC), AV1, VP8, and VP9.
  * Uses reusable buffers to eliminate allocations on every frame.
  */
 class ScrcpyDecoder(
@@ -82,6 +82,8 @@ class ScrcpyDecoder(
                 0x68323634 -> MediaFormat.MIMETYPE_VIDEO_AVC   // "h264"
                 0x68323635 -> MediaFormat.MIMETYPE_VIDEO_HEVC  // "h265"
                 0x00617631 -> MediaFormat.MIMETYPE_VIDEO_AV1   // "av1"
+                0x00767038 -> MediaFormat.MIMETYPE_VIDEO_VP8   // "vp8"
+                0x00767039 -> MediaFormat.MIMETYPE_VIDEO_VP9   // "vp9"
                 else -> {
                     AppLogger.e(TAG, "Unknown codec id: 0x%08x".format(codecIdInt))
                     MediaFormat.MIMETYPE_VIDEO_AVC

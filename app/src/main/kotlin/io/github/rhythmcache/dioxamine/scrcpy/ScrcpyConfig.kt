@@ -23,7 +23,7 @@ data class ScrcpyConfig(
     val cameraAr: String? = null,         // "16:9", "1.6", or "sensor"
     val cameraTorch: Boolean = false,     // torch on at startup
 
-    val videoCodec: String = "h264",      // h264, h265, av1
+    val videoCodec: String = "h264",      // h264, h265, av1, vp8, vp9
     val audioCodec: String = "opus",      // opus, aac, flac, raw
     val audioBitRateKbps: Int = 128,      // 64, 128, 192, 256, 320 Kbps
     val captureOrientation: String? = null // 0, 90, 180, 270, flip0, flip90, flip180, flip270

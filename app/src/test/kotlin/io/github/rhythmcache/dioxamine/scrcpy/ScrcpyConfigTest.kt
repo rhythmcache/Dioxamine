@@ -18,6 +18,15 @@ class ScrcpyConfigTest {
     }
 
     @Test
+    fun testVp8AndVp9Config_toServerArgs() {
+        val vp8Config = ScrcpyConfig(videoCodec = "vp8")
+        assertTrue(vp8Config.toServerArgs().contains("video_codec=vp8"))
+
+        val vp9Config = ScrcpyConfig(videoCodec = "vp9")
+        assertTrue(vp9Config.toServerArgs().contains("video_codec=vp9"))
+    }
+
+    @Test
     fun testAudioOnlyConfig_toServerArgs() {
         val config = ScrcpyConfig(
             videoEnabled = false,

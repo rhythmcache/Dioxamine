@@ -181,6 +181,8 @@
     <string name="codec_h264">H.264</string>
     <string name="codec_h265">H.265</string>
     <string name="codec_av1">AV1</string>
+    <string name="codec_vp8">VP8</string>
+    <string name="codec_vp9">VP9</string>
     <string name="label_orientation">Orientation</string>
     <string name="orient_normal">Normal</string>
     <string name="orient_90">90°</string>

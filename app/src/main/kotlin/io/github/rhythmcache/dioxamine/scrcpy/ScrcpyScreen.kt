@@ -1022,11 +1022,16 @@ private fun VideoSettings(
     Spacer(Modifier.height(8.dp))
     Text(stringResource(R.string.label_codec), style = MaterialTheme.typography.labelMedium)
     Spacer(Modifier.height(4.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         listOf(
             stringResource(R.string.codec_h264) to "h264",
             stringResource(R.string.codec_h265) to "h265",
-            stringResource(R.string.codec_av1) to "av1"
+            stringResource(R.string.codec_av1) to "av1",
+            stringResource(R.string.codec_vp8) to "vp8",
+            stringResource(R.string.codec_vp9) to "vp9"
         ).forEach { (label, value) ->
             val isEnabled = !isMirroring && (!config.cameraHighSpeed || value == "h264")
             FilterChip(
@@ -1037,7 +1042,7 @@ private fun VideoSettings(
             )
         }
     }
-    if (config.videoCodec == "av1") {
+    if (config.videoCodec in listOf("av1", "vp8", "vp9")) {
         Spacer(Modifier.height(2.dp))
         Text(
             text = stringResource(R.string.scrcpy_recording_codec_warning),
