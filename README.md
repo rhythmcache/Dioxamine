@@ -23,7 +23,7 @@
 </table>
 
 <p align="center">
-  <a href="SCREENSHOTS.md"><b>📸 View Full Screenshots Gallery (All 12 Features) →</b></a>
+  <a href="SCREENSHOTS.md"><b> View Full Screenshots Gallery (All 12 Features) →</b></a>
 </p>
 
 It focuses on:
@@ -185,6 +185,16 @@ git checkout -b translate-<language>
 
 - **Telegram Channel**: [t.me/tr1ple_fault](https://t.me/tr1ple_fault)
 - **Issues & Suggestions**: [GitHub Issues](https://github.com/rhythmcache/Dioxamine/issues)
+
+## Support Me
+
+Hii! I'm [rhythmcache](https://github.com/rhythmcache), the developer of [Dioxamine](https://github.com/rhythmcache/Dioxamine).
+
+If you like this project, consider supporting me by sponsoring the project or buying me a coffee. It really helps me continue working on it!
+
+- ☕ [Buy me a coffee](https://www.buymeacoffee.com/triple_fault)
+- 💖 [Sponsor on GitHub](https://github.com/sponsors/rhythmcache)
+- 
 
 ## License
 
