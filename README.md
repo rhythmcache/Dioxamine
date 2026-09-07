@@ -194,7 +194,6 @@ If you like this project, consider supporting me by sponsoring the project or bu
 
 - ☕ [Buy me a coffee](https://www.buymeacoffee.com/triple_fault)
 - 💖 [Sponsor on GitHub](https://github.com/sponsors/rhythmcache)
-- 
 
 ## License
 
