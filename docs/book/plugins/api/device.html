@@ -181,31 +181,54 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="device-management-api"><a class="header" href="#device-management-api">Device Management API</a></h1>
-<p>The Device Management API allows plugins to verify the current ADB connection status and query device identifiers.</p>
+<p>The Device Management API allows plugins to verify the active ADB connection status.</p>
+<blockquote>
+<p><strong>Multi-Device Behavior</strong>: In Dioxamine, plugins run in the scope of the device currently selected in the UI chip (the "active" device). All ADB operations (<code>shellExec</code>, <code>pull</code>, <code>push</code>, <code>forwardAdd</code>, <code>openInteractiveShell</code>, etc.) automatically target this selected device.</p>
+</blockquote>
 <h2 id="dioxaminegetactivedevice"><a class="header" href="#dioxaminegetactivedevice"><code>dioxamine.getActiveDevice()</code></a></h2>
-<p>Retrieves information about the currently active ADB device.</p>
+<p>Checks whether an active ADB device is currently connected and selected.</p>
 <h3 id="signature"><a class="header" href="#signature">Signature</a></h3>
-<pre><code class="language-javascript">dioxamine.getActiveDevice(): Promise&lt;DeviceInfo | null&gt;
+<pre><code class="language-javascript">dioxamine.getActiveDevice(): Promise&lt;ActiveDeviceStatus | null&gt;
 </code></pre>
 <h3 id="parameters"><a class="header" href="#parameters">Parameters</a></h3>
 <p>None.</p>
 <h3 id="returns"><a class="header" href="#returns">Returns</a></h3>
-<p>A <code>Promise</code> resolving to a <code>DeviceInfo</code> object, or <code>null</code> if no device is connected.</p>
-<h3 id="deviceinfo-object-structure"><a class="header" href="#deviceinfo-object-structure"><code>DeviceInfo</code> Object Structure</a></h3>
-<pre><code class="language-typescript">interface DeviceInfo {
-    serial: string;      // Device serial or IP:Port (e.g. "192.168.1.50:5555" or "RFCW10ABCDE")
-    model: string;       // Device marketing name or model (e.g. "Pixel 8 Pro")
-    state: string;       // Connection state: "device", "offline", "unauthorized", etc.
+<p>A <code>Promise</code> resolving to an <code>ActiveDeviceStatus</code> object (<code>{ connected: true }</code>) if an active device is connected, or <code>null</code> if no device is connected.</p>
+<h3 id="activedevicestatus-object-structure"><a class="header" href="#activedevicestatus-object-structure"><code>ActiveDeviceStatus</code> Object Structure</a></h3>
+<pre><code class="language-typescript">interface ActiveDeviceStatus {
+    connected: boolean;  // Always true when an active device is connected
+}
+</code></pre>
+<h3 id="retrieving-device-details"><a class="header" href="#retrieving-device-details">Retrieving Device Details</a></h3>
+<p>If your plugin needs specific device identifiers or properties (such as device model, Android release version, or serial number), query them using <code>dioxamine.shellExec()</code>:</p>
+<pre><code class="language-javascript">async function getDeviceInfo() {
+    const device = await dioxamine.getActiveDevice();
+    if (!device) {
+        console.warn("No active ADB device connected in Dioxamine");
+        return null;
+    }
+
+    const [modelRes, versionRes, serialRes] = await Promise.all([
+        dioxamine.shellExec("getprop ro.product.model"),
+        dioxamine.shellExec("getprop ro.build.version.release"),
+        dioxamine.shellExec("getprop ro.serialno")
+    ]);
+
+    return {
+        model: modelRes.stdout.trim() || "Unknown",
+        androidVersion: versionRes.stdout.trim() || "Unknown",
+        serial: serialRes.stdout.trim() || "Unknown"
+    };
 }
 </code></pre>
 <h3 id="example"><a class="header" href="#example">Example</a></h3>
 <pre><code class="language-javascript">async function checkDevice() {
     const dev = await dioxamine.getActiveDevice();
-    if (!dev) {
+    if (!dev || !dev.connected) {
         console.warn("No active ADB device connected in Dioxamine");
         return;
     }
-    console.log(`Connected to ${dev.model} (${dev.serial}) [${dev.state}]`);
+    console.log("Device is connected and ready");
 }
 </code></pre>
 
