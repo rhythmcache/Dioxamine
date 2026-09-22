@@ -9,13 +9,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -23,14 +23,23 @@ import androidx.compose.ui.unit.sp
 import io.github.rhythmcache.dioxamine.R
 
 /**
- * Compact toolbar above the input bar with Ctrl toggle, Tab, Clear, and Restart.
+ * Compact toolbar above the input bar with ESC, Ctrl toggle, Tab, ^C (interrupt),
+ * ^D (EOF), navigation arrows, keyboard toggle, Clear, and Restart.
  */
 @Composable
 fun ShellToolbar(
     sessionState: ShellSessionState,
     ctrlActive: Boolean,
     onToggleCtrl: () -> Unit,
-    onTab: () -> Unit,
+    onEsc: () -> Unit = {},
+    onTab: () -> Unit = {},
+    onInterrupt: () -> Unit = {},
+    onEof: () -> Unit = {},
+    onArrowUp: () -> Unit = {},
+    onArrowDown: () -> Unit = {},
+    onArrowLeft: () -> Unit = {},
+    onArrowRight: () -> Unit = {},
+    onToggleKeyboard: () -> Unit = {},
     onClear: () -> Unit,
     onRestart: () -> Unit,
     modifier: Modifier = Modifier,
@@ -50,6 +59,7 @@ fun ShellToolbar(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
+            KeyPill("ESC", onClick = onEsc, enabled = enabled)
             KeyPill(
                 label = "Ctrl",
                 onClick = onToggleCtrl,
@@ -57,9 +67,24 @@ fun ShellToolbar(
                 active = ctrlActive,
             )
             KeyPill("Tab", onClick = onTab, enabled = enabled)
+            KeyPill("^C", onClick = onInterrupt, enabled = enabled)
+            KeyPill("^D", onClick = onEof, enabled = enabled)
+            KeyPill("▲", onClick = onArrowUp, enabled = enabled)
+            KeyPill("▼", onClick = onArrowDown, enabled = enabled)
+            KeyPill("◀", onClick = onArrowLeft, enabled = enabled)
+            KeyPill("▶", onClick = onArrowRight, enabled = enabled)
         }
 
         Spacer(Modifier.width(4.dp))
+
+        IconButton(onClick = onToggleKeyboard, modifier = Modifier.size(32.dp)) {
+            Icon(
+                Icons.Filled.Keyboard,
+                contentDescription = "Toggle Keyboard",
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
 
         IconButton(onClick = onClear, modifier = Modifier.size(32.dp)) {
             Icon(

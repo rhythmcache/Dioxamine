@@ -100,6 +100,11 @@ class ShellViewModel : ViewModel() {
     fun sendEof() = sendRaw(byteArrayOf(0x04))
     fun sendTab() = sendRaw(byteArrayOf(0x09))
     fun sendSuspend() = sendRaw(byteArrayOf(0x1A))
+    fun sendEscape() = sendRaw(byteArrayOf(0x1B))
+    fun sendArrowUp() = sendRaw(byteArrayOf(0x1B, 0x5B, 0x41)) // \e[A
+    fun sendArrowDown() = sendRaw(byteArrayOf(0x1B, 0x5B, 0x42)) // \e[B
+    fun sendArrowRight() = sendRaw(byteArrayOf(0x1B, 0x5B, 0x43)) // \e[C
+    fun sendArrowLeft() = sendRaw(byteArrayOf(0x1B, 0x5B, 0x44)) // \e[D
 
     /** Clear scrollback and redraw. */
     fun clearBuffer() {

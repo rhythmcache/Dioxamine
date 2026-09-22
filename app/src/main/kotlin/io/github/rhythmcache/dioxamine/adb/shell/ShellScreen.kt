@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Typeface
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.ScaleGestureDetector
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -61,6 +61,7 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
     val errorMessage by shellVm.errorMessage.collectAsState()
 
     var ctrlActive by remember { mutableStateOf(false) }
+    var terminalViewRef by remember { mutableStateOf<TerminalView?>(null) }
 
     // Start / restart shell when the active device changes
     LaunchedEffect(activeDeviceId) {
@@ -93,10 +94,16 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                     }
                     setTextSize(14)
                     setTypeface(monoTypeface)
-                    setTerminalViewClient(createTerminalViewClient(shellVm, { ctrlActive }, { ctrlActive = false }))
+                    setTerminalViewClient(createTerminalViewClient(shellVm, { this }, { ctrlActive }, { ctrlActive = false }))
                     isFocusable = true
                     isFocusableInTouchMode = true
                     shellVm.bindTerminalView(this)
+                    terminalViewRef = this
+                    post {
+                        requestFocus()
+                        val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                        imm?.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
+                    }
                 }
             },
             modifier = Modifier
@@ -120,12 +127,26 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
             }
         }
 
-        // -- Toolbar (Ctrl toggle, Tab, etc.) --
+        // -- Toolbar (Ctrl, ESC, Tab, ^C, navigation, keyboard toggle, etc.) --
         ShellToolbar(
             sessionState = sessionState,
             ctrlActive = ctrlActive,
             onToggleCtrl = { ctrlActive = !ctrlActive },
+            onEsc = { shellVm.sendEscape() },
             onTab = { shellVm.sendTab() },
+            onInterrupt = { shellVm.sendInterrupt() },
+            onEof = { shellVm.sendEof() },
+            onArrowUp = { shellVm.sendArrowUp() },
+            onArrowDown = { shellVm.sendArrowDown() },
+            onArrowLeft = { shellVm.sendArrowLeft() },
+            onArrowRight = { shellVm.sendArrowRight() },
+            onToggleKeyboard = {
+                terminalViewRef?.let { view ->
+                    view.requestFocus()
+                    val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                    imm?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+                }
+            },
             onClear = { shellVm.clearBuffer() },
             onRestart = {
                 val client = adbViewModel.activeClient()
@@ -143,6 +164,7 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
  */
 private fun createTerminalViewClient(
     shellVm: ShellViewModel,
+    terminalViewProvider: () -> TerminalView?,
     readCtrl: () -> Boolean,
     consumeCtrl: () -> Unit,
 ): TerminalViewClient {
@@ -150,7 +172,11 @@ private fun createTerminalViewClient(
         override fun onScale(scale: Float): Float = 1.0f
 
         override fun onSingleTapUp(e: MotionEvent) {
-            // Tapping shows the keyboard — handled by TerminalView's requestFocus
+            terminalViewProvider()?.let { view ->
+                view.requestFocus()
+                val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            }
         }
 
         override fun shouldBackButtonBeMappedToEscape(): Boolean = false
