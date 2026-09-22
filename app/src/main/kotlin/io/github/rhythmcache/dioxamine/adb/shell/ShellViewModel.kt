@@ -8,7 +8,7 @@ import com.termux.terminal.AdbTerminalSession
 import com.termux.terminal.TerminalSessionClient
 import com.termux.view.TerminalView
 import io.github.rhythmcache.adb.AdbClient
-import io.github.rhythmcache.adb.shell.AdbInteractiveSession
+import io.github.rhythmcache.adb.AdbInteractiveSession
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
-import io.github.rhythmcache.adb.shell.AdbInteractiveSession
+import io.github.rhythmcache.adb.AdbInteractiveSession
 import kotlinx.coroutines.*
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -37,12 +37,10 @@ class AdbTerminalSession(
     var mEmulator: TerminalEmulator? = null
 
     /** Queue: reader coroutine writes bytes from ADB, main thread reads to feed emulator. */
-    @JvmField
-    val mProcessToTerminalIOQueue = ByteQueue(64 * 1024)
+    private val mProcessToTerminalIOQueue = ByteQueue(64 * 1024)
 
     /** Queue: main thread writes user input, writer coroutine reads and sends to ADB. */
-    @JvmField
-    val mTerminalToProcessIOQueue = ByteQueue(4096)
+    private val mTerminalToProcessIOQueue = ByteQueue(4096)
 
     private val mUtf8InputBuffer = ByteArray(5)
 
