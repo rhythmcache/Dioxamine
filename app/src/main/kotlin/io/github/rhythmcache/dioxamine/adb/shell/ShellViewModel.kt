@@ -1,175 +1,192 @@
 package io.github.rhythmcache.dioxamine.adb.shell
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import android.util.Log
+import androidx.annotation.NonNull
+import androidx.annotation.Nullable
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.termux.terminal.AdbTerminalSession
+import com.termux.terminal.TerminalSessionClient
+import com.termux.view.TerminalView
 import io.github.rhythmcache.adb.AdbClient
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import io.github.rhythmcache.adb.shell.AdbInteractiveSession
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * ViewModel for the ADB interactive shell.
+ * ViewModel for the ADB interactive shell, now backed by Termux's
+ * [com.termux.terminal.TerminalEmulator] via [AdbTerminalSession].
  *
- * Owns the [ShellSession], collects raw output into a [ShellBuffer],
- * parses ANSI colours, and exposes styled lines plus command history
- * for the Compose UI layer.
+ * Owns the session lifecycle and exposes it for the Compose/View layer.
  */
 class ShellViewModel : ViewModel() {
 
-    private val buffer = ShellBuffer()
-    private var session: ShellSession? = null
-    private var collectorJob: Job? = null
-
-    // -- Exposed state -----------------------------------------------
-
-    val outputLines: SnapshotStateList<String> = mutableStateListOf()
-    var currentLine by mutableStateOf("")
-        private set
-
-    private var lastReadIndex = 0L
+    private var session: AdbTerminalSession? = null
+    private var terminalView: TerminalView? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _sessionState = MutableStateFlow(ShellSessionState.IDLE)
-    /** Current session lifecycle state. */
     val sessionState: StateFlow<ShellSessionState> = _sessionState
 
     private val _errorMessage = MutableStateFlow<String?>(null)
-    /** Error detail when session is in ERROR state. */
     val errorMessage: StateFlow<String?> = _errorMessage
-
-    // -- Command history ---------------------------------------------
-
-    private val _history = mutableListOf<String>()
-    private var historyIndex = -1
 
     var currentDeviceId: String? = null
         private set
 
-    // -- Session lifecycle -------------------------------------------
+    /** Bind the TerminalView (called from Compose AndroidView factory). */
+    fun bindTerminalView(view: TerminalView) {
+        terminalView = view
+        // If a session already exists, re-attach
+        session?.let { view.attachSession(it) }
+    }
 
     /**
-     * Start (or restart) an interactive shell on [client].
+     * Start (or restart) an interactive ADB shell on [client].
      * Closes any existing session first.
      */
     fun startSession(deviceId: String?, client: AdbClient) {
         stopSession()
-        buffer.clear()
-        outputLines.clear()
-        currentLine = ""
-        lastReadIndex = buffer.oldestAvailableIndex()
         currentDeviceId = deviceId
+        _sessionState.value = ShellSessionState.STARTING
+        _errorMessage.value = null
 
-        val newSession = ShellSession()
+        val sessionClient = createSessionClient()
+        val newSession = AdbTerminalSession(2000, sessionClient)
         session = newSession
 
-        viewModelScope.launch {
-            newSession.state.collect { _sessionState.value = it }
-        }
-        viewModelScope.launch {
-            newSession.errorMessage.collect { _errorMessage.value = it }
-        }
+        scope.launch {
+            try {
+                val interactiveSession = client.openInteractiveShell(
+                    terminalType = "xterm-256color",
+                    rows = 24,
+                    cols = 80,
+                )
 
-        collectorJob = viewModelScope.launch {
-            val dirty = AtomicBoolean(false)
-
-            launch {
-                newSession.output.collect { chunk ->
-                    buffer.append(chunk)
-                    dirty.set(true)
+                // Initialize with default size; TerminalView will call updateSize()
+                // once it has measured and will set the real dimensions + send resize.
+                withContext(Dispatchers.Main) {
+                    newSession.initializeEmulator(80, 24, 12, 24, interactiveSession)
+                    terminalView?.attachSession(newSession)
+                    _sessionState.value = ShellSessionState.ACTIVE
                 }
-            }
-
-            launch {
-                while (isActive) {
-                    if (dirty.compareAndSet(true, false)) {
-                        flushToUi()
-                    }
-                    delay(50)
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _errorMessage.value = e.message ?: "Failed to open shell"
+                    _sessionState.value = ShellSessionState.ERROR
                 }
             }
         }
-
-        newSession.start(client)
-    }
-
-    private fun flushToUi() {
-        val oldestAvailable = buffer.oldestAvailableIndex()
-        if (lastReadIndex < oldestAvailable) {
-            lastReadIndex = oldestAvailable
-        }
-
-        val total = buffer.completedLineCount()
-        if (lastReadIndex < total) {
-            outputLines.addAll(buffer.linesInRange(lastReadIndex, total))
-            lastReadIndex = total
-        }
-
-        currentLine = buffer.currentIncompleteLine()
     }
 
     /** Close the current session (if any). */
     fun stopSession() {
-        collectorJob?.cancel()
-        collectorJob = null
-        session?.close()
+        session?.finishIfRunning()
         session = null
+        _sessionState.value = ShellSessionState.IDLE
     }
 
-    // -- Commands ----------------------------------------------------
+    // -- Commands (forwarded to session via raw writes) ---------------
 
-    /** Send a command string to the shell (appended to history). */
     fun sendCommand(command: String) {
-        if (command.isNotBlank()) {
-            _history.add(command)
-        }
-        historyIndex = _history.size
-        session?.sendCommand(command)
+        session?.write("$command\n")
     }
 
-    fun sendRaw(bytes: ByteArray) { session?.sendRaw(bytes) }
-    fun sendInterrupt() { session?.sendInterrupt() }
-    fun sendEof()       { session?.sendEof() }
-    fun sendTab()       { session?.sendTab() }
-    fun sendSuspend()   { session?.sendSuspend() }
+    fun sendRaw(bytes: ByteArray) {
+        session?.write(bytes, 0, bytes.size)
+    }
 
-    // -- Buffer management -------------------------------------------
+    fun sendInterrupt() = sendRaw(byteArrayOf(0x03))
+    fun sendEof() = sendRaw(byteArrayOf(0x04))
+    fun sendTab() = sendRaw(byteArrayOf(0x09))
+    fun sendSuspend() = sendRaw(byteArrayOf(0x1A))
 
-    /** Clear terminal output. */
+    /** Clear scrollback and redraw. */
     fun clearBuffer() {
-        buffer.clear()
-        outputLines.clear()
-        currentLine = ""
-        lastReadIndex = buffer.oldestAvailableIndex()
+        session?.let { s ->
+            s.getEmulator()?.clearScrollCounter()
+            terminalView?.let { tv ->
+                tv.setTopRow(0)
+                tv.invalidate()
+            }
+        }
     }
 
-    // -- History navigation ------------------------------------------
-
-    /** Navigate up in history (older). Returns command text or null. */
-    fun historyUp(): String? {
-        if (_history.isEmpty()) return null
-        historyIndex = (historyIndex - 1).coerceAtLeast(0)
-        return _history[historyIndex]
-    }
-
-    /** Navigate down in history (newer). Returns command text or empty string. */
-    fun historyDown(): String? {
-        if (_history.isEmpty()) return null
-        historyIndex = (historyIndex + 1).coerceAtMost(_history.size)
-        return if (historyIndex < _history.size) _history[historyIndex] else ""
-    }
-
-    // -- Cleanup -----------------------------------------------------
+    // -- Cleanup ---
 
     override fun onCleared() {
         session?.destroy()
+        scope.cancel()
         super.onCleared()
+    }
+
+    // -- TerminalSessionClient implementation ---
+
+    private fun createSessionClient(): TerminalSessionClient {
+        return object : TerminalSessionClient {
+            override fun onTextChanged(@NonNull changedSession: AdbTerminalSession) {
+                terminalView?.onScreenUpdated()
+            }
+
+            override fun onTitleChanged(@NonNull changedSession: AdbTerminalSession) {
+                // Could update UI title if desired
+            }
+
+            override fun onSessionFinished(@NonNull finishedSession: AdbTerminalSession) {
+                _sessionState.value = ShellSessionState.CLOSED
+            }
+
+            override fun onCopyTextToClipboard(@NonNull session: AdbTerminalSession, text: String?) {
+                // Handled by TerminalView's text selection
+            }
+
+            override fun onPasteTextFromClipboard(@Nullable session: AdbTerminalSession?) {
+                // Handled by TerminalView
+            }
+
+            override fun onBell(@NonNull session: AdbTerminalSession) {
+                // Could play a sound/vibrate
+            }
+
+            override fun onColorsChanged(@NonNull session: AdbTerminalSession) {
+                terminalView?.invalidate()
+            }
+
+            override fun onTerminalCursorStateChange(state: Boolean) {
+                // Cursor visibility change
+            }
+
+            override fun setTerminalShellPid(@NonNull session: AdbTerminalSession, pid: Int) {
+                // Not applicable for ADB sessions
+            }
+
+            override fun getTerminalCursorStyle(): Int = 0
+
+            override fun logError(tag: String?, message: String?) {
+                Log.e(tag ?: LOG_TAG, message ?: "")
+            }
+            override fun logWarn(tag: String?, message: String?) {
+                Log.w(tag ?: LOG_TAG, message ?: "")
+            }
+            override fun logInfo(tag: String?, message: String?) {
+                Log.i(tag ?: LOG_TAG, message ?: "")
+            }
+            override fun logDebug(tag: String?, message: String?) {
+                Log.d(tag ?: LOG_TAG, message ?: "")
+            }
+            override fun logVerbose(tag: String?, message: String?) {
+                Log.v(tag ?: LOG_TAG, message ?: "")
+            }
+            override fun logStackTraceWithMessage(tag: String?, message: String?, e: Exception?) {
+                Log.e(tag ?: LOG_TAG, message, e)
+            }
+            override fun logStackTrace(tag: String?, e: Exception?) {
+                Log.e(tag ?: LOG_TAG, "", e)
+            }
+        }
+    }
+
+    companion object {
+        private const val LOG_TAG = "ShellViewModel"
     }
 }

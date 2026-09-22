@@ -1,6 +1,11 @@
 package io.github.rhythmcache.dioxamine.adb.shell
 
 import android.content.Context
+import android.graphics.Typeface
+import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
@@ -12,16 +17,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.termux.terminal.AdbTerminalSession
+import com.termux.view.TerminalView
+import com.termux.view.TerminalViewClient
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 
 /**
  * Main ADB Shell screen composable.
  *
- * Wires [ShellViewModel] to the currently-active device from [AdbViewModel].
- * Automatically starts a new shell session when a device connects and
- * tears it down on disconnect or device change.
+ * Uses Termux's [TerminalView] (an Android View) wrapped in Compose [AndroidView]
+ * for full terminal emulation including cursor, colors, scrollback, text selection,
+ * and proper keyboard handling.
  */
 @Composable
 fun ShellScreen(adbViewModel: AdbViewModel) {
@@ -49,8 +58,6 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
     val activeDeviceId = adbViewModel.activeDeviceId
 
     val sessionState by shellVm.sessionState.collectAsState()
-    val outputLines = shellVm.outputLines
-    val currentLine = shellVm.currentLine
     val errorMessage by shellVm.errorMessage.collectAsState()
 
     var ctrlActive by remember { mutableStateOf(false) }
@@ -75,14 +82,30 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // -- Terminal output (fills available space) ----------------
-        ShellOutputView(
-            completedLines = outputLines,
-            currentLine = currentLine,
-            modifier = Modifier.weight(1f),
+        // -- Terminal view (Termux TerminalView wrapped in AndroidView) --
+        AndroidView(
+            factory = { ctx ->
+                TerminalView(ctx, null).apply {
+                    val monoTypeface = try {
+                        Typeface.createFromAsset(ctx.assets, "fonts/JetBrainsMono-Regular.ttf")
+                    } catch (_: Exception) {
+                        Typeface.MONOSPACE
+                    }
+                    setTextSize(14)
+                    setTypeface(monoTypeface)
+                    setTerminalViewClient(createTerminalViewClient(shellVm, { ctrlActive }, { ctrlActive = false }))
+                    isFocusable = true
+                    isFocusableInTouchMode = true
+                    shellVm.bindTerminalView(this)
+                }
+            },
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .background(androidx.compose.ui.graphics.Color(0xFF000000)),
         )
 
-        // -- Error banner ------------------------------------------
+        // -- Error banner --
         if (sessionState == ShellSessionState.ERROR && errorMessage != null) {
             Surface(
                 color = MaterialTheme.colorScheme.errorContainer,
@@ -97,35 +120,73 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
             }
         }
 
-        // -- Toolbar (Ctrl toggle, Tab, etc.) -----------------------
+        // -- Toolbar (Ctrl toggle, Tab, etc.) --
         ShellToolbar(
             sessionState = sessionState,
-            ctrlActive   = ctrlActive,
+            ctrlActive = ctrlActive,
             onToggleCtrl = { ctrlActive = !ctrlActive },
-            onTab        = { shellVm.sendTab() },
-            onClear      = { shellVm.clearBuffer() },
-            onRestart    = {
+            onTab = { shellVm.sendTab() },
+            onClear = { shellVm.clearBuffer() },
+            onRestart = {
                 val client = adbViewModel.activeClient()
                 if (client != null && !client.isClosed) {
                     shellVm.startSession(activeDeviceId, client)
                 }
             },
         )
-
-        // -- Input bar ---------------------------------------------
-        ShellInputBar(
-            onSend         = { shellVm.sendCommand(it) },
-            onHistoryUp    = { shellVm.historyUp() },
-            onHistoryDown  = { shellVm.historyDown() },
-            onRawKey       = { shellVm.sendRaw(it) },
-            ctrlActive     = ctrlActive,
-            onCtrlConsumed = { ctrlActive = false },
-            enabled        = sessionState == ShellSessionState.ACTIVE,
-        )
     }
 }
 
-// -- Empty state when no device is connected -------------------------
+/**
+ * Create a [TerminalViewClient] that bridges Termux's view callbacks
+ * to our ViewModel and Compose state.
+ */
+private fun createTerminalViewClient(
+    shellVm: ShellViewModel,
+    readCtrl: () -> Boolean,
+    consumeCtrl: () -> Unit,
+): TerminalViewClient {
+    return object : TerminalViewClient {
+        override fun onScale(scale: Float): Float = 1.0f
+
+        override fun onSingleTapUp(e: MotionEvent) {
+            // Tapping shows the keyboard — handled by TerminalView's requestFocus
+        }
+
+        override fun shouldBackButtonBeMappedToEscape(): Boolean = false
+        override fun shouldEnforceCharBasedInput(): Boolean = true
+        override fun shouldUseCtrlSpaceWorkaround(): Boolean = false
+        override fun isTerminalViewSelected(): Boolean = true
+        override fun copyModeChanged(copyMode: Boolean) {}
+
+        override fun onKeyDown(keyCode: Int, e: KeyEvent, session: AdbTerminalSession): Boolean = false
+        override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean = false
+        override fun onLongPress(event: MotionEvent): Boolean = false
+
+        override fun readControlKey(): Boolean {
+            val active = readCtrl()
+            if (active) consumeCtrl()
+            return active
+        }
+
+        override fun readAltKey(): Boolean = false
+        override fun readShiftKey(): Boolean = false
+        override fun readFnKey(): Boolean = false
+
+        override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: AdbTerminalSession): Boolean = false
+        override fun onEmulatorSet() {}
+
+        override fun logError(tag: String?, message: String?) {}
+        override fun logWarn(tag: String?, message: String?) {}
+        override fun logInfo(tag: String?, message: String?) {}
+        override fun logDebug(tag: String?, message: String?) {}
+        override fun logVerbose(tag: String?, message: String?) {}
+        override fun logStackTraceWithMessage(tag: String?, message: String?, e: Exception?) {}
+        override fun logStackTrace(tag: String?, e: Exception?) {}
+    }
+}
+
+// -- Empty state when no device is connected --
 
 @Composable
 private fun NoDeviceState() {
