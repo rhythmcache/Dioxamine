@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -30,7 +31,7 @@ import io.github.rhythmcache.dioxamine.adb.AdbViewModel
  *
  * Uses Termux's [TerminalView] (an Android View) wrapped in Compose [AndroidView]
  * for full terminal emulation including cursor, colors, scrollback, text selection,
- * and proper keyboard handling.
+ * and proper keyboard handling. Follows the application's MaterialTheme colors.
  */
 @Composable
 fun ShellScreen(adbViewModel: AdbViewModel) {
@@ -60,7 +61,13 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
     val sessionState by shellVm.sessionState.collectAsState()
     val errorMessage by shellVm.errorMessage.collectAsState()
 
+    val colorScheme = MaterialTheme.colorScheme
+    val bgColor = colorScheme.surface.toArgb()
+    val fgColor = colorScheme.onSurface.toArgb()
+    val cursorColor = colorScheme.primary.toArgb()
+
     var ctrlActive by remember { mutableStateOf(false) }
+    var altActive by remember { mutableStateOf(false) }
     var terminalViewRef by remember { mutableStateOf<TerminalView?>(null) }
 
     // Start / restart shell when the active device changes
@@ -94,7 +101,17 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                     }
                     setTextSize(14)
                     setTypeface(monoTypeface)
-                    setTerminalViewClient(createTerminalViewClient(shellVm, { this }, { ctrlActive }, { ctrlActive = false }))
+                    setTerminalThemeColors(bgColor, fgColor, cursorColor)
+                    setTerminalViewClient(
+                        createTerminalViewClient(
+                            shellVm = shellVm,
+                            terminalViewProvider = { this },
+                            readCtrl = { ctrlActive },
+                            consumeCtrl = { ctrlActive = false },
+                            readAlt = { altActive },
+                            consumeAlt = { altActive = false },
+                        ),
+                    )
                     isFocusable = true
                     isFocusableInTouchMode = true
                     shellVm.bindTerminalView(this)
@@ -109,10 +126,13 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                     }
                 }
             },
+            update = { view ->
+                view.setTerminalThemeColors(bgColor, fgColor, cursorColor)
+            },
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(androidx.compose.ui.graphics.Color(0xFF000000)),
+                .background(colorScheme.surface),
         )
 
         // -- Error banner --
@@ -130,15 +150,18 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
             }
         }
 
-        // -- Toolbar (Ctrl, ESC, Tab, ^C, navigation, keyboard toggle, etc.) --
+        // -- Termux-styled Extra Keys Toolbar --
         ShellToolbar(
             sessionState = sessionState,
             ctrlActive = ctrlActive,
+            altActive = altActive,
             onToggleCtrl = { ctrlActive = !ctrlActive },
+            onToggleAlt = { altActive = !altActive },
             onEsc = { shellVm.sendEscape() },
             onTab = { shellVm.sendTab() },
             onInterrupt = { shellVm.sendInterrupt() },
             onEof = { shellVm.sendEof() },
+            onChar = { shellVm.sendText(it) },
             onArrowUp = { shellVm.sendArrowUp() },
             onArrowDown = { shellVm.sendArrowDown() },
             onArrowLeft = { shellVm.sendArrowLeft() },
@@ -170,6 +193,8 @@ private fun createTerminalViewClient(
     terminalViewProvider: () -> TerminalView?,
     readCtrl: () -> Boolean,
     consumeCtrl: () -> Unit,
+    readAlt: () -> Boolean,
+    consumeAlt: () -> Unit,
 ): TerminalViewClient {
     return object : TerminalViewClient {
         override fun onScale(scale: Float): Float = 1.0f
@@ -201,7 +226,12 @@ private fun createTerminalViewClient(
             return active
         }
 
-        override fun readAltKey(): Boolean = false
+        override fun readAltKey(): Boolean {
+            val active = readAlt()
+            if (active) consumeAlt()
+            return active
+        }
+
         override fun readShiftKey(): Boolean = false
         override fun readFnKey(): Boolean = false
 

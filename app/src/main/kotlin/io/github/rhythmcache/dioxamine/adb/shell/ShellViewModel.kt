@@ -105,6 +105,7 @@ class ShellViewModel : ViewModel() {
     fun sendArrowDown() = sendRaw(byteArrayOf(0x1B, 0x5B, 0x42)) // \e[B
     fun sendArrowRight() = sendRaw(byteArrayOf(0x1B, 0x5B, 0x43)) // \e[C
     fun sendArrowLeft() = sendRaw(byteArrayOf(0x1B, 0x5B, 0x44)) // \e[D
+    fun sendText(text: String) = sendRaw(text.toByteArray(Charsets.UTF_8))
 
     /** Clear scrollback and redraw. */
     fun clearBuffer() {

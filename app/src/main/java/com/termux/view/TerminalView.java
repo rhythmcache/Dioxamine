@@ -994,6 +994,7 @@ public final class TerminalView extends View {
             mTermSession.updateSize(newColumns, newRows, (int) mRenderer.getFontWidth(), mRenderer.getFontLineSpacing());
             mEmulator = mTermSession.getEmulator();
             mClient.onEmulatorSet();
+            applyCustomColors();
 
             // Update mTerminalCursorBlinkerRunnable inner class mEmulator on session change
             if (mTerminalCursorBlinkerRunnable != null)
@@ -1017,11 +1018,36 @@ public final class TerminalView extends View {
         }
     }
 
+    private int mCustomBackgroundColor = 0xFF000000;
+    private int mCustomForegroundColor = 0xFFFFFFFF;
+    private int mCustomCursorColor = 0xFFFFFFFF;
+    private boolean mHasCustomColors = false;
+
+    public void setTerminalThemeColors(int backgroundColor, int foregroundColor, int cursorColor) {
+        mCustomBackgroundColor = backgroundColor;
+        mCustomForegroundColor = foregroundColor;
+        mCustomCursorColor = cursorColor;
+        mHasCustomColors = true;
+        applyCustomColors();
+        invalidate();
+    }
+
+    public void applyCustomColors() {
+        if (mHasCustomColors && mEmulator != null) {
+            mEmulator.mColors.mCurrentColors[com.termux.terminal.TextStyle.COLOR_INDEX_BACKGROUND] = mCustomBackgroundColor;
+            mEmulator.mColors.mCurrentColors[com.termux.terminal.TextStyle.COLOR_INDEX_FOREGROUND] = mCustomForegroundColor;
+            mEmulator.mColors.mCurrentColors[com.termux.terminal.TextStyle.COLOR_INDEX_CURSOR] = mCustomCursorColor;
+        }
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         if (mEmulator == null) {
-            canvas.drawColor(0XFF000000);
+            canvas.drawColor(mHasCustomColors ? mCustomBackgroundColor : 0XFF000000);
         } else {
+            applyCustomColors();
+            canvas.drawColor(mEmulator.mColors.mCurrentColors[com.termux.terminal.TextStyle.COLOR_INDEX_BACKGROUND]);
+
             // render the terminal view and highlight any selected text
             int[] sel = mDefaultSelectors;
             if (mTextSelectionCursorController != null) {
