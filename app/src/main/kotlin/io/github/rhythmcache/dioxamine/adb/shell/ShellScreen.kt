@@ -102,7 +102,10 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                     post {
                         requestFocus()
                         val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                        imm?.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
+                        val shown = imm?.showSoftInput(this, 0) == true
+                        if (!shown) {
+                            imm?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+                        }
                     }
                 }
             },
@@ -175,7 +178,10 @@ private fun createTerminalViewClient(
             terminalViewProvider()?.let { view ->
                 view.requestFocus()
                 val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                val shown = imm?.showSoftInput(view, 0) == true
+                if (!shown) {
+                    imm?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+                }
             }
         }
 

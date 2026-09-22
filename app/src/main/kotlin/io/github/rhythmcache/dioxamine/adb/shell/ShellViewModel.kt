@@ -142,7 +142,11 @@ class ShellViewModel : ViewModel() {
             }
 
             override fun onCopyTextToClipboard(@NonNull session: AdbTerminalSession, text: String?) {
-                // Handled by TerminalView's text selection
+                if (text.isNullOrEmpty()) return
+                terminalView?.context?.let { ctx ->
+                    val clipboard = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                    clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("terminal", text))
+                }
             }
 
             override fun onPasteTextFromClipboard(@Nullable session: AdbTerminalSession?) {

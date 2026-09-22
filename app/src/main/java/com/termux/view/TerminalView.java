@@ -151,6 +151,9 @@ public final class TerminalView extends View {
                     mClient.onSingleTapUp(event);
                     return true;
                 }
+                if (!scrolledWithFinger && !isSelectingText()) {
+                    onSingleTapUp(event);
+                }
                 scrolledWithFinger = false;
                 return false;
             }
@@ -233,13 +236,7 @@ public final class TerminalView extends View {
 
             @Override
             public boolean onDown(float x, float y) {
-                // Why is true not returned here?
-                // https://developer.android.com/training/gestures/detector.html#detect-a-subset-of-supported-gestures
-                // Although setting this to true still does not solve the following errors when long pressing in terminal view text area
-                // ViewDragHelper: Ignoring pointerId=0 because ACTION_DOWN was not received for this pointer before ACTION_MOVE
-                // Commenting out the call to mGestureDetector.onTouchEvent(event) in GestureAndScaleRecognizer#onTouchEvent() removes
-                // the error logging, so issue is related to GestureDetector
-                return false;
+                return true;
             }
 
             @Override

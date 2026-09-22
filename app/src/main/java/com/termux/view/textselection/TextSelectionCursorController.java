@@ -1,5 +1,6 @@
 package com.termux.view.textselection;
 
+import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Rect;
@@ -135,12 +136,32 @@ public class TextSelectionCursorController implements CursorController {
                 switch (item.getItemId()) {
                     case ACTION_COPY:
                         String selectedText = getSelectedText();
-                        terminalView.mTermSession.onCopyTextToClipboard(selectedText);
+                        if (selectedText != null) {
+                            ClipboardManager clipboardMgr = (ClipboardManager) terminalView.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                            if (clipboardMgr != null) {
+                                clipboardMgr.setPrimaryClip(ClipData.newPlainText("terminal", selectedText));
+                            }
+                            if (terminalView.mTermSession != null) {
+                                terminalView.mTermSession.onCopyTextToClipboard(selectedText);
+                            }
+                        }
                         terminalView.stopTextSelectionMode();
                         break;
                     case ACTION_PASTE:
                         terminalView.stopTextSelectionMode();
-                        terminalView.mTermSession.onPasteTextFromClipboard();
+                        ClipboardManager clipboardMgrPaste = (ClipboardManager) terminalView.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                        if (clipboardMgrPaste != null) {
+                            ClipData clipData = clipboardMgrPaste.getPrimaryClip();
+                            if (clipData != null && clipData.getItemCount() > 0) {
+                                CharSequence text = clipData.getItemAt(0).coerceToText(terminalView.getContext());
+                                if (!TextUtils.isEmpty(text) && terminalView.mEmulator != null) {
+                                    terminalView.mEmulator.paste(text.toString());
+                                }
+                            }
+                        }
+                        if (terminalView.mTermSession != null) {
+                            terminalView.mTermSession.onPasteTextFromClipboard();
+                        }
                         break;
                     case ACTION_MORE:
                         // We first store the selected text in case TerminalViewClient needs the
