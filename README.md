@@ -128,6 +128,7 @@ We want Dioxamine to be accessible in as many languages as possible.
 - [x] Hindi (`hi`) — [@rhythmcache](https://github.com/rhythmcache)
 - [x] Russian (`ru`) — [@LorianL98](https://github.com/LorianL98)
 - [x] German (`de`) — [@ctrl-mietze](https://github.com/ctrl-mietze)
+- [x] Persian (`fa`) — [@MrMR-711](https://github.com/MrMR-711)
 
 ![Translation Coverage](badges/coverage.svg)
 
