@@ -1,0 +1,904 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dioxamine</string>
+
+    <!-- Navigation Tabs -->
+    <string name="tab_adb">ADB</string>
+    <string name="tab_scrcpy">scrcpy</string>
+    <string name="tab_fastboot">Fastboot</string>
+    <string name="tab_plugins">پلاگین‌ها</string>
+    <string name="tab_settings">تنظیمات</string>
+
+    <!-- ADB Tab -->
+    <string name="adb_subtab_builtin">داخلی</string>
+    <string name="adb_subtab_adb_shell">ADB Shell</string>
+    <string name="adb_subtab_plugins">پلاگین‌ها</string>
+    
+    <string name="adb_shell_title">پشتیبانی از ADB Shell</string>
+    <string name="feature_coming_soon">این قابلیت به‌زودی اضافه می‌شود.</string>
+    <string name="adb_shell_info_dialog_title">توجه درباره ADB Shell</string>
+    <string name="adb_shell_info_dialog_msg_before_link">"این شل داخلی یک ترمینال ساده برای اجرای دستورات اولیه است. این بخش امکانات محدودی دارد و شبیه‌ساز کامل ترمینال نیست. برای تجربه کامل‌تر یا پیشرفته‌تر ترمینال، توصیه می‌شود از "</string>
+    <string name="adb_shell_info_dialog_link">پلاگین ترمینال</string>
+    <string name="adb_shell_info_dialog_msg_after_link"> استفاده کنید.</string>
+    <string name="adb_shell_dont_show_again">"دیگر نشان داده نشود"</string>
+
+    <string name="no_devices_connected">هیچ دستگاهی متصل نیست</string>
+    <plurals name="connected_devices_count">
+        <item quantity="one">%1$d دستگاه متصل است</item>
+        <item quantity="other">%1$d دستگاه متصل است</item>
+    </plurals>
+    <string name="cd_add_device">افزودن دستگاه</string>
+    <string name="cd_expand_collapse">گسترش یا بستن</string>
+    <string name="no_devices_added_hint">هنوز دستگاهی افزوده نشده است. برای اتصال به دستگاه، \'+\' را لمس کنید.</string>
+    
+    <string name="dialog_add_tcp_title">افزودن دستگاه TCP</string>
+    <string name="label_ip_address">آدرس IP</string>
+    <string name="label_port">پورت</string>
+    <string name="btn_connect">اتصال</string>
+    <string name="btn_cancel">لغو</string>
+
+    <string name="status_connected">متصل شد</string>
+    <string name="status_connected_version">متصل شد &#8226; اندروید %1$s</string>
+    <string name="status_connected_api">متصل شد (API %1$d)</string>
+    <string name="status_connected_version_api">متصل شد &#8226; اندروید %1$s (API %2$d)</string>
+    <string name="status_connecting">در حال اتصال...</string>
+    <string name="cd_remove">حذف</string>
+
+    <string name="action_device_info_title">اطلاعات دستگاه</string>
+    <string name="action_device_info_desc">مشاهده مشخصات دقیق سخت‌افزار، نسخه، باتری، اطلاعات پردازنده، رزولوشن، زمان روشن بودن و بسته‌های نصب‌شده.</string>
+    <string name="dialog_device_info_title">اطلاعات دستگاه</string>
+    <string name="btn_close">بستن</string>
+    <string name="cd_open_details">باز کردن جزئیات</string>
+    <string name="action_device_model">مدل دستگاه</string>
+    <string name="action_android_version">نسخه اندروید</string>
+    <string name="action_battery_info">اطلاعات باتری</string>
+    <string name="action_serial_number">شماره سریال</string>
+    <string name="action_cpu_info">اطلاعات پردازنده (CPU)</string>
+    <string name="action_uptime">زمان روشن بودن (Uptime)</string>
+    <string name="action_screen_resolution">رزولوشن صفحه</string>
+    <string name="action_installed_packages">تعداد بسته‌های نصب‌شده</string>
+    <string name="connect_device_warning">برای استفاده از این قابلیت‌ها ابتدا به یک دستگاه متصل شوید.</string>
+
+    <string name="cd_refresh">تازه‌سازی</string>
+    <string name="cd_collapse">بستن</string>
+    <string name="cd_expand">گسترش</string>
+    <string name="status_running_command">در حال اجرای دستور...</string>
+    <string name="tap_refresh_hint">برای اجرا روی تازه‌سازی بزنید</string>
+
+    <string name="plugins_title">پلاگین‌های سفارشی</string>
+    <string name="plugins_description">"پلاگین‌ها به شما امکان می‌دهند افزونه‌های سفارشی نوشته‌شده توسط خودتان یا سایر توسعه‌دهندگان را نصب کنید."</string>
+    <string name="plugins_docs_prompt">"برای مستندات پلاگین، به "</string>
+    <string name="plugins_docs_link">"مستندات پلاگین"</string>
+    <string name="plugins_coming_soon">نوشتن پلاگین‌های اختصاصی - به‌زودی.</string>
+    <string name="plugins_no_plugins">هیچ پلاگینی نصب نشده است</string>
+    <string name="plugins_cd_install">نصب پلاگین</string>
+    <string name="plugins_msg_installed">%1$s نصب شد</string>
+    <string name="plugins_msg_updated">%1$s به %2$s به‌روزرسانی شد</string>
+    <string name="plugins_msg_rejected">نسخه نصب‌شده جدیدتر یا یکسان است</string>
+    <string name="plugins_msg_error">نصب ناموفق بود: %1$s</string>
+
+    <!-- Plugin Permission Dialog Strings -->
+    <string name="btn_allow">اجازه دادن</string>
+    <string name="btn_deny">رد کردن</string>
+    <string name="plugin_perm_dialog_title">%1$s درخواست مجوز دارد</string>
+    <string name="plugin_perm_shell">اجرای دستورات شل در دستگاه متصل</string>
+    <string name="plugin_perm_push">آپلود فایل‌ها به دستگاه متصل</string>
+    <string name="plugin_perm_pull">دانلود فایل‌ها از دستگاه متصل</string>
+    <string name="plugin_perm_install">نصب بسته‌ها روی دستگاه متصل</string>
+    <string name="plugin_perm_forward">ایجاد فوروارد پورت شبکه به/از دستگاه متصل</string>
+    <string name="plugin_perm_reverse">ایجاد نگاشت معکوس پورت از دستگاه متصل به این دستگاه</string>
+    <string name="plugin_perm_network">دسترسی به شبکه (اینترنت، شبکه محلی و سرویس‌های لوکال‌هاست)</string>
+    <string name="plugin_perm_fastboot">دسترسی به رابط بوت‌لودر USB فست‌بوت برای اجرای دستورات، فلش پارتیشن‌ها و راه‌اندازی مجدد</string>
+    <string name="plugin_dialog_attribution">پلاگین: %1$s</string>
+    <string name="plugin_open_browser_title">باز کردن پیوند خارجی</string>
+    <string name="plugin_open_browser_msg">این پلاگین می‌خواهد پیوند خارجی زیر را باز کند:\n\n%1$s\n\nآیا می‌خواهید ادامه دهید؟</string>
+    <string name="plugin_open_browser_btn_open">باز کردن</string>
+    <string name="plugin_runner_not_found">پلاگین پیدا نشد</string>
+    <string name="plugin_menu_info">اطلاعات</string>
+    <string name="plugin_menu_uninstall">حذف نصب</string>
+    <string name="plugin_info_title">جزئیات پلاگین</string>
+    <string name="plugin_info_id">شناسه: %1$s</string>
+    <string name="plugin_info_version">نسخه: %1$s</string>
+    <string name="plugin_info_author">توسعه‌دهنده: %1$s</string>
+    <string name="plugin_info_entry">نقطه ورود: %1$s</string>
+    <string name="plugin_info_permissions">مجوزها: %1$s</string>
+    <string name="plugin_uninstall_title">حذف نصب پلاگین</string>
+    <string name="plugin_uninstall_confirm">آیا مطمئن هستید که می‌خواهید \"%1$s\" را حذف کنید؟</string>
+    <string name="plugin_msg_uninstalled">پلاگین \"%1$s\" حذف شد</string>
+    <string name="cd_more_options">گزینه‌های بیشتر</string>
+
+    <!-- Plugin Settings & Permission Manager Strings -->
+    <string name="settings_plugins_title">پلاگین‌ها</string>
+    <string name="settings_plugins_desc">اشکال‌زدایی وب‌ویو و مجوزها</string>
+    <string name="settings_plugins_webview_debug_title">اشکال‌زدایی WebView</string>
+    <string name="settings_plugins_webview_debug_desc">اجازه بازرسی از طریق Chrome DevTools در chrome://inspect</string>
+    <string name="settings_plugins_take_effect_hint">تغییرات با اجرای بعدی پلاگین اعمال خواهند شد</string>
+    <string name="settings_plugins_permissions_title">مجوزهای پلاگین</string>
+    <string name="settings_plugins_permissions_desc">مدیریت و لغو مجوزهای پلاگین‌های نصب‌شده</string>
+    <string name="settings_plugins_btn_manage">مدیریت</string>
+    <string name="settings_plugins_no_permissions">مجوزی تعریف نشده است</string>
+    <string name="plugin_policy_ask_default">پرسش در هر بار (پیش‌فرض)</string>
+    <string name="plugin_policy_ask">پرسش در هر بار</string>
+    <string name="plugin_policy_always_allow">همیشه مجاز</string>
+    <string name="plugin_policy_always_deny">همیشه رد شود</string>
+    <string name="btn_reset_all">بازنشانی همه</string>
+
+    <!-- Fastboot Tab -->
+    <string name="fastboot_title">پشتیبانی از Fastboot</string>
+    <string name="fastboot_no_device_status">ردیاب USB فعال است • دستگاه Fastboot متصل نیست</string>
+
+    <!-- Scrcpy Tab -->
+    <string name="scrcpy_no_device_title">دستگاهی انتخاب نشده است</string>
+    <string name="scrcpy_no_device_desc">یک دستگاه را از نوار بالایی متصل و انتخاب کنید تا آینه‌کردن صفحه با scrcpy پیکربندی و آغاز شود.</string>
+    <string name="scrcpy_invalid_config_prefix">پیکربندی نامعتبر:\n</string>
+    <string name="scrcpy_mirroring_idle">آینه‌کردن غیرفعال است</string>
+    <string name="scrcpy_title">آینه‌کردن صفحه با scrcpy</string>
+    <string name="scrcpy_target">هدف: %1$s</string>
+    <string name="scrcpy_target_version">هدف: %1$s • اندروید %2$s</string>
+    <string name="scrcpy_start_mirroring">شروع آینه‌کردن</string>
+    <string name="scrcpy_stop_mirroring">توقف آینه‌کردن</string>
+    <string name="scrcpy_remember_settings">به‌خاطرسپردن برای این دستگاه</string>
+    <string name="scrcpy_btn_reset_defaults">بازنشانی به پیش‌فرض</string>
+    <string name="scrcpy_settings_reset">تنظیمات به حالت پیش‌فرض بازنشانی شد</string>
+    <string name="scrcpy_tab_configurator">پیکربندی</string>
+    <string name="scrcpy_tab_logs">لاگ‌ها</string>
+    <string name="scrcpy_logs_empty">هنوز لاگی برای scrcpy ثبت نشده است.</string>
+
+    <string name="section_video_source">منبع تصویر</string>
+    <string name="video_source_screen">صفحه‌نمایش</string>
+    <string name="video_source_camera">دوربین</string>
+    <string name="camera_source_subtitle_req">نیازمند اندروید 12+ (API 31). دستگاه دارای API %1$d است.</string>
+
+    <string name="section_camera">دوربین</string>
+    <string name="camera_facing_back">پشت</string>
+    <string name="camera_facing_front">جلو</string>
+    <string name="camera_facing_external">خارجی</string>
+    <string name="camera_high_speed_title">حالت سرعت بالا (High Speed)</string>
+    <string name="camera_high_speed_subtitle">ضبط با نرخ 120+ فریم (نیاز به پشتیبانی دستگاه)</string>
+    <string name="label_high_speed_fps">نرخ فریم بالا</string>
+    <string name="label_fps_format">%1$d فریم بر ثانیه</string>
+    <string name="label_high_speed_res">رزولوشن سرعت بالا</string>
+    <string name="res_720p">720p</string>
+    <string name="res_1080p">1080p</string>
+    <string name="res_480p">480p</string>
+    <string name="res_auto">خودکار</string>
+
+    <string name="section_video">ویدیو</string>
+    <string name="video_enable_title">فعال‌سازی ویدیو</string>
+    <string name="video_enable_subtitle">استریم نمایشگر یا تصویر دوربین</string>
+    <string name="scrcpy_audio_only_banner">استریم صدا فعال است</string>
+    <string name="scrcpy_audio_only_desc">حالت فقط صدا (استریم ویدیو غیرفعال است)</string>
+    <string name="label_resolution">حداکثر اندازه (Max Size)</string>
+    <string name="label_add_chip">+ افزودن</string>
+    <string name="dialog_add_max_size_title">افزودن اندازه سفارشی</string>
+    <string name="dialog_add_max_size_msg">حداکثر اندازه را به پیکسل وارد کنید (مثلاً 1440 یا 2160):</string>
+    <string name="dialog_add_fps_title">افزودن نرخ فریم سفارشی</string>
+    <string name="dialog_add_fps_msg">نرخ فریم را بر حسب FPS وارد کنید (مثلاً 90 یا 144):</string>
+    <string name="dialog_add_bitrate_title">افزودن نرخ بیت سفارشی</string>
+    <string name="dialog_add_bitrate_msg">نرخ بیت را بر حسب مگابیت بر ثانیه (Mbps) وارد کنید (مثلاً 16 یا 25):</string>
+    <string name="btn_add">افزودن</string>
+
+    <string name="settings_scrcpy_title">scrcpy</string>
+    <string name="settings_scrcpy_subtitle">پیکربندی گزینه‌های آینه‌کردن با scrcpy</string>
+    <string name="settings_scrcpy_allow_custom_title">اجازه مقادیر سفارشی در پیکربندی</string>
+    <string name="settings_scrcpy_allow_custom_subtitle">امکان افزودن گزینه‌های سفارشی برای حداکثر اندازه، نرخ فریم و نرخ بیت</string>
+    <string name="camera_discovering">در حال بررسی قابلیت‌های دوربین...</string>
+    <string name="label_frame_rate">نرخ فریم</string>
+    <string name="label_bitrate">نرخ بیت (Bitrate)</string>
+    <string name="label_mbps_format">%1$d مگابیت بر ثانیه</string>
+    <string name="label_codec">کدک</string>
+    <string name="codec_h264">H.264</string>
+    <string name="codec_h265">H.265</string>
+    <string name="codec_av1">AV1</string>
+    <string name="codec_vp8">VP8</string>
+    <string name="codec_vp9">VP9</string>
+    <string name="label_orientation">جهت‌گیری</string>
+    <string name="orient_normal">عادی</string>
+    <string name="orient_90">۹۰ درجه</string>
+    <string name="orient_180">۱۸۰ درجه</string>
+    <string name="orient_270">۲۷۰ درجه</string>
+    <string name="orient_flip_0">آینه‌ای افقی</string>
+    <string name="orient_flip_90">آینه‌ای ۹۰ درجه</string>
+    <string name="orient_flip_180">آینه‌ای ۱۸۰ درجه</string>
+    <string name="orient_flip_270">آینه‌ای ۲۷۰ درجه</string>
+
+    <string name="section_audio">صدا</string>
+    <string name="audio_enable_title">فعال‌سازی صدا</string>
+    <string name="audio_enable_subtitle_ok">استریم صدای دستگاه</string>
+    <string name="audio_enable_subtitle_req">نیازمند اندروید 11+ (API 30). دستگاه دارای API %1$d است.</string>
+    <string name="label_audio_source">منبع</string>
+    <string name="audio_source_device">صدای دستگاه</string>
+    <string name="audio_source_mic">میکروفون</string>
+    <string name="label_audio_format">فرمت</string>
+    <string name="codec_opus">Opus</string>
+    <string name="codec_aac">AAC</string>
+    <string name="codec_flac">FLAC</string>
+    <string name="audio_dup_title">بی‌صدا نکردن دستگاه</string>
+    <string name="audio_dup_subtitle_ok">بلندگوهای دستگاه متصل فعال بمانند</string>
+    <string name="audio_dup_subtitle_req">نیازمند اندروید 13+ (API 33)</string>
+
+    <string name="section_display">نمایشگر و کنترل‌ها</string>
+    <string name="display_screen_off_title">خاموش کردن صفحه دستگاه</string>
+    <string name="display_screen_off_subtitle">خاموش نگه‌داشتن صفحه دستگاه در حین آینه‌کردن</string>
+    <string name="display_floating_nav_title">نوار ناوبری شناور</string>
+    <string name="display_floating_nav_subtitle">نمایش دکمه‌های عمودی بازگشت، خانه و برنامه‌های اخیر روی صفحه</string>
+    <string name="display_bind_volume_title">هدایت کلیدهای صدا</string>
+    <string name="display_bind_volume_subtitle">ارسال کلیدهای فیزیکی صدا به دستگاه متصل</string>
+
+    <string name="cd_toggle_torch">تغییر وضعیت چراغ‌قوه</string>
+    <string name="cd_rotate_device">چرخش دستگاه</string>
+    <string name="cd_toggle_fullscreen">حالت تمام‌صفحه</string>
+    <string name="cd_stop_mirroring">توقف آینه‌کردن</string>
+    <string name="cd_expand_controls">نمایش کنترل‌ها</string>
+    <string name="cd_collapse_controls">پنهان کردن کنترل‌ها</string>
+    <string name="cd_nav_back">بازگشت</string>
+    <string name="cd_nav_home">خانه</string>
+    <string name="cd_nav_recents">برنامه‌های اخیر</string>
+
+    <!-- Settings Tab -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_key_title">ADB</string>
+    <string name="settings_adb_subtitle">مدیریت کلیدها و تنظیمات اتصال محلی</string>
+    <string name="settings_adb_detect_localhost_title">شناسایی لوکال‌هاست</string>
+    <string name="settings_adb_detect_localhost_subtitle">بررسی وجود سرور محلی فعال ADB و درخواست اتصال</string>
+    <string name="settings_adb_autoconnect_localhost_title">اتصال خودکار به لوکال‌هاست</string>
+    <string name="settings_adb_autoconnect_localhost_subtitle">اتصال خودکار در صورت شناسایی ADB محلی بدون پرسش</string>
+    <string name="settings_adb_auth_section">کلید احراز هویت</string>
+    <string name="settings_key_desc">مدیریت جفت‌کلید RSA برای احراز هویت این برنامه با دستگاه‌ها.</string>
+    <string name="settings_fingerprint_label">اثرانگشت کلید (Fingerprint):</string>
+    <string name="settings_no_key">هنوز کلیدی تولید نشده است.</string>
+    <string name="settings_btn_regen_key">تولید مجدد کلید احراز هویت</string>
+    <string name="settings_btn_load_custom_key">بارگذاری کلید سفارشی</string>
+    <string name="dialog_regen_key_title">تولید مجدد کلید؟</string>
+    <string name="dialog_regen_key_msg">این کار جفت‌کلید فعلی ADB را حذف کرده و کلید جدیدی می‌سازد. باید دسترسی را مجدداً در تمام دستگاه‌های قبلی تأیید کنید.</string>
+    <string name="btn_regenerate">تولید مجدد</string>
+
+    <string name="settings_language_title">زبان</string>
+    <string name="settings_language_system_default">پیش‌فرض سیستم</string>
+    <string name="settings_language_contribute">مشارکت در ترجمه</string>
+
+    <string name="settings_theme_title">پوسته</string>
+    <string name="theme_system">پیش‌فرض دستگاه</string>
+    <string name="theme_light">روشن</string>
+    <string name="theme_dark">تاریک</string>
+    <string name="theme_amoled">AMOLED (مشکی خالص)</string>
+    <string name="settings_theme_dynamic_title">رنگ‌های پویا (Material You)</string>
+    <string name="settings_theme_dynamic_desc">استفاده از رنگ‌های تصویر زمینه سیستم</string>
+    <string name="settings_theme_dynamic_req">نیازمند اندروید 12+</string>
+    <string name="settings_theme_mode_header">حالت پوسته</string>
+
+    <string name="settings_logs_title">لاگ‌های برنامه</string>
+    <string name="settings_logs_subtitle">خروجی گرفتن یا پاک‌سازی لاگ‌های پایدار برنامه</string>
+    <string name="settings_enable_logging_title">فعال‌سازی ثبت وقایع (Logging)</string>
+    <string name="settings_enable_logging_subtitle">ثبت رخدادهای داخلی برنامه در حافظه و دیسک</string>
+    <string name="settings_btn_export_all_logs">خروجی لاگ‌ها</string>
+    <string name="settings_btn_clear_logs">پاک کردن لاگ‌ها</string>
+    <string name="dialog_clear_logs_title">پاک‌سازی تمام لاگ‌ها؟</string>
+    <string name="dialog_clear_logs_msg">این کار تمام فایل‌های لاگ ذخیره‌شده را برای همیشه از حافظه دیسک پاک کرده و بافرهای حافظه موقت را خالی می‌کند.</string>
+    <string name="btn_clear">پاک کردن</string>
+    <string name="msg_logs_cleared">تمام فایل‌ها و بافرهای لاگ پاک شدند.</string>
+    <string name="msg_logs_exported">لاگ‌ها با موفقیت ذخیره شدند.</string>
+
+    <!-- ViewModel State / Error Messages -->
+    <string name="msg_new_key_generated">کلید جدید تولید شد.</string>
+    <string name="msg_custom_key_loaded">کلید سفارشی بارگذاری شد.</string>
+    <string name="err_usb_connection_lost">اتصال USB قطع شد. لطفاً دوباره متصل کنید.</string>
+    <string name="err_connection_lost">ارتباط قطع شد: %1$s</string>
+    <string name="err_connection_failed">اتصال ناموفق بود</string>
+    <string name="err_usb_connection_failed">اتصال USB ناموفق بود</string>
+    <string name="err_failed_prefix">خطا: %1$s</string>
+    <string name="err_shell_format">خطا (%1$d): %2$s</string>
+    <string name="err_command_timed_out">مهلت زمان دستور به پایان رسید - ممکن است اتصال دستگاه قطع شده باشد</string>
+
+    <!-- File Manager -->
+    <string name="file_manager_title">مدیریت فایل‌های دستگاه</string>
+    <string name="file_manager_subtitle">مرور، مشاهده، آپلود، دانلود و مدیریت فایل‌ها در دستگاه متصل</string>
+    <string name="file_manager_empty">پوشه خالی است</string>
+    <string name="file_manager_parent_dir">..</string>
+    <string name="file_manager_search_hint">جستجو در این پوشه…</string>
+    <string name="file_manager_write_denied">امکان نوشتن در این پوشه وجود ندارد (دسترسی رد شد)</string>
+    <string name="file_manager_action_properties">مشاهده مشخصات</string>
+    <string name="file_manager_action_download">دانلود (Pull)</string>
+    <string name="file_manager_action_rename">تغییر نام / انتقال</string>
+    <string name="file_manager_action_delete">حذف</string>
+    <string name="file_manager_properties_title">مشخصات فایل</string>
+    <string name="file_manager_new_folder">پوشه جدید</string>
+    <string name="file_manager_create_folder_title">ایجاد پوشه جدید</string>
+    <string name="file_manager_create_folder_msg">نام پوشه جدید را وارد کنید:</string>
+    <string name="file_manager_rename_title">تغییر نام مورد</string>
+    <string name="file_manager_rename_msg">مسیر یا نام جدید را وارد کنید:</string>
+    <string name="file_manager_delete_title">حذف مورد؟</string>
+    <string name="file_manager_delete_msg">آیا مطمئن هستید که می‌خواهید "%1$s" را حذف کنید؟ این عمل غیرقابل بازگشت است.</string>
+    <string name="file_manager_downloading_folder">در حال دانلود پوشه…</string>
+
+    <!-- Adb / Device Connect / Modes -->
+    <string name="err_invalid_ip_format">قالب آدرس IPv4 نامعتبر است</string>
+    <string name="err_invalid_port_range">شماره پورت باید عددی بین ۱ تا ۶۵۵۳۵ باشد</string>
+    <string name="mode_sideload">حالت Sideload</string>
+    <string name="mode_recovery">حالت ریکاوری (Recovery)</string>
+    <string name="mode_rescue">حالت Rescue</string>
+    <string name="status_connected_mode">متصل [%1$s]</string>
+    <string name="status_connected_recovery_version_api">متصل [حالت ریکاوری &#8226; اندروید %1$s (API %2$d)]</string>
+    <string name="status_connected_recovery_version">متصل [حالت ریکاوری &#8226; اندروید %1$s]</string>
+    <string name="status_connected_recovery_api">متصل [حالت ریکاوری &#8226; API %1$d]</string>
+    <string name="sideload_description">دستگاه در حالت Sideload است. فایل زیپ OTA را برای فلش انتخاب کنید.</string>
+    <string name="btn_choose_file">انتخاب فایل</string>
+    <string name="btn_starting">در حال شروع...</string>
+    <string name="btn_sideload">سایدلود (Sideload)</string>
+    <string name="msg_flash_complete">فلش کامل شد</string>
+    <string name="btn_done">انجام شد</string>
+    <string name="btn_try_again">تلاش مجدد</string>
+    <string name="btn_wipe_userdata">پاک کردن داده‌های کاربر (Wipe Userdata)</string>
+    <string name="dialog_wipe_userdata_title">پاک کردن داده‌های کاربر؟</string>
+    <string name="dialog_wipe_userdata_msg">این کار تمام داده‌های کاربر در دستگاه را پاک خواهد کرد. این عمل غیرقابل بازگشت است.</string>
+    <string name="btn_wipe">پاک کردن (Wipe)</string>
+
+    <!-- Scrcpy Additions -->
+    <string name="dialog_add_audio_bitrate_title">افزودن نرخ بیت صدای سفارشی</string>
+    <string name="dialog_add_audio_bitrate_msg">نرخ بیت صدا را به کیلوبیت بر ثانیه وارد کنید (مثلاً 192, 256, 320):</string>
+    <string name="scrcpy_mirroring_failed">آینه‌کردن صفحه ناموفق بود</string>
+    <string name="btn_dismiss">بستن</string>
+    <string name="label_audio_bitrate">نرخ بیت صدا</string>
+    <string name="codec_raw_pcm">خام (RAW PCM)</string>
+    <string name="err_invalid_positive_number">لطفاً یک عدد مثبت و معتبر وارد کنید</string>
+    <string name="scrcpy_mode_not_supported">scrcpy در حالت %1$s پشتیبانی نمی‌شود</string>
+    <string name="scrcpy_mode_not_supported_desc">آینه‌کردن صفحه به حالت استاندارد ADB نیاز دارد و در وضعیت %1$s دستگاه قابل استفاده نیست.</string>
+    <string name="scrcpy_server_start_failed">راه‌اندازی سرور scrcpy در دستگاه مقصد ناموفق بود. دسترسی‌ها یا سازگاری دستگاه را بررسی کنید.</string>
+    <string name="scrcpy_server_terminated">فرایند سرور scrcpy در دستگاه مقصد به‌طور غیرمنتظره متوقف شد.</string>
+
+    <!-- Local ADB Detection -->
+    <string name="local_adb_detected_title">ADB محلی شناسایی شد</string>
+    <string name="local_adb_detected_msg">برنامه Dioxamine متوجه شد که ADB بی‌سیم محلی روی پورت %1$d فعال است. آیا مایلید به این دستگاه متصل شوید؟</string>
+
+    <!-- File Manager Additions -->
+    <string name="file_manager_push_file">ارسال فایل (Push)</string>
+    <string name="file_manager_upload_failed">آپلود برای %1$s ناموفق بود: %2$s</string>
+    <string name="file_manager_download_success">%1$s با موفقیت دانلود شد</string>
+    <string name="file_manager_download_failed">دانلود ناموفق بود: %1$s</string>
+    <string name="file_manager_folder_download_unsupported">دانلود پوشه از طریق ذخیره تک‌فایل پشتیبانی نمی‌شود</string>
+    <string name="file_manager_prop_name">نام</string>
+    <string name="file_manager_prop_path">مسیر</string>
+    <string name="file_manager_prop_type">نوع</string>
+    <string name="file_manager_prop_link_target">مقصد پیوند</string>
+    <string name="file_manager_prop_size">اندازه</string>
+    <string name="file_manager_prop_mode">دسترسی (Mode)</string>
+    <string name="file_manager_prop_type_symlink">پیوند نمادین (%1$s)</string>
+    <string name="file_manager_prop_type_dir">پوشه</string>
+    <string name="file_manager_prop_type_file">فایل</string>
+    <string name="file_manager_retry">تلاش مجدد</string>
+    <string name="file_manager_create">ایجاد</string>
+    <string name="file_manager_rename">تغییر نام</string>
+
+    <!-- Package Manager -->
+    <string name="pkg_manager_title">مدیریت برنامه‌ها</string>
+    <string name="pkg_manager_subtitle">مدیریت برنامه‌های نصب‌شده، استخراج APK/APKS، فعال/غیرفعال‌سازی یا نصب بسته‌ها</string>
+    <string name="pkg_manager_search_hint">جستجوی برنامه‌ها با نام یا شناسه بسته…</string>
+    <string name="pkg_manager_filter_all">همه برنامه‌ها</string>
+    <string name="pkg_manager_filter_user">برنامه‌های کاربر</string>
+    <string name="pkg_manager_filter_system">برنامه‌های سیستمی</string>
+    <string name="pkg_manager_filter_disabled">برنامه‌های غیرفعال</string>
+    <string name="pkg_manager_action_enable">فعال کردن برنامه</string>
+    <string name="pkg_manager_action_disable">غیرفعال کردن برنامه</string>
+    <string name="pkg_manager_action_pull">استخراج فایل نصبی (Pull APK)</string>
+    <string name="pkg_manager_action_uninstall">حذف نصب برنامه</string>
+    <string name="pkg_manager_action_force_stop">توقف اجباری</string>
+    <string name="pkg_manager_action_permissions">اعطای مجوزها</string>
+    <string name="pkg_manager_action_info">اطلاعات برنامه</string>
+    <string name="pkg_manager_dialog_permissions_title">اعطای مجوزها</string>
+    <string name="pkg_manager_custom_perm_placeholder">مثال: android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="pkg_manager_perm_prompt">نام مجوزی که می‌خواهید اعطا کنید را وارد نمایید:</string>
+    <string name="pkg_manager_perm_label">نام مجوز</string>
+    <string name="pkg_manager_perm_manifest_note">نکته: برنامه مقصد باید این مجوز را در AndroidManifest.xml خود تعریف کرده باشد.</string>
+    <string name="pkg_manager_perm_invalid_format">قالب مجوز نامعتبر است (مثال: android.permission.WRITE_SECURE_SETTINGS)</string>
+    <string name="pkg_manager_btn_grant">اعطا</string>
+    <string name="pkg_manager_perm_granted">مجوز %1$s اعطا شد</string>
+    <string name="pkg_manager_perm_failed">ناموفق: %1$s</string>
+    <string name="pkg_manager_force_stop_success">توقف اجباری %1$s انجام شد</string>
+    <string name="pkg_manager_install_apks">نصب APKها</string>
+    <string name="pkg_manager_installing">در حال نصب بسته روی دستگاه…</string>
+    <string name="pkg_manager_install_success">بسته با موفقیت نصب شد</string>
+    <string name="pkg_manager_install_failed">نصب ناموفق بود: %1$s</string>
+    <string name="pkg_manager_pulling">در حال استخراج بسته…</string>
+    <string name="pkg_manager_pull_success">%1$s با موفقیت استخراج شد</string>
+    <string name="pkg_manager_pull_failed">استخراج ناموفق بود: %1$s</string>
+    <string name="pkg_manager_uninstall_confirm_title">حذف نصب برنامه؟</string>
+    <string name="pkg_manager_uninstall_confirm_msg">آیا از حذف نصب %1$s (%2$s) از دستگاه مقصد اطمینان دارید؟</string>
+    <string name="pkg_manager_uninstall_success">%1$s با موفقیت حذف نصب شد</string>
+    <string name="pkg_manager_uninstall_failed">حذف نصب ناموفق بود: %1$s</string>
+    <string name="pkg_manager_disable_success">%1$s غیرفعال شد</string>
+    <string name="pkg_manager_enable_success">%1$s فعال شد</string>
+    <string name="settings_btn_export_key">خروجی گرفتن از کلید احراز هویت</string>
+    <string name="msg_key_exported">کلید احراز هویت ADB با موفقیت ذخیره شد</string>
+    <string name="pkg_manager_empty">هیچ بسته‌ای یافت نشد</string>
+
+    <!-- ADB Logcat Strings -->
+    <string name="adb_logcat_tile_title">Logcat</string>
+    <string name="adb_logcat_tile_desc">مشاهده لحظه‌ای لاگ‌های سیستم با فیلتر، جستجو و عبارات منظم (Regex)</string>
+    <string name="logcat_search_hint">جستجوی لاگ‌ها یا regex…</string>
+    <string name="logcat_filter_tag_hint">تگ (Tag)</string>
+    <string name="logcat_filter_pid_hint">شناسه فرایند (PID)</string>
+    <string name="logcat_btn_pause">توقف موقت</string>
+    <string name="logcat_btn_resume">ادامه استریم</string>
+    <string name="logcat_btn_clear">پاک کردن لاگ‌ها</string>
+    <string name="logcat_btn_copy">کپی لاگ‌ها</string>
+    <string name="logcat_btn_autoscroll">پیمایش خودکار</string>
+    <string name="logcat_status_streaming">در حال استریم</string>
+    <string name="logcat_status_paused">متوقف‌شده</string>
+    <string name="logcat_logs_copied">%1$d لاگ در کلیپ‌بورد کپی شد</string>
+    <string name="logcat_empty_waiting">در انتظار لاگ‌های دستگاه…</string>
+    <string name="logcat_empty_filtered">هیچ لاگی با فیلترهای کنونی مطابقت ندارد</string>
+    <string name="logcat_device_buffer_cleared">بافر logcat دستگاه پاک شد</string>
+    <string name="logcat_clear_dialog_msg">آیا بافر محلی روی صفحه پاک شود یا بافر داخلی logcat دستگاه نیز تخلیه گردد؟</string>
+    <string name="logcat_clear_screen">پاک‌سازی صفحه</string>
+    <string name="logcat_clear_device_buffer">پاک‌سازی بافر دستگاه</string>
+    <string name="logcat_btn_toggle_filters">تغییر وضعیت جستجو و فیلترها</string>
+
+    <!-- ADB Reboot Options Strings -->
+    <string name="adb_reboot_tile_title">گزینه‌های راه‌اندازی مجدد</string>
+    <string name="adb_reboot_tile_desc">راه‌اندازی مجدد به سیستم، بوت‌لودر، ریکاوری، فست‌بوت یا خاموش کردن</string>
+    <string name="adb_reboot_system_title">راه‌اندازی مجدد به سیستم</string>
+    <string name="adb_reboot_system_desc">راه‌اندازی معمولی به سیستم‌عامل اندروید</string>
+    <string name="adb_reboot_bootloader_title">راه‌اندازی مجدد به بوت‌لودر</string>
+    <string name="adb_reboot_bootloader_desc">راه‌اندازی مجدد به حالت Bootloader / Fastboot</string>
+    <string name="adb_reboot_recovery_title">راه‌اندازی مجدد به ریکاوری</string>
+    <string name="adb_reboot_recovery_desc">راه‌اندازی مجدد به حالت ریکاوری (Recovery)</string>
+    <string name="adb_reboot_fastboot_title">راه‌اندازی مجدد به فست‌بوت (fastbootd)</string>
+    <string name="adb_reboot_fastboot_desc">راه‌اندازی مجدد به fastbootd (فست‌بوت در محیط کاربر)</string>
+    <string name="adb_reboot_shutdown_title">خاموش کردن</string>
+    <string name="adb_reboot_shutdown_desc">خاموش کردن دستگاه</string>
+    <string name="adb_reboot_executing">در حال اجرای %1$s…</string>
+
+    <!-- ADB Screenshot Strings -->
+    <string name="adb_screenshot_tile_title">عکس صفحه‌نمایش (اسکرین‌شات)</string>
+    <string name="adb_screenshot_tile_desc">گرفتن اسکرین‌شات از صفحه دستگاه و مشاهده یا ذخیره تصویر</string>
+    <string name="adb_screenshot_take_btn">گرفتن اسکرین‌شات</string>
+    <string name="adb_screenshot_capturing">در حال گرفتن اسکرین‌شات…</string>
+    <string name="adb_screenshot_save_btn">ذخیره اسکرین‌شات</string>
+    <string name="adb_screenshot_saved">اسکرین‌شات با موفقیت ذخیره شد</string>
+    <string name="adb_screenshot_failed">گرفتن اسکرین‌شات ناموفق بود: %1$s</string>
+    <string name="adb_screenshot_empty">برای ثبت تصویر از نمایشگر دستگاه متصل، روی \'گرفتن اسکرین‌شات\' بزنید.</string>
+
+    <!-- General Buttons -->
+    <string name="btn_back">بازگشت</string>
+
+    <!-- ADB Miscellaneous Tools Strings -->
+    <string name="adb_misc_tile_title">ابزارهای متفرقه</string>
+    <string name="adb_misc_tile_desc">کنترل‌های نمایشگر، تنظیمات توسعه‌دهنده و میان‌برها</string>
+    <string name="adb_misc_section_app_process">اقدامات برنامه و فرایندها</string>
+    <string name="adb_misc_section_display">نمایشگر و جهت‌گیری</string>
+    <string name="adb_misc_section_system_ui">رابط کاربری سیستم و اعلان‌ها</string>
+    <string name="adb_misc_section_dev_tweaks">تنظیمات توسعه‌دهنده و رابط کاربری</string>
+    <string name="adb_misc_section_battery">شبیه‌سازی باتری</string>
+    <string name="adb_misc_section_intent_url">ارسال Intent و URL</string>
+
+    <string name="adb_misc_kill_app_title">بستن اجباری برنامه فعال</string>
+    <string name="adb_misc_kill_app_desc">متوقف کردن اجباری برنامه‌ای که هم‌اکنون روی صفحه باز است</string>
+    <string name="adb_misc_clear_app_title">پاک کردن داده‌های برنامه فعال</string>
+    <string name="adb_misc_clear_app_desc">بازنشانی داده‌ها و حافظه پنهان برنامه در حال اجرا</string>
+
+    <string name="adb_misc_orientation_title">تنظیم جهت صفحه</string>
+    <string name="adb_misc_orientation_desc">اجبار به عمودی ۰°، افقی ۹۰°، عمودی معکوس ۱۸۰°، یا افقی ۲۷۰°</string>
+    <string name="adb_misc_auto_rotate_title">تغییر وضعیت چرخش خودکار</string>
+    <string name="adb_misc_auto_rotate_desc">روشن/خاموش کردن چرخش خودکار صفحه با شتاب‌سنج</string>
+    <string name="adb_misc_density_title">تراکم صفحه (DPI)</string>
+    <string name="adb_misc_density_desc">تغییر مقیاس DPI نمایشگر یا بازنشانی به پیش‌فرض دستگاه</string>
+    <string name="adb_misc_density_current">فعلی: %1$s</string>
+    <string name="adb_misc_density_placeholder">مثلاً 420</string>
+    <string name="adb_misc_resolution_title">رزولوشن صفحه</string>
+    <string name="adb_misc_resolution_desc">تغییر ابعاد رزولوشن صفحه (عرض x ارتفاع) یا بازنشانی</string>
+    <string name="adb_misc_size_current">فعلی: %1$s</string>
+    <string name="adb_misc_size_placeholder">مثلاً 1080x2400</string>
+    <string name="adb_misc_stay_awake_title">روشن نگه‌داشتن صفحه (Stay Awake)</string>
+    <string name="adb_misc_stay_awake_desc">جلوگیری از به خواب رفتن صفحه دستگاه هنگام اتصال USB</string>
+
+    <string name="adb_misc_expand_notifs_title">باز کردن نوار اعلان‌ها</string>
+    <string name="adb_misc_expand_notifs_desc">پایین کشیدن منوی اعلان‌ها</string>
+    <string name="adb_misc_expand_qs_title">باز کردن تنظیمات سریع</string>
+    <string name="adb_misc_expand_qs_desc">پایین کشیدن پنل کاشی‌های تنظیمات سریع (Quick Settings)</string>
+    <string name="adb_misc_collapse_statusbar_title">بستن نوار وضعیت</string>
+    <string name="adb_misc_collapse_statusbar_desc">بستن پنل اعلان‌ها یا تنظیمات سریع بازشده</string>
+
+    <string name="adb_misc_demo_mode_title">حالت دمو (نوار وضعیت مرتب)</string>
+    <string name="adb_misc_demo_mode_desc">نمایش باتری ۱۰۰٪، ساعت ۱۲:۰۰، آنتن کامل و پنهان کردن اعلان‌ها</string>
+    <string name="adb_misc_show_touches_title">تغییر وضعیت نمایش لمس‌ها</string>
+    <string name="adb_misc_show_touches_desc">نمایش دایره بصری در محل لمس انگشت روی صفحه</string>
+    <string name="adb_misc_pointer_location_title">تغییر وضعیت موقعیت اشاره‌گر</string>
+    <string name="adb_misc_pointer_location_desc">نمایش مختصات لمسی و خطوط مسیر حرکت انگشت روی صفحه</string>
+    <string name="adb_misc_anim_scale_title">سرعت پویانمایی پنجره‌ها</string>
+    <string name="adb_misc_anim_scale_desc">تنظیم مقیاس انیمیشن‌های پنجره، انتقال و مدت انیماتور (۰ تا ۲ برابر)</string>
+
+    <string name="adb_misc_battery_sim_title">شبیه‌سازی وضعیت باتری</string>
+    <string name="adb_misc_battery_sim_desc">شبیه‌سازی درصد باتری، وضعیت شارژ/تخلیه شارژ یا بازنشانی</string>
+    <string name="adb_misc_open_url_title">باز کردن پیوند اینترنتی / دیپ‌لینک</string>
+    <string name="adb_misc_open_url_desc">باز کردن هر صفحه وب یا دیپ‌لینک در مرورگر دستگاه مقصد</string>
+    <string name="adb_misc_open_url_placeholder">https://example.com</string>
+
+    <string name="adb_misc_dialog_clear_title">پاک کردن داده‌های برنامه فعال؟</string>
+    <string name="adb_misc_dialog_clear_msg">آیا مطمئن هستید که می‌خواهید تمام داده‌ها، اطلاعات ورود و حافظه پنهان بسته زیر را برای همیشه پاک کنید:\n\n%1$s\n\nاین عمل غیرقابل بازگشت است.</string>
+    <string name="adb_misc_dialog_clear_btn">پاک کردن داده‌ها</string>
+    <string name="adb_misc_dialog_orientation_title">انتخاب جهت صفحه</string>
+    <string name="adb_misc_orientation_0">۰° عمودی (Portrait)</string>
+    <string name="adb_misc_orientation_90">۹۰° افقی راست (Landscape Right)</string>
+    <string name="adb_misc_orientation_180">۱۸۰° عمودی معکوس (Inverted Portrait)</string>
+    <string name="adb_misc_orientation_270">۲۷۰° افقی چپ (Landscape Left)</string>
+    <string name="adb_misc_dialog_density_title">تنظیم تراکم صفحه (DPI)</string>
+    <string name="adb_misc_density_reading">در حال خواندن تراکم فعلی…</string>
+    <string name="adb_misc_density_presets">پیش‌فرض‌ها</string>
+    <string name="adb_misc_density_custom_label">مقدار DPI سفارشی (۷۲ تا ۱۲۰۰)</string>
+    <string name="adb_misc_density_invalid">لطفاً یک مقدار DPI معتبر بین ۷۲ تا ۱۲۰۰ وارد کنید</string>
+    <string name="adb_misc_btn_apply">اعمال</string>
+    <string name="adb_misc_btn_reset_default">بازنشانی به پیش‌فرض</string>
+    <string name="adb_misc_dialog_resolution_title">تنظیم رزولوشن صفحه</string>
+    <string name="adb_misc_resolution_reading">در حال خواندن رزولوشن فعلی…</string>
+    <string name="adb_misc_resolution_width">عرض</string>
+    <string name="adb_misc_resolution_height">ارتفاع</string>
+    <string name="adb_misc_resolution_invalid">لطفاً ابعاد معتبری بین ۲۴۰ تا ۱۰۰۰۰ وارد کنید</string>
+    <string name="adb_misc_dialog_stay_awake_title">روشن نگه‌داشتن صفحه</string>
+    <string name="adb_misc_dialog_stay_awake_msg">انتخاب کنید که آیا صفحه دستگاه هنگام اتصال به USB همیشه روشن بماند یا خیر.</string>
+    <string name="adb_misc_btn_stay_awake_enable">فعال‌سازی (روشن بماند)</string>
+    <string name="adb_misc_btn_stay_awake_disable">غیرفعال‌سازی</string>
+    <string name="adb_misc_dialog_demo_mode_title">حالت دمو (نوار وضعیت مرتب)</string>
+    <string name="adb_misc_dialog_demo_mode_msg">تنظیم آیکون‌های نوار وضعیت روی باتری ۱۰۰٪، ساعت ۱۲:۰۰ و آنتن کامل، یا بازگرداندن نوار وضعیت به حالت عادی.</string>
+    <string name="adb_misc_btn_demo_mode_enter">ورود به حالت دمو</string>
+    <string name="adb_misc_btn_demo_mode_exit">خروج از حالت دمو</string>
+    <string name="adb_misc_dialog_anim_scale_title">انتخاب سرعت انیمیشن</string>
+    <string name="adb_misc_dialog_battery_title">شبیه‌سازی وضعیت باتری</string>
+    <string name="adb_misc_battery_level_label">شبیه‌سازی درصد شارژ</string>
+    <string name="adb_misc_battery_charging_label">شبیه‌سازی وضعیت شارژ</string>
+    <string name="adb_misc_battery_btn_charging">در حال شارژ</string>
+    <string name="adb_misc_battery_btn_discharging">در حال تخلیه شارژ</string>
+    <string name="adb_misc_battery_btn_reset">بازنشانی شبیه‌سازی</string>
+    <string name="adb_misc_dialog_open_url_title">باز کردن پیوند در دستگاه</string>
+    <string name="adb_misc_dialog_open_url_msg">یک آدرس وب یا دیپ‌لینک برای باز شدن در مرورگر دستگاه مقصد وارد کنید:</string>
+    <string name="adb_misc_btn_open">باز کردن</string>
+
+    <string name="adb_misc_status_success">وضعیت: موفق</string>
+    <string name="adb_misc_status_failed">وضعیت: ناموفق</string>
+    <string name="adb_misc_status_dismiss">بستن</string>
+    <string name="adb_misc_not_connected">دستگاه متصل نیست</string>
+    <string name="adb_misc_no_foreground_app">برنامه فعال در حال اجرایی روی صفحه دستگاه مقصد شناسایی نشد.</string>
+    <string name="adb_misc_state_enabled">فعال (ON)</string>
+    <string name="adb_misc_state_disabled">غیرفعال (OFF)</string>
+    <string name="adb_misc_executed_success">با موفقیت اجرا شد.</string>
+    <string name="adb_misc_btn_reset">بازنشانی</string>
+
+    <!-- Fastboot Tab Strings -->
+    <string name="fastboot_tab_actions">عملیات‌ها</string>
+    <string name="fastboot_tab_shell">شل (Shell)</string>
+    <string name="fastboot_connected">متصل شد</string>
+    <string name="fastboot_detected_not_connected">شناسایی شد — متصل نیست</string>
+    <string name="fastboot_retry">تلاش مجدد</string>
+    <string name="fastboot_disconnect">قطع اتصال</string>
+    <string name="fastboot_no_device_warning">هیچ دستگاه فست‌بوتی متصل نیست. برای استفاده از این قابلیت‌ها، دستگاهی را در حالت Fastboot متصل کنید.</string>
+    <string name="fastboot_tile_reboot_title">راه‌اندازی مجدد</string>
+    <string name="fastboot_tile_reboot_desc">راه‌اندازی مجدد به سیستم، بوت‌لودر، ریکاوری یا fastbootd</string>
+    <string name="fastboot_tile_flash_title">فلش ایمیج</string>
+    <string name="fastboot_tile_flash_desc">انتخاب فایل ایمیج از حافظه و فلش آن روی یک پارتیشن</string>
+    <string name="fastboot_tile_boot_title">بوت ایمیج</string>
+    <string name="fastboot_tile_boot_desc">بارگذاری و بوت موقت یک ایمیج بدون فلش کردن آن</string>
+    <string name="fastboot_tile_lock_title">وضعیت قفل بوت‌لودر</string>
+    <string name="fastboot_tile_lock_desc">باز کردن قفل یا قفل کردن مجدد بوت‌لودر</string>
+    <string name="fastboot_tile_vars_title">متغیرهای دستگاه</string>
+    <string name="fastboot_tile_vars_desc">خواندن متغیرهای بوت‌لودر از طریق getvar</string>
+    <string name="fastboot_log_title">لاگ</string>
+    <string name="fastboot_clear_log">پاک کردن لاگ</string>
+    <string name="fastboot_shell_hint">یک دستور در زیر بنویسید یا روی help بزنید.</string>
+
+    <string name="fastboot_reboot_title">راه‌اندازی مجدد</string>
+    <string name="fastboot_reboot_system_title">راه‌اندازی مجدد به سیستم</string>
+    <string name="fastboot_reboot_system_desc">راه‌اندازی مجدد معمولی به سیستم‌عامل</string>
+    <string name="fastboot_reboot_bootloader_title">راه‌اندازی مجدد به بوت‌لودر</string>
+    <string name="fastboot_reboot_bootloader_desc">راه‌اندازی مجدد به محیط بوت‌لودر</string>
+    <string name="fastboot_reboot_recovery_title">راه‌اندازی مجدد به ریکاوری</string>
+    <string name="fastboot_reboot_recovery_desc">راه‌اندازی مجدد به حالت ریکاوری</string>
+    <string name="fastboot_reboot_fastboot_title">راه‌اندازی مجدد به فست‌بوت</string>
+    <string name="fastboot_reboot_fastboot_desc">راه‌اندازی مجدد به fastbootd (فست‌بوت در فضای کاربر)</string>
+    <string name="fastboot_continue_boot_title">ادامه بوت</string>
+    <string name="fastboot_continue_boot_desc">ادامه روال بوت عادی از بوت‌لودر بدون راه‌اندازی مجدد دستگاه</string>
+    <string name="fastboot_shutdown_title">خاموش کردن</string>
+    <string name="fastboot_shutdown_desc">خاموش کردن دستگاه</string>
+    <string name="fastboot_lock_title">وضعیت قفل بوت‌لودر</string>
+    <string name="fastboot_lock_warning">باز کردن قفل یا قفل مجدد بوت‌لودر ممکن است تمام داده‌های کاربر روی دستگاه را پاک کند.</string>
+    <string name="fastboot_unlock_bootloader_title">آنلاک بوت‌لودر (Unlock)</string>
+    <string name="fastboot_lock_bootloader_title">قفل بوت‌لودر (Lock)</string>
+    <string name="fastboot_unlock_critical_title">آنلاک پارتیشن‌های حیاتی (Unlock Critical)</string>
+    <string name="fastboot_lock_critical_title">قفل پارتیشن‌های حیاتی (Lock Critical)</string>
+    <string name="fastboot_check_unlock_title">بررسی قابلیت آنلاک</string>
+
+    <string name="fastboot_vars_title">متغیرهای دستگاه</string>
+    <string name="fastboot_vars_desc">خواندن یک متغیر خاص بوت‌لودر، یا دریافت همه آن‌ها به‌طور یکجا.</string>
+    <string name="fastboot_var_name_label">نام متغیر (مثلاً product، version-bootloader)</string>
+    <string name="fastboot_btn_get_all">دریافت همه</string>
+    <string name="fastboot_btn_get_var">دریافت متغیر</string>
+
+    <string name="fastboot_working_placeholder">در حال پردازش...</string>
+    <string name="fastboot_op_in_progress">عملیات در حال انجام است...</string>
+    <string name="fastboot_op_done">%1$s انجام شد</string>
+    <string name="fastboot_op_failed">%1$s ناموفق بود</string>
+    <string name="fastboot_flash_title">فلش ایمیج</string>
+    <string name="fastboot_flash_desc">یک فایل ایمیج برای فلش روی یکی از پارتیشن‌های دستگاه انتخاب کنید. نام پارتیشن بر اساس نام فایل حدس زده می‌شود اما قابل ویرایش است.</string>
+    <string name="fastboot_choose_image">انتخاب ایمیج</string>
+    <string name="fastboot_no_file_selected">هیچ فایلی انتخاب نشده است</string>
+    <string name="fastboot_dialog_flash_partition_title">فلش روی پارتیشن</string>
+    <string name="fastboot_dialog_flash_partition_msg">نام پارتیشنی که می‌خواهید \"%1$s\" روی آن فلش شود را وارد کنید.</string>
+    <string name="fastboot_partition_name_label">نام پارتیشن</string>
+    <string name="fastboot_btn_flash">فلش</string>
+    <string name="fastboot_btn_cancel">لغو</string>
+    <string name="fastboot_boot_title">بوت ایمیج</string>
+    <string name="fastboot_boot_desc">ایمیج را روی دستگاه بارگذاری کرده و بدون فلش کردن روی پارتیشن، آن را موقتاً بوت می‌کند.</string>
+    <string name="fastboot_choose_image_and_boot">انتخاب ایمیج و بوت</string>
+
+    <string name="fastboot_shell_placeholder">reboot, getvar product, flash boot, help ...</string>
+    <string name="fastboot_raw_path_warning_title">مسیر مستقیم شناسایی شد</string>
+    <string name="fastboot_raw_path_warning_msg">\"%1$s\" پشتیبانی نمی‌شود — این برنامه اجازه خواندن مسیرهای مستقیم فایل را ندارد. به‌جای آن از دکمه پیوست برای انتخاب فایل استفاده کنید.</string>
+    <string name="fastboot_proceed_anyway">به‌هر‌حال ادامه بده</string>
+
+    <!-- Remote Control Strings -->
+    <string name="remote_control_title">کنترل از راه دور</string>
+    <string name="remote_control_desc">شبیه‌سازی ریموت کنترل فیزیکی برای دستگاه‌های اندروید استاندارد و تلویزیون‌های هوشمند (Android TV)</string>
+    <string name="remote_mode_auto">تشخیص خودکار</string>
+    <string name="remote_mode_tv">تلویزیون اندروید (Android TV)</string>
+    <string name="remote_mode_standard">اندروید استاندارد</string>
+    <string name="remote_detected_tv">تلویزیون اندروید شناسایی شد</string>
+    <string name="remote_detected_standard">اندروید استاندارد شناسایی شد</string>
+    <string name="remote_section_navigation">جهت‌نما (D-Pad)</string>
+    <string name="remote_section_system">سیستم و پخش مدیا</string>
+    <string name="remote_section_tv_controls">کنترل‌های تلویزیون</string>
+    <string name="remote_section_text_input">ارسال متن به فیلد ورودی</string>
+    <string name="remote_btn_send_text">ارسال متن</string>
+    <string name="remote_text_placeholder">متن را برای ارسال به فیلد فعال بنویسید...</string>
+    <string name="remote_tv_guide">راهنما (Guide)</string>
+    <string name="remote_tv_input">ورودی (Source)</string>
+    <string name="remote_tv_ch_up">کانال +</string>
+    <string name="remote_tv_ch_down">کانال -</string>
+    <string name="remote_tv_search">جستجو</string>
+
+    <!-- Touchpad & Virtual Mouse/Keyboard Strings -->
+    <string name="touchpad_title">تاچ‌پد و ماوس</string>
+    <string name="touchpad_desc">کنترل نشانگر ماوس در دستگاه مقصد با تاچ‌پد مجازی و صفحه‌کلید سخت‌افزاری</string>
+    <string name="tab_touchpad">تاچ‌پد</string>
+    <string name="tab_keyboard">کیبورد رایانه</string>
+    <string name="touchpad_connecting">در حال مقداردهی دستگاه‌های ورودی مجازی...</string>
+    <string name="touchpad_connected">ماوس و صفحه‌کلید مجازی فعال شدند</string>
+    <string name="touchpad_surface_hint">بکشید برای حرکت • ضربه برای کلیک چپ • نگه داشتن برای کلیک راست • پیمایش با ۲ انگشت</string>
+    <string name="touchpad_btn_left">چپ</string>
+    <string name="touchpad_btn_right">راست</string>
+    <string name="touchpad_btn_middle">وسط</string>
+    <string name="touchpad_sensitivity">حساسیت نشانگر ماوس</string>
+    <string name="touchpad_keyboard_section">صفحه‌کلید سخت‌افزاری</string>
+    <string name="touchpad_modifiers">کلیدهای تغییردهنده (Modifiers)</string>
+    <string name="touchpad_functions">کلیدهای تابع (F1-F12)</string>
+    <string name="touchpad_shortcuts">میان‌برها</string>
+    <string name="touchpad_navigation">کلیدهای ناوبری</string>
+    <string name="touchpad_numpad">صفحه‌کلید عددی (Numpad)</string>
+    <string name="touchpad_soft_keyboard">صفحه‌کلید مجازی نرم‌افزاری</string>
+    <string name="touchpad_toggle_ime">تغییر وضعیت صفحه‌کلید</string>
+    <string name="touchpad_type_here">برای تایپ بلادرنگ اینجا بنویسید...</string>
+    <string name="touchpad_realtime_typing_hint">تایپ بلادرنگ فعال است. کاراکترها و کلید پاک‌کن بلافاصله ارسال می‌شوند.</string>
+    <string name="touchpad_error_title">خطای ورودی مجازی</string>
+    <string name="touchpad_error_desc">راه‌اندازی ماوس/صفحه‌کلید مجازی (/dev/uhid) ممکن نشد. مطمئن شوید در گزینه‌های توسعه‌دهنده (Developer Options) گزینه «USB debugging (Security settings)» فعال باشد.</string>
+
+
+    <!-- Daemon Control & Connection Strings -->
+    <string name="daemon_dialog_title">پاسخ دیمن (Daemon)</string>
+    <string name="btn_ok">تأیید</string>
+    <string name="btn_restart">راه‌اندازی مجدد</string>
+    <string name="cd_daemon_options">گزینه‌های دیمن</string>
+    <string name="action_switch_tcpip">تغییر به TCP/IP</string>
+    <string name="action_root_daemon">اجرای دیمن با دسترسی روت</string>
+    <string name="action_unroot_daemon">خروج دیمن از حالت روت</string>
+    <string name="dialog_tcpip_title">راه‌اندازی مجدد adbd روی TCP/IP</string>
+    <string name="dialog_tcpip_msg">شماره پورت برای ADB بی‌سیم را وارد کنید:</string>
+    <string name="cd_pair_qr">اتصال با کد QR</string>
+    <string name="cd_close">بستن</string>
+
+    <!-- Discovery Sheet Strings -->
+    <string name="discovery_title">شناسایی دستگاه‌ها</string>
+    <string name="discovery_searching">در حال جستجوی دستگاه‌های دارای عیب‌یابی بی‌سیم فعال…</string>
+    <string name="discovery_no_devices_found">هنوز دستگاهی پیدا نشد</string>
+    <string name="discovery_network_hint">مطمئن شوید اشکال‌زدایی بی‌سیم روشن است و هر دو دستگاه در یک شبکه قرار دارند</string>
+    <string name="discovery_btn_manual_entry">ورود دستی اطلاعات اتصال</string>
+    <string name="discovery_conn_type">نوع اتصال</string>
+    <string name="discovery_plain_tcp">اتصال ساده TCP (سنتی، پورت 5555)</string>
+    <string name="discovery_wireless_tls">اشکال‌زدایی بی‌سیم (TLS)</string>
+    <string name="discovery_connect_tcp">اتصال از طریق TCP</string>
+    <string name="discovery_wireless_debugging">اشکال‌زدایی بی‌سیم</string>
+    <string name="discovery_pair_first_hint">اگر این دستگاه هنوز جفت‌سازی نشده است، ابتدا آن را جفت کنید.</string>
+    <string name="discovery_pair_with_code">جفت‌سازی با کد</string>
+    <string name="discovery_connect_already_paired">اتصال (از قبل جفت‌شده)</string>
+    <string name="discovery_connect_tls">اتصال (TLS)</string>
+    <string name="discovery_paired_success_connecting">جفت‌سازی با موفقیت انجام شد! در حال اتصال به سرویس اشکال‌زدایی بی‌سیم…</string>
+    <string name="discovery_pair_instead">جفت‌سازی به‌جای اتصال</string>
+    <string name="discovery_pair_device">جفت‌سازی دستگاه</string>
+    <string name="discovery_pairing_port">پورت جفت‌سازی</string>
+    <string name="discovery_pairing_code">کد جفت‌سازی (Pairing code)</string>
+    <string name="discovery_btn_pair">جفت‌سازی</string>
+
+    <!-- QR Code Pairing Strings -->
+    <string name="qr_starting_server">در حال راه‌اندازی سرور جفت‌سازی…</string>
+    <string name="cd_qr_code">کد QR جفت‌سازی</string>
+    <string name="qr_instruction">در دستگاه خود به مسیر تنظیمات > گزینه‌های توسعه‌دهنده > عیب‌یابی بی‌سیم > جفت‌سازی دستگاه با کد QR بروید و این کد را اسکن کنید.</string>
+    <string name="qr_wifi_hint">هر دو دستگاه باید به یک شبکه وای‌فای متصل باشند.</string>
+    <string name="qr_paired_success">جفت‌سازی با موفقیت انجام شد</string>
+    <string name="qr_connecting">در حال اتصال…</string>
+    <string name="qr_waiting_discoverable">در انتظار شناسایی دستگاه…</string>
+    <string name="qr_pairing_failed">جفت‌سازی ناموفق بود</string>
+
+    <!-- About Section Strings -->
+    <string name="settings_about_title">درباره</string>
+    <string name="settings_about_desc">اطلاعات برنامه، شبکه‌های اجتماعی و مخزن پروژه</string>
+    <string name="settings_about_version">نسخه %1$s</string>
+    <string name="settings_about_documentation">مستندات</string>
+    <string name="settings_about_source_code">سورس کد</string>
+    <string name="settings_about_donate">حمایت مالی</string>
+    <string name="settings_about_check_updates">بررسی به‌روزرسانی</string>
+    <string name="settings_about_checking_updates">در حال بررسی به‌روزرسانی…</string>
+    <string name="update_dialog_title">به‌روزرسانی جدید موجود است</string>
+    <string name="update_dialog_msg">نسخه جدید (%1$s) موجود است.\n\nنسخه فعلی: %2$s</string>
+    <string name="update_btn_download">دانلود</string>
+    <string name="update_already_latest">شما از آخرین نسخه استفاده می‌کنید</string>
+    <string name="update_check_failed">بررسی به‌روزرسانی ناموفق بود: %1$s</string>
+    <string name="update_checking">در حال بررسی به‌روزرسانی…</string>
+    <string name="cd_github">گیت‌هاب</string>
+    <string name="cd_telegram">تلگرام</string>
+
+    <!-- Additional localized UI and accessibility strings -->
+    <string name="cd_run">اجرا</string>
+    <string name="cd_send">ارسال</string>
+    <string name="cd_scroll_to_bottom">پیمایش به پایین</string>
+    <string name="cd_restart_shell">راه‌اندازی مجدد شل</string>
+    <string name="cd_select_mode">انتخاب حالت</string>
+    <string name="cd_open_touchpad">باز کردن تاچ‌پد</string>
+    <string name="cd_power">پاور (روشن/خاموش)</string>
+    <string name="cd_mute">بی‌صدا</string>
+    <string name="cd_volume_down">کاهش صدا</string>
+    <string name="cd_volume_up">افزایش صدا</string>
+    <string name="cd_nav_menu">منو</string>
+    <string name="cd_nav_up">بالا</string>
+    <string name="cd_nav_down">پایین</string>
+    <string name="cd_nav_left">چپ</string>
+    <string name="cd_nav_right">راست</string>
+    <string name="cd_previous">قبلی</string>
+    <string name="cd_rewind">عقب‌گرد</string>
+    <string name="cd_play_pause">پخش یا توقف</string>
+    <string name="cd_fast_forward">جلوگرد سریع</string>
+    <string name="cd_next">بعدی</string>
+    <string name="cd_keyboard">صفحه‌کلید</string>
+    <string name="cd_send_text">ارسال متن</string>
+    <string name="cd_toggle_numpad">تغییر وضعیت صفحه‌کلید عددی</string>
+    <string name="cd_sensitivity_settings">تنظیمات حساسیت</string>
+    <string name="cd_hide_keyboard">پنهان کردن کیبورد</string>
+    <string name="cd_symlink">پیوند نمادین (Symlink)</string>
+    <string name="cd_actions">عملیات‌ها</string>
+    <string name="cd_copy_logs_to_clipboard">کپی لاگ‌ها در کلیپ‌بورد</string>
+    <string name="cd_clear_logs">پاک کردن لاگ‌ها</string>
+    <string name="cd_export_logs_zip">خروجی لاگ‌ها به‌صورت فایل ZIP</string>
+
+    <string name="status_disconnected">قطع شد</string>
+    <string name="msg_export_failed">خروجی ناموفق بود: %1$s</string>
+    <string name="err_no_adb_key_file">فایل کلید ADB پیدا نشد</string>
+    <string name="err_save_file_failed">ذخیره فایل ناموفق بود</string>
+
+    <string name="camera_selector">انتخاب‌گر دوربین</string>
+    <string name="camera_label_format">دوربین %1$s (%2$s)</string>
+    <string name="camera_resolution">رزولوشن دوربین</string>
+    <string name="camera_frame_rate">نرخ فریم دوربین</string>
+    <string name="scrcpy_logs_client">کلاینت</string>
+    <string name="scrcpy_logs_server">سرور</string>
+    <string name="scrcpy_logs_exported">لاگ‌ها ذخیره شدند</string>
+    <string name="scrcpy_logs_export_failed">خروجی ناموفق بود</string>
+
+    <string name="pkg_manager_dump_failed">بارگذاری بسته‌ها ناموفق بود: %1$s</string>
+    <string name="pkg_manager_name_copied">نام بسته کپی شد</string>
+    <string name="pkg_manager_copy_package">کپی نام بسته</string>
+    <string name="pkg_manager_app_settings">تنظیمات برنامه</string>
+    <string name="pkg_info_package_name">نام بسته (Package Name)</string>
+    <string name="pkg_info_version_name">نام نسخه (Version Name)</string>
+    <string name="pkg_info_version_code">کد نسخه (Version Code)</string>
+    <string name="pkg_info_target_sdk">SDK هدف (Target SDK)</string>
+    <string name="pkg_info_min_sdk">حداقل SDK (Minimum SDK)</string>
+    <string name="pkg_info_uid">شناسه کاربر (UID)</string>
+    <string name="pkg_info_installer">برنامه نصب‌کننده</string>
+    <string name="pkg_info_source_dir">مسیر فایل نصبی (Source Directory)</string>
+    <string name="pkg_info_data_dir">مسیر داده‌ها (Data Directory)</string>
+    <string name="pkg_info_first_installed">تاریخ اولین نصب</string>
+    <string name="pkg_info_last_updated">تاریخ آخرین به‌روزرسانی</string>
+    <string name="pkg_info_split_apks">بسته‌های اسپلیت (%1$d):</string>
+    <string name="pkg_info_not_available">نامشخص</string>
+
+    <string name="remote_detecting_device">در حال تشخیص نوع دستگاه…</string>
+    <string name="remote_mode_tv_detected">تلویزیون اندروید (شناسایی شد)</string>
+    <string name="remote_mode_standard_detected">اندروید استاندارد (شناسایی شد)</string>
+    <string name="remote_media_controls">کنترل‌های رسانه</string>
+    <string name="remote_numeric_keypad">صفحه‌کلید عددی</string>
+    <string name="touchpad_type">تایپ کردن</string>
+    <string name="adb_ip_placeholder">وارد کردن IP</string>
+    <string name="cd_choose_save_location">انتخاب محل ذخیره‌سازی</string>
+    <string name="cd_attach_image">پیوست کردن ایمیج</string>
+    <string name="touchpad_error_details">جزئیات: %1$s</string>
+    <string name="shell_error_message">خطای شل: %1$s</string>
+    <string name="shell_live_hint">دستورات را با «adb shell» شروع نکنید — اینجا شل زنده و مستقیم دستگاه است.</string>
+    <string name="pkg_badge_system">سیستمی</string>
+    <string name="pkg_badge_disabled">غیرفعال</string>
+    <string name="pkg_badge_splits">اسپلیت‌ها (%1$d)</string>
+
+    <string name="btn_refresh">تازه‌سازی</string>
+    <string name="btn_retry">تلاش دوباره</string>
+
+    <!-- Process Manager Strings -->
+    <string name="proc_manager_title">مدیریت فرایندها</string>
+    <string name="proc_manager_subtitle">نمایش لحظه‌ای مصرف پردازنده/رم، بررسی و مدیریت فرایندهای در حال اجرا</string>
+    <string name="proc_manager_ram_usage">حافظه رم سیستم</string>
+    <string name="proc_manager_ram_used_format">%1$s / %2$s (%3$d%% مصرف شده)</string>
+    <string name="proc_manager_cpu_usage">مصرف پردازنده (CPU)</string>
+    <string name="proc_manager_cpu_format">%1$s · %2$d هسته</string>
+    <string name="proc_manager_processes_count">%1$d فرایند (%2$d برنامه، %3$d سیستمی)</string>
+    <string name="proc_manager_search_placeholder">جستجوی فرایند، برنامه یا شناسه PID…</string>
+    <string name="proc_filter_all">همه (%1$d)</string>
+    <string name="proc_filter_apps">برنامه‌ها (%1$d)</string>
+    <string name="proc_filter_system">سیستمی (%1$d)</string>
+    <string name="proc_sort_ram">رم (زیاد به کم)</string>
+    <string name="proc_sort_cpu">پردازنده (زیاد به کم)</string>
+    <string name="proc_sort_pid">شناسه PID (کم به زیاد)</string>
+    <string name="proc_sort_name">نام (الف تا ی)</string>
+    <string name="proc_action_force_stop">توقف اجباری</string>
+    <string name="proc_action_kill_pid">کشتن فرایند با PID</string>
+    <string name="proc_btn_force_stop">توقف اجباری</string>
+    <string name="proc_btn_kill">کشتن (Kill)</string>
+    <string name="proc_dialog_force_stop_title">توقف اجباری %1$s؟</string>
+    <string name="proc_dialog_force_stop_msg">توقف اجباری این برنامه بلافاصله تمام فرایندها و سرویس‌های پس‌زمینه فعال آن را می‌بندد.</string>
+    <string name="proc_dialog_kill_pid_title">کشتن فرایند %1$s (شناسه PID %2$d)؟</string>
+    <string name="proc_dialog_kill_pid_msg">ارسال سیگنال SIGKILL (سیگنال ۹) فوراً این فرایند را خاتمه می‌دهد. داده‌های ذخیره‌نشده ممکن است از دست بروند.</string>
+    <string name="proc_toast_force_stop_success">توقف اجباری %1$s انجام شد</string>
+    <string name="proc_toast_force_stop_failed">توقف اجباری %1$s ناموفق بود: %2$s</string>
+    <string name="proc_toast_kill_success">فرایند با PID %1$d خاتمه یافت</string>
+    <string name="proc_toast_kill_failed">خاتمه فرایند با PID %1$d ناموفق بود: %2$s</string>
+    <string name="proc_auto_refresh_on">تازه‌سازی خودکار (روشن)</string>
+    <string name="proc_auto_refresh_off">تازه‌سازی خودکار (خاموش)</string>
+    <string name="proc_empty_list">فرایند مطابقی یافت نشد.</string>
+    <string name="proc_loading">در حال اتصال به DioxAgent و بارگذاری فرایندها…</string>
+    <string name="proc_badge_threads">%1$d رشته (Thread)</string>
+    <string name="proc_badge_pid">شناسه PID: %1$d</string>
+    <string name="proc_badge_uid">شناسه UID: %1$d</string>
+    <string name="proc_badge_cpu">%1$s پردازنده</string>
+
+    <!-- Scrcpy Recording -->
+    <string name="scrcpy_tab_recordings">ضبط‌ها</string>
+    <string name="scrcpy_recording_started">ضبط آغاز شد</string>
+    <string name="scrcpy_recording_stopped">ویدیو ضبط‌شده ذخیره شد</string>
+    <string name="scrcpy_recording_empty">هنوز هیچ ویدیویی ضبط نشده است</string>
+    <string name="scrcpy_recording_empty_subtitle">پس از ضبط یک نشست آینه‌کردن صفحه، ویدیوها در اینجا نمایش داده می‌شوند</string>
+    <string name="scrcpy_recording_delete_confirm">حذف این فایل ضبط‌شده؟</string>
+    <string name="scrcpy_recording_delete_confirm_msg">این عمل غیرقابل بازگشت است.</string>
+    <string name="scrcpy_recording_exported">ویدیو ذخیره شد</string>
+    <string name="scrcpy_recording_export_failed">خروجی ناموفق بود</string>
+    <string name="scrcpy_recording_deleted">ویدیو ضبط‌شده حذف شد</string>
+    <string name="scrcpy_recording_codec_warning">ضبط ویدیو با این کدک پشتیبانی نمی‌شود</string>
+    <string name="scrcpy_recording_elapsed">در حال ضبط %1$s</string>
+    <string name="btn_delete">حذف</string>
+    <string name="btn_export">خروجی</string>
+    <string name="settings_scrcpy_auto_record_title">ضبط خودکار نشست‌ها</string>
+    <string name="settings_scrcpy_auto_record_subtitle">آغاز خودکار ضبط ویدیو به محض شروع آینه‌کردن صفحه</string>
+
+    <!-- Miscellaneous Settings -->
+    <string name="settings_misc_title">متفرقه</string>
+    <string name="settings_misc_desc">رفتار در پس‌زمینه و گزینه‌های عمومی</string>
+    <string name="settings_keep_alive_title">فعال ماندن در پس‌زمینه (Keep Alive)</string>
+    <string name="settings_keep_alive_desc">فعال نگه‌داشتن سرویس پس‌زمینه برای حفظ اتصالات در صورت کوچک شدن برنامه</string>
+    <string name="notification_channel_keep_alive_name">سرویس فعال نگه‌داشتن برنامه</string>
+    <string name="notification_channel_keep_alive_desc">اعلان نمایش‌داده‌شده هنگامی که Dioxamine در پس‌زمینه زنده است</string>
+    <string name="notification_keep_alive_title">سرویس فعال Dioxamine</string>
+    <string name="notification_keep_alive_text">Dioxamine در پس‌زمینه فعال است</string>
+    <string name="notification_keep_alive_no_devices">هیچ دستگاهی متصل نیست • فعال در پس‌زمینه</string>
+    <plurals name="notification_adb_devices">
+        <item quantity="one">%1$d دستگاه ADB متصل است</item>
+        <item quantity="other">%1$d دستگاه ADB متصل است</item>
+    </plurals>
+    <plurals name="notification_fastboot_devices">
+        <item quantity="one">%1$d دستگاه Fastboot متصل است</item>
+        <item quantity="other">%1$d دستگاه Fastboot متصل است</item>
+    </plurals>
+    <string name="notification_keep_alive_stop_action">توقف</string>
+    <string name="settings_battery_opt_denied_warning">بهینه‌سازی باتری غیرفعال نشده است. اتصالات پس‌زمینه ممکن است در حالت Doze تعلیق شوند.</string>
+    <string name="settings_notif_perm_denied_warning">مجوز ارسال اعلان رد شد. وضعیت اعلان پس‌زمینه نمایش داده نخواهد شد.</string>
+</resources>
