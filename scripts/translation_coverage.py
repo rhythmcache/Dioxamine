@@ -20,6 +20,13 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+try:
+    from babel import Locale
+    from babel.core import UnknownLocaleError
+    HAVE_BABEL = True
+except ImportError:
+    HAVE_BABEL = False
+
 
 def parse_strings_xml(path: Path) -> set[str]:
     """
@@ -77,6 +84,19 @@ def locale_code_from_dir(dirname: str) -> str:
     return f"{lang}-{region}" if region else lang
 
 
+def locale_display_name(code: str) -> str:
+    """Human-readable label for a locale code, e.g. 'zh-CN' -> 'Chinese (China)'.
+    Falls back to the raw code if babel isn't installed or the code is unrecognized."""
+    if not HAVE_BABEL:
+        return code
+    try:
+        lang, _, region = code.partition("-")
+        loc = Locale.parse(f"{lang}_{region}" if region else lang)
+        return loc.get_display_name("en")
+    except (UnknownLocaleError, ValueError):
+        return code
+
+
 def compute_coverage(res_dir: Path) -> dict:
     base_path = res_dir / "values" / "strings.xml"
     base_names = parse_strings_xml(base_path)
@@ -104,6 +124,7 @@ def compute_coverage(res_dir: Path) -> dict:
 
         report["locales"][code] = {
             "dir": d.name,
+            "label": locale_display_name(code),
             "translated": len(translated),
             "total": total,
             "percent": pct,
@@ -181,7 +202,7 @@ def make_combined_table_svg(report: dict) -> str:
     row_h = 24
     header_h = 30
     pad = 12
-    label_w = 90
+    label_w = 160
     bar_w = 200
     pct_w = 55
     width = pad * 2 + label_w + bar_w + pct_w
@@ -197,8 +218,9 @@ def make_combined_table_svg(report: dict) -> str:
         pct = info["percent"]
         color = badge_color(pct)
         bar_fill = max(2, int(bar_w * pct / 100))
+        label = info.get("label", code)
 
-        parts.append(f'<text x="{pad}" y="{y + 16}" fill="#c9d1d9" font-size="12">{code}</text>')
+        parts.append(f'<text x="{pad}" y="{y + 16}" fill="#c9d1d9" font-size="12">{label} ({code})</text>')
         bx = pad + label_w
         parts.append(f'<rect x="{bx}" y="{y + 6}" width="{bar_w}" height="10" rx="5" fill="#30363d"/>')
         parts.append(f'<rect x="{bx}" y="{y + 6}" width="{bar_fill}" height="10" rx="5" fill="{color}"/>')
@@ -216,13 +238,18 @@ def write_combined_svg(report: dict, out_path: Path):
 
 def write_markdown(report: dict, out_path: Path, svg_rel_dir: str | None = None):
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    lines = ["| Locale | Coverage | Translated / Total |", "|---|---|---|"]
+    lines = ["| Locale | Language | Coverage | Translated / Total |", "|---|---|---|---|"]
     for code, info in sorted(report["locales"].items(), key=lambda kv: -kv[1]["percent"]):
         if svg_rel_dir:
-            badge = f"![{code}]({svg_rel_dir}/{code}.svg)"
+            badge = f"
+
+![{code}]({svg_rel_dir}/{code}.svg)
+
+"
         else:
             badge = f"{info['percent']}%"
-        lines.append(f"| `{code}` | {badge} | {info['translated']} / {info['total']} |")
+        label = info.get("label", code)
+        lines.append(f"| `{code}` | {label} | {badge} | {info['translated']} / {info['total']} |")
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -238,6 +265,10 @@ def main():
                      help="exit nonzero if any locale is below this percent (useful for CI gating)")
     args = ap.parse_args()
 
+    if not HAVE_BABEL:
+        print("note: 'babel' not installed, locale labels will fall back to raw codes "
+              "(pip install babel to enable language names)", file=sys.stderr)
+
     res_dir = args.res_dir.resolve()
     if not res_dir.is_dir():
         print(f"error: {res_dir} is not a directory", file=sys.stderr)
@@ -248,7 +279,8 @@ def main():
     # console summary
     print(f"Base: {report['base_count']} translatable strings\n")
     for code, info in sorted(report["locales"].items(), key=lambda kv: -kv[1]["percent"]):
-        print(f"  {code:8s} {info['percent']:5.1f}%  ({info['translated']}/{info['total']})")
+        label = info.get("label", code)
+        print(f"  {code:8s} {label:28s} {info['percent']:5.1f}%  ({info['translated']}/{info['total']})")
         if info["missing_keys"]:
             preview = ", ".join(info["missing_keys"][:5])
             more = f" (+{len(info['missing_keys']) - 5} more)" if len(info["missing_keys"]) > 5 else ""
