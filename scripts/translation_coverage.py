@@ -241,11 +241,7 @@ def write_markdown(report: dict, out_path: Path, svg_rel_dir: str | None = None)
     lines = ["| Locale | Language | Coverage | Translated / Total |", "|---|---|---|---|"]
     for code, info in sorted(report["locales"].items(), key=lambda kv: -kv[1]["percent"]):
         if svg_rel_dir:
-            badge = f"
-
-![{code}]({svg_rel_dir}/{code}.svg)
-
-"
+            badge = f"![{code}]({svg_rel_dir}/{code}.svg)"
         else:
             badge = f"{info['percent']}%"
         label = info.get("label", code)
