@@ -148,7 +148,7 @@ fun PluginRunnerScreen(
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
     var rapidBackPressCount by remember { mutableIntStateOf(0) }
 
-    val handleBack = {
+    BackHandler {
         if (interceptBackButton) {
             val now = System.currentTimeMillis()
             if (now - lastBackPressTime < 2000L) {
@@ -173,8 +173,6 @@ fun PluginRunnerScreen(
             onBack()
         }
     }
-
-    BackHandler(onBack = handleBack)
 
     DisposableEffect(interceptVolumeButtons, bridge) {
         if (interceptVolumeButtons) {
