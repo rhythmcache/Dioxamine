@@ -120,6 +120,157 @@ document.getElementById('close-btn').addEventListener('click', () => {
 
 ---
 
+## Hardware and System Button Interception (Back and Volume Keys)
+
+By default, pressing the system **Back button** or performing a back gesture navigates back through internal web history or closes the plugin screen, while pressing the **Volume buttons** adjusts Android's system media volume.
+
+Plugins can request button passing to intercept these buttons directly, preventing the default app action and handling the events in JavaScript.
+
+**Required Permissions**: None (Safe native UI controls).
+
+### 1. Back Button Interception
+
+When back button interception is requested and granted, pressing the Android Back button or performing an edge-swipe gesture will not close the plugin. Instead, the app passes the back event directly to the plugin's JavaScript handler. The plugin can then decide what to do (e.g., dismiss an in-app modal, navigate internal SPA routes, or call `dioxamine.exitPlugin()` / `dioxamine.defaultBack()`).
+
+#### `dioxamine.onBackButton(listener)`
+Registers a listener callback for the back button. Setting a function automatically enables back button interception. Passing `null` or `false` disables interception.
+
+```javascript
+dioxamine.onBackButton(listener: ((event: ButtonEvent) => void) | null): void
+```
+
+#### `dioxamine.setInterceptBackButton(enable)`
+Explicitly toggles whether the app intercepts back button presses and passes them to the plugin.
+
+```javascript
+dioxamine.setInterceptBackButton(enable: boolean): void
+dioxamine.isInterceptingBackButton(): boolean
+```
+
+#### `dioxamine.defaultBack()`
+Performs the app's default back action (navigates web history if available, or closes the plugin). Useful when the plugin decides not to handle a particular back press.
+
+```javascript
+dioxamine.defaultBack(): void
+```
+
+#### Example: In-Plugin Modal Back Handling
+```javascript
+let isModalOpen = false;
+
+// Registering onBackButton automatically enables back button interception
+dioxamine.onBackButton((event) => {
+    console.log("Back button pressed:", event);
+    if (isModalOpen) {
+        // Dismiss in-plugin dialog
+        closeModal();
+    } else {
+        // No modal open: perform default back action or exit
+        dioxamine.exitPlugin();
+    }
+});
+
+// To stop intercepting back button:
+// dioxamine.onBackButton(null);
+```
+
+#### User Safety Escape Hatch
+To ensure users are never permanently trapped by a frozen or buggy plugin:
+- **Windowed Mode**: Tapping the native TopAppBar back arrow icon always closes the plugin immediately.
+- **Fullscreen / Gesture Navigation**: Pressing the back button or swiping the back gesture 3 times in rapid succession (within 2 seconds) triggers an emergency escape hatch that prompts the user and force-exits the plugin.
+
+---
+
+### 2. Volume Buttons Interception
+
+When volume button interception is enabled, pressing the physical **Volume Up**, **Volume Down**, or **Volume Mute** buttons on the device will not trigger the Android volume slider. The event is intercepted and forwarded directly to the plugin.
+
+#### `dioxamine.onVolumeButton(listener)`
+Registers a listener callback for volume button events (`down` and `up`). Passing a function automatically enables volume key interception. Passing `null` or `false` disables it.
+
+```javascript
+dioxamine.onVolumeButton(listener: ((event: VolumeButtonEvent) => void) | null): void
+```
+
+#### `dioxamine.setInterceptVolumeButtons(enable)`
+Explicitly toggles whether the app intercepts hardware volume buttons.
+
+```javascript
+dioxamine.setInterceptVolumeButtons(enable: boolean): void
+dioxamine.isInterceptingVolumeButtons(): boolean
+```
+
+#### Event Object Structure
+Volume button events contain the following properties:
+- `button` (`string`): `'volume_up'`, `'volume_down'`, or `'volume_mute'`.
+- `direction` (`string`): `'up'`, `'down'`, or `'mute'`.
+- `action` (`string`): `'down'` (key press) or `'up'` (key release).
+- `key` (`string`): `'VolumeUp'`, `'VolumeDown'`, or `'VolumeMute'`.
+- `keyCode` (`number`): Android keycode (`24` for Volume Up, `25` for Volume Down, `164` for Volume Mute).
+- `repeatCount` (`number`): Repeat counter when button is held down (`0` for initial press).
+
+#### Example: Remote Control Volume
+```javascript
+// Intercept volume buttons and forward to remote ADB device
+dioxamine.onVolumeButton(async (event) => {
+    if (event.action !== 'down') return;
+
+    if (event.direction === 'up') {
+        console.log("Volume Up pressed - sending ADB keyevent 24");
+        await dioxamine.adb.shellExec("input keyevent 24");
+    } else if (event.direction === 'down') {
+        console.log("Volume Down pressed - sending ADB keyevent 25");
+        await dioxamine.adb.shellExec("input keyevent 25");
+    }
+});
+
+// To restore normal system volume behavior:
+// dioxamine.setInterceptVolumeButtons(false);
+```
+
+---
+
+### 3. Unified Button API (`dioxamine.buttons.*`)
+
+All button methods are also available under the `dioxamine.buttons` namespace:
+
+```javascript
+// Configure both button interceptors at once
+dioxamine.buttons.setIntercept({ back: true, volume: true });
+
+// Check current status
+const isBackIntercepted = dioxamine.buttons.isInterceptingBackButton();
+const isVolumeIntercepted = dioxamine.buttons.isInterceptingVolumeButtons();
+
+// Asynchronous status check
+const status = await dioxamine.buttons.getStatusAsync();
+// status => { back: true, volume: true }
+
+// Unified button listener for all buttons (back and volume)
+dioxamine.buttons.onButton((event) => {
+    console.log("Button event:", event.button, event.action);
+});
+```
+
+### 4. DOM Custom Events
+
+Button presses also dispatch DOM Custom Events on the `window` object:
+- `'dioxamine-back-button'`: Dispatched when the back button is pressed.
+- `'dioxamine-volume-button'`: Dispatched on volume button down and up.
+- `'dioxamine-button'`: Dispatched for both back and volume buttons.
+
+```javascript
+window.addEventListener('dioxamine-back-button', (e) => {
+    console.log("DOM Back Event:", e.detail);
+});
+
+window.addEventListener('dioxamine-volume-button', (e) => {
+    console.log("DOM Volume Event:", e.detail);
+});
+```
+
+---
+
 ## Opening External Links
 
 ### `dioxamine.openBrowser()` / `dioxamine.openUrl()`

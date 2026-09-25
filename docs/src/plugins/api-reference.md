@@ -30,7 +30,7 @@ The API is organized into the following specialized modules:
 3. **[ADB Interactive Shell Sessions](api/interactive-shell.md)**: Open persistent bi-directional PTY streams via `dioxamine.adb.openInteractiveShell()`.
 4. **[File Operations](api/files.md)**: Pull/push files via `dioxamine.adb.pull()` / `dioxamine.adb.push()`, and open system file pickers via `dioxamine.requestFilePicker()`.
 5. **[ADB Port Forwarding and Reverse](api/port-forwarding.md)**: Manage TCP socket forwarding via `dioxamine.adb.forwardAdd()` / `reverseAdd()`.
-6. **[UI Controls, Dialogs and Fullscreen](api/ui.md)**: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, and open external links in the host device browser.
+6. **[UI Controls, Dialogs, Buttons and Fullscreen](api/ui.md)**: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, intercept Back and Volume buttons, and open external links in the host device browser.
 7. **[Native Logging and Debugging](api/logging.md)**: Forward logs and console output directly to Android Logcat.
 8. **[Dynamic Theming and Material 3](api/theming.md)**: Integrate with Dioxamine's dynamic color schemes and listen for theme changes.
 9. **[App Language and Localization](api/localization.md)**: Detect Dioxamine's active app language, text direction (RTL/LTR), and build multi-language plugins.

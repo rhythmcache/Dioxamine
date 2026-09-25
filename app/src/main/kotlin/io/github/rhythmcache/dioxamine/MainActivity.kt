@@ -3,6 +3,7 @@ package io.github.rhythmcache.dioxamine
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -49,6 +50,32 @@ enum class Tab(@StringRes val labelRes: Int, val icon: androidx.compose.ui.graph
 }
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        // Owner-token pattern: prevents a disposing/unmounting screen from clobbering a newly active
+        // screen's key interceptor during overlapping Compose transitions or recomposition.
+        private var interceptorOwner: Any? = null
+        private var activeInterceptor: ((KeyEvent) -> Boolean)? = null
+
+        fun setKeyEventInterceptor(owner: Any, interceptor: (KeyEvent) -> Boolean) {
+            interceptorOwner = owner
+            activeInterceptor = interceptor
+        }
+
+        fun clearKeyEventInterceptor(owner: Any) {
+            if (interceptorOwner === owner) {
+                interceptorOwner = null
+                activeInterceptor = null
+            }
+        }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (activeInterceptor?.invoke(event) == true) {
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()

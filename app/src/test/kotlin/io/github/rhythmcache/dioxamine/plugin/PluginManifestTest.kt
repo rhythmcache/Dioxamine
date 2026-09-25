@@ -83,4 +83,35 @@ class PluginManifestTest {
         assertTrue(msg.contains("belongs to 'common', not 'fastboot'"))
         assertTrue(msg.contains("move to permissions.common"))
     }
+
+    @Test
+    fun testButtonInterceptionDefaultFalse() {
+        val json = validJson("{}")
+        val result = parseManifest(json)
+        assertTrue(result.isSuccess)
+        val manifest = result.getOrThrow()
+        assertFalse(manifest.interceptBackButton)
+        assertFalse(manifest.interceptVolumeButtons)
+    }
+
+    @Test
+    fun testButtonInterceptionExplicitTrue() {
+        val json = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.buttonsplugin",
+                "name": "Buttons Test Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "interceptBackButton": true,
+                "interceptVolumeButtons": true
+            }
+        """.trimIndent()
+        val result = parseManifest(json)
+        assertTrue(result.isSuccess)
+        val manifest = result.getOrThrow()
+        assertTrue(manifest.interceptBackButton)
+        assertTrue(manifest.interceptVolumeButtons)
+    }
 }

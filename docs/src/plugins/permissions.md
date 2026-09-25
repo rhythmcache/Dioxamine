@@ -72,6 +72,9 @@ The following bridge methods are safe UI/context utilities and do not require de
 - `dioxamine.showDialog()`
 - `dioxamine.setFullScreen()` / `dioxamine.fullScreen()`
 - `dioxamine.exitPlugin()` / `dioxamine.closePlugin()`
+- `dioxamine.onBackButton()` / `dioxamine.setInterceptBackButton()` / `dioxamine.defaultBack()`
+- `dioxamine.onVolumeButton()` / `dioxamine.setInterceptVolumeButtons()`
+- `dioxamine.buttons.*` button management
 - `dioxamine.openBrowser()` / `dioxamine.openUrl()` (prompts user with a native confirmation dialog showing the target URL before launching)
 - `dioxamine.requestFilePicker()` (delegates to Android Storage Access Framework with user file picker)
 - `dioxamine.log.*` and `console.*` forwarding

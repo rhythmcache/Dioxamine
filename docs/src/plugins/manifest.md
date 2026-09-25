@@ -42,6 +42,8 @@ Every Dioxamine plugin must include a valid `plugin.json` file at the root of it
 | `minAppVersionCode` | `Integer` | No | Minimum Dioxamine app `versionCode` required to execute this plugin. Default: `1`. |
 | `permissions` | `Object` | No | Declared permission groups. Supported subkeys: `adb` (list of ADB permissions) and `common` (list of general permissions, e.g. `"network"`). Default: `{}`. |
 | `fullscreen` | `Boolean` | No | If `true`, hides the Dioxamine top bar on launch to provide an edge-to-edge full-screen display. Default: `false`. |
+| `interceptBackButton` | `Boolean` | No | If `true`, intercepts Android Back button/gesture on plugin launch and forwards events to JavaScript. Default: `false`. |
+| `interceptVolumeButtons` | `Boolean` | No | If `true`, intercepts hardware Volume buttons on plugin launch and forwards events to JavaScript. Default: `false`. |
 | `homepage` | `String` | No | Web URL pointing to the plugin repository, source code, or documentation. |
 
 ## Validation Rules

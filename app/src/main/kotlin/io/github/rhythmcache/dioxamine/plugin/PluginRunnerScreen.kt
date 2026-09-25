@@ -2,10 +2,13 @@ package io.github.rhythmcache.dioxamine.plugin
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.view.KeyEvent
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import io.github.rhythmcache.dioxamine.MainActivity
 import io.github.rhythmcache.dioxamine.core.AppLogger
+import android.widget.Toast
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -92,6 +95,8 @@ fun PluginRunnerScreen(
     }
 
     var isFullScreen by remember(manifest.id) { mutableStateOf(manifest.fullscreen) }
+    var interceptBackButton by remember(manifest.id) { mutableStateOf(manifest.interceptBackButton) }
+    var interceptVolumeButtons by remember(manifest.id) { mutableStateOf(manifest.interceptVolumeButtons) }
 
     val declaredPermissions = remember(manifest.permissions) {
         manifest.permissions.allList().mapNotNull { PluginPermission.fromManifestString(it) }
@@ -122,14 +127,91 @@ fun PluginRunnerScreen(
                     isFullScreen = enable
                 },
                 onClosePlugin = onBack,
+                onDefaultBack = {
+                    if (webViewRef?.canGoBack() == true) {
+                        webViewRef?.goBack()
+                    } else {
+                        onBack()
+                    }
+                },
+                initialInterceptBackButton = manifest.interceptBackButton,
+                initialInterceptVolumeButtons = manifest.interceptVolumeButtons,
+                onInterceptBackButtonChanged = { enable ->
+                    interceptBackButton = enable
+                },
+                onInterceptVolumeButtonsChanged = { enable ->
+                    interceptVolumeButtons = enable
+                },
             )
         }
 
-    BackHandler {
-        if (webViewRef?.canGoBack() == true) {
+    var lastBackPressTime by remember { mutableLongStateOf(0L) }
+    var rapidBackPressCount by remember { mutableIntStateOf(0) }
+
+    val handleBack = {
+        if (interceptBackButton) {
+            val now = System.currentTimeMillis()
+            if (now - lastBackPressTime < 2000L) {
+                rapidBackPressCount++
+            } else {
+                rapidBackPressCount = 1
+            }
+            lastBackPressTime = now
+
+            if (rapidBackPressCount >= 3) {
+                Toast.makeText(context, R.string.plugin_force_exit_done, Toast.LENGTH_SHORT).show()
+                onBack()
+            } else {
+                if (rapidBackPressCount == 2) {
+                    Toast.makeText(context, R.string.plugin_force_exit_prompt, Toast.LENGTH_SHORT).show()
+                }
+                bridge.dispatchBackButton()
+            }
+        } else if (webViewRef?.canGoBack() == true) {
             webViewRef?.goBack()
         } else {
             onBack()
+        }
+    }
+
+    BackHandler(onBack = handleBack)
+
+    DisposableEffect(interceptVolumeButtons, bridge) {
+        if (interceptVolumeButtons) {
+            MainActivity.setKeyEventInterceptor(bridge) { event ->
+                val keyCode = event.keyCode
+                if (keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+                    keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ||
+                    keyCode == KeyEvent.KEYCODE_VOLUME_MUTE
+                ) {
+                    val button = when (keyCode) {
+                        KeyEvent.KEYCODE_VOLUME_UP -> "volume_up"
+                        KeyEvent.KEYCODE_VOLUME_DOWN -> "volume_down"
+                        KeyEvent.KEYCODE_VOLUME_MUTE -> "volume_mute"
+                        else -> "unknown"
+                    }
+                    val action = when (event.action) {
+                        KeyEvent.ACTION_DOWN -> "down"
+                        KeyEvent.ACTION_UP -> "up"
+                        else -> "unknown"
+                    }
+                    bridge.dispatchVolumeButton(
+                        button = button,
+                        action = action,
+                        keyCode = keyCode,
+                        repeatCount = event.repeatCount,
+                    )
+                    true
+                } else {
+                    false
+                }
+            }
+        } else {
+            MainActivity.clearKeyEventInterceptor(bridge)
+        }
+
+        onDispose {
+            MainActivity.clearKeyEventInterceptor(bridge)
         }
     }
 
