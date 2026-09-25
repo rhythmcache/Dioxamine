@@ -358,12 +358,22 @@
                 };
             });
         },
+        interceptBack: function(enable) { this.setInterceptBackButton(enable); },
+        interceptVolume: function(enable) { this.setInterceptVolumeButtons(enable); },
+        isInterceptingBack: function() { return this.isInterceptingBackButton(); },
+        isInterceptingVolume: function() { return this.isInterceptingVolumeButtons(); },
         buttons: {
             setInterceptBackButton: function(enable) { window.dioxamine.setInterceptBackButton(enable); },
             setInterceptVolumeButtons: function(enable) { window.dioxamine.setInterceptVolumeButtons(enable); },
+            setInterceptBack: function(enable) { window.dioxamine.setInterceptBackButton(enable); },
+            setInterceptVolume: function(enable) { window.dioxamine.setInterceptVolumeButtons(enable); },
+            interceptBack: function(enable) { window.dioxamine.setInterceptBackButton(enable); },
+            interceptVolume: function(enable) { window.dioxamine.setInterceptVolumeButtons(enable); },
             setIntercept: function(options) { window.dioxamine.setInterceptButtons(options); },
             isInterceptingBackButton: function() { return window.dioxamine.isInterceptingBackButton(); },
             isInterceptingVolumeButtons: function() { return window.dioxamine.isInterceptingVolumeButtons(); },
+            isInterceptingBack: function() { return window.dioxamine.isInterceptingBackButton(); },
+            isInterceptingVolume: function() { return window.dioxamine.isInterceptingVolumeButtons(); },
             getStatusAsync: function() { return window.dioxamine.getInterceptStatusAsync(); },
             onBackButton: function(fn) { window.dioxamine.onBackButton(fn); },
             onVolumeButton: function(fn) { window.dioxamine.onVolumeButton(fn); },
