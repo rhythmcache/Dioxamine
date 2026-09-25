@@ -45,6 +45,69 @@
 
     window.__dioxamine_theme_listener = null;
     window.__dioxamine_language_listener = null;
+    window.__dioxamine_back_listener = null;
+    window.__dioxamine_volume_listener = null;
+    window.__dioxamine_button_listener = null;
+
+    window.__dioxamine_on_back_button = function() {
+        var event = {
+            button: 'back',
+            direction: 'back',
+            action: 'down',
+            key: 'GoBack',
+            keyCode: 4,
+            repeatCount: 0
+        };
+        if (typeof window.__dioxamine_back_listener === 'function') {
+            try {
+                window.__dioxamine_back_listener(event);
+            } catch (e) {
+                console.error('Error in onBackButton listener:', e);
+            }
+        }
+        if (typeof window.__dioxamine_button_listener === 'function') {
+            try {
+                window.__dioxamine_button_listener(event);
+            } catch (e) {
+                console.error('Error in onButton listener:', e);
+            }
+        }
+        try {
+            window.dispatchEvent(new CustomEvent('dioxamine-back-button', { detail: event }));
+            window.dispatchEvent(new CustomEvent('dioxamine-button', { detail: event }));
+        } catch (e) {}
+    };
+
+    window.__dioxamine_on_volume_button = function(button, action, keyCode, repeatCount) {
+        var direction = button === 'volume_up' ? 'up' : (button === 'volume_down' ? 'down' : 'mute');
+        var key = button === 'volume_up' ? 'VolumeUp' : (button === 'volume_down' ? 'VolumeDown' : 'VolumeMute');
+        var event = {
+            button: button,
+            direction: direction,
+            action: action,
+            key: key,
+            keyCode: keyCode,
+            repeatCount: repeatCount || 0
+        };
+        if (typeof window.__dioxamine_volume_listener === 'function') {
+            try {
+                window.__dioxamine_volume_listener(event);
+            } catch (e) {
+                console.error('Error in onVolumeButton listener:', e);
+            }
+        }
+        if (typeof window.__dioxamine_button_listener === 'function') {
+            try {
+                window.__dioxamine_button_listener(event);
+            } catch (e) {
+                console.error('Error in onButton listener:', e);
+            }
+        }
+        try {
+            window.dispatchEvent(new CustomEvent('dioxamine-volume-button', { detail: event }));
+            window.dispatchEvent(new CustomEvent('dioxamine-button', { detail: event }));
+        } catch (e) {}
+    };
 
     var adb = {
         getActiveDevice: function() { return callNative('getActiveDevice'); },
@@ -227,6 +290,95 @@
         },
         closePlugin: function() {
             this.exitPlugin();
+        },
+        setInterceptBackButton: function(enable) {
+            if (window.DioxamineNative && typeof window.DioxamineNative.setInterceptBackButton === 'function') {
+                window.DioxamineNative.setInterceptBackButton(Boolean(enable));
+            }
+        },
+        isInterceptingBackButton: function() {
+            if (window.DioxamineNative && typeof window.DioxamineNative.isInterceptingBackButton === 'function') {
+                return window.DioxamineNative.isInterceptingBackButton();
+            }
+            return false;
+        },
+        onBackButton: function(fn) {
+            window.__dioxamine_back_listener = fn;
+            if (typeof fn === 'function') {
+                this.setInterceptBackButton(true);
+            } else if (fn === null || fn === false) {
+                this.setInterceptBackButton(false);
+            }
+        },
+        defaultBack: function() {
+            if (window.DioxamineNative && typeof window.DioxamineNative.defaultBack === 'function') {
+                window.DioxamineNative.defaultBack();
+            }
+        },
+        setInterceptVolumeButtons: function(enable) {
+            if (window.DioxamineNative && typeof window.DioxamineNative.setInterceptVolumeButtons === 'function') {
+                window.DioxamineNative.setInterceptVolumeButtons(Boolean(enable));
+            }
+        },
+        isInterceptingVolumeButtons: function() {
+            if (window.DioxamineNative && typeof window.DioxamineNative.isInterceptingVolumeButtons === 'function') {
+                return window.DioxamineNative.isInterceptingVolumeButtons();
+            }
+            return false;
+        },
+        onVolumeButton: function(fn) {
+            window.__dioxamine_volume_listener = fn;
+            if (typeof fn === 'function') {
+                this.setInterceptVolumeButtons(true);
+            } else if (fn === null || fn === false) {
+                this.setInterceptVolumeButtons(false);
+            }
+        },
+        onButton: function(fn) {
+            window.__dioxamine_button_listener = fn;
+            if (typeof fn === 'function') {
+                this.setInterceptBackButton(true);
+                this.setInterceptVolumeButtons(true);
+            } else if (fn === null || fn === false) {
+                this.setInterceptBackButton(false);
+                this.setInterceptVolumeButtons(false);
+            }
+        },
+        setInterceptButtons: function(options) {
+            options = options || {};
+            if (options.back !== undefined) this.setInterceptBackButton(Boolean(options.back));
+            if (options.volume !== undefined) this.setInterceptVolumeButtons(Boolean(options.volume));
+        },
+        getInterceptStatusAsync: function() {
+            var self = this;
+            return Promise.resolve().then(function() {
+                return {
+                    back: self.isInterceptingBackButton(),
+                    volume: self.isInterceptingVolumeButtons()
+                };
+            });
+        },
+        interceptBack: function(enable) { this.setInterceptBackButton(enable); },
+        interceptVolume: function(enable) { this.setInterceptVolumeButtons(enable); },
+        isInterceptingBack: function() { return this.isInterceptingBackButton(); },
+        isInterceptingVolume: function() { return this.isInterceptingVolumeButtons(); },
+        buttons: {
+            setInterceptBackButton: function(enable) { window.dioxamine.setInterceptBackButton(enable); },
+            setInterceptVolumeButtons: function(enable) { window.dioxamine.setInterceptVolumeButtons(enable); },
+            setInterceptBack: function(enable) { window.dioxamine.setInterceptBackButton(enable); },
+            setInterceptVolume: function(enable) { window.dioxamine.setInterceptVolumeButtons(enable); },
+            interceptBack: function(enable) { window.dioxamine.setInterceptBackButton(enable); },
+            interceptVolume: function(enable) { window.dioxamine.setInterceptVolumeButtons(enable); },
+            setIntercept: function(options) { window.dioxamine.setInterceptButtons(options); },
+            isInterceptingBackButton: function() { return window.dioxamine.isInterceptingBackButton(); },
+            isInterceptingVolumeButtons: function() { return window.dioxamine.isInterceptingVolumeButtons(); },
+            isInterceptingBack: function() { return window.dioxamine.isInterceptingBackButton(); },
+            isInterceptingVolume: function() { return window.dioxamine.isInterceptingVolumeButtons(); },
+            getStatusAsync: function() { return window.dioxamine.getInterceptStatusAsync(); },
+            onBackButton: function(fn) { window.dioxamine.onBackButton(fn); },
+            onVolumeButton: function(fn) { window.dioxamine.onVolumeButton(fn); },
+            onButton: function(fn) { window.dioxamine.onButton(fn); },
+            defaultBack: function() { window.dioxamine.defaultBack(); }
         },
         openBrowser: function(url) {
             if (!url || typeof url !== 'string') {

@@ -65,7 +65,15 @@ class DioxaminePluginBridge(
     private val evaluateJs: (String) -> Unit,
     private val onFullScreenChanged: (Boolean) -> Unit = {},
     private val onClosePlugin: () -> Unit = {},
+    private val onDefaultBack: () -> Unit = {},
+    initialInterceptBackButton: Boolean = false,
+    initialInterceptVolumeButtons: Boolean = false,
+    private val onInterceptBackButtonChanged: (Boolean) -> Unit = {},
+    private val onInterceptVolumeButtonsChanged: (Boolean) -> Unit = {},
 ) {
+
+    private var interceptBackButton: Boolean = initialInterceptBackButton
+    private var interceptVolumeButtons: Boolean = initialInterceptVolumeButtons
 
     private val logTimestamps = ArrayDeque<Long>()
     private val toastTimestamps = ArrayDeque<Long>()
@@ -733,6 +741,50 @@ class DioxaminePluginBridge(
     @JavascriptInterface
     fun closePlugin() {
         exitPlugin()
+    }
+
+    @JavascriptInterface
+    fun setInterceptBackButton(enable: Boolean) {
+        interceptBackButton = enable
+        scope.launch(Dispatchers.Main) {
+            onInterceptBackButtonChanged(enable)
+        }
+    }
+
+    @JavascriptInterface
+    fun isInterceptingBackButton(): Boolean = interceptBackButton
+
+    @JavascriptInterface
+    fun setInterceptVolumeButtons(enable: Boolean) {
+        interceptVolumeButtons = enable
+        scope.launch(Dispatchers.Main) {
+            onInterceptVolumeButtonsChanged(enable)
+        }
+    }
+
+    @JavascriptInterface
+    fun isInterceptingVolumeButtons(): Boolean = interceptVolumeButtons
+
+    @JavascriptInterface
+    fun defaultBack() {
+        scope.launch(Dispatchers.Main) {
+            onDefaultBack()
+        }
+    }
+
+    fun dispatchBackButton() {
+        evaluateJs("window.__dioxamine_on_back_button && window.__dioxamine_on_back_button();")
+    }
+
+    fun dispatchVolumeButton(
+        button: String,
+        action: String,
+        keyCode: Int,
+        repeatCount: Int,
+    ) {
+        val escapedButton = JSONObject.quote(button)
+        val escapedAction = JSONObject.quote(action)
+        evaluateJs("window.__dioxamine_on_volume_button && window.__dioxamine_on_volume_button($escapedButton, $escapedAction, $keyCode, $repeatCount);")
     }
 
     @JavascriptInterface

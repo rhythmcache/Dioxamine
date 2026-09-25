@@ -907,4 +907,6 @@
     <string name="notification_keep_alive_stop_action">Stop</string>
     <string name="settings_battery_opt_denied_warning">Battery optimization not disabled. Background connections may be suspended during Doze mode.</string>
     <string name="settings_notif_perm_denied_warning">Notification permission denied. Background status notification will not be visible.</string>
+    <string name="plugin_force_exit_prompt">Press back once more to force exit plugin</string>
+    <string name="plugin_force_exit_done">Exited plugin</string>
 </resources>

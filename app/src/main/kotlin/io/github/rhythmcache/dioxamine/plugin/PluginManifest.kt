@@ -33,6 +33,8 @@ data class PluginManifest(
     val permissions: PluginPermissionsConfig = PluginPermissionsConfig(),
     val homepage: String? = null,
     val fullscreen: Boolean = false,
+    val interceptBackButton: Boolean = false,
+    val interceptVolumeButtons: Boolean = false,
 )
 
 private val jsonParser = Json { ignoreUnknownKeys = true }
