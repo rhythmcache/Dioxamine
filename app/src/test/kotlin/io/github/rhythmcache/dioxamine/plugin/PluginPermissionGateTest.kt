@@ -167,4 +167,41 @@ class PluginPermissionGateTest {
         assertFalse(gate.isSessionGranted("plugin.a", PluginPermission.SHELL))
         assertFalse(gate.isSessionGranted("plugin.b", PluginPermission.NETWORK))
     }
+
+    @Test
+    fun testConcurrentSessionAccessDoesNotThrow() {
+        val gate = PluginPermissionGate(store = null)
+        val numThreads = 8
+        val iterationsPerThread = 500
+        val executor = java.util.concurrent.Executors.newFixedThreadPool(numThreads)
+        val latch = java.util.concurrent.CountDownLatch(numThreads)
+        val errors = java.util.concurrent.CopyOnWriteArrayList<Throwable>()
+
+        for (i in 0 until numThreads) {
+            executor.submit {
+                try {
+                    val pluginId = "plugin_${i % 3}"
+                    val perm = PluginPermission.entries[i % PluginPermission.entries.size]
+                    for (j in 0 until iterationsPerThread) {
+                        gate.isSessionGranted(pluginId, perm)
+                        gate.isSessionDenied(pluginId, perm)
+                        if (j % 5 == 0) {
+                            gate.clearSessionPermission(pluginId, perm)
+                        }
+                        if (j % 20 == 0) {
+                            gate.clearSession(pluginId)
+                        }
+                    }
+                } catch (t: Throwable) {
+                    errors.add(t)
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
+        executor.shutdown()
+        assertTrue("Encountered errors during concurrent access: $errors", errors.isEmpty())
+    }
 }
