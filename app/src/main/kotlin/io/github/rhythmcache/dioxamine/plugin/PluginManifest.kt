@@ -30,7 +30,6 @@ data class PluginManifest(
     val entry: String,
     val icon: String? = null,
     val minAppVersionCode: Int = 1,
-    val minAppVersion: String? = null,
     val permissions: PluginPermissionsConfig = PluginPermissionsConfig(),
     val homepage: String? = null,
     val fullscreen: Boolean = false,
@@ -130,22 +129,13 @@ fun parseManifest(json: String): Result<PluginManifest> {
         }
     }
 
-    // 9. minAppVersionCode & minAppVersion enforcement
+    // 9. minAppVersionCode enforcement
     if (manifest.minAppVersionCode > BuildConfig.VERSION_CODE) {
         return Result.failure(
             IllegalArgumentException(
                 "Plugin requires app version code ${manifest.minAppVersionCode} or higher (current version code is ${BuildConfig.VERSION_CODE})",
             ),
         )
-    }
-    manifest.minAppVersion?.let { requiredVersion ->
-        if (requiredVersion.isNotBlank() && !isAppVersionAtLeast(requiredVersion, BuildConfig.VERSION_NAME)) {
-            return Result.failure(
-                IllegalArgumentException(
-                    "Plugin requires Dioxamine version $requiredVersion or higher (current version is ${BuildConfig.VERSION_NAME})",
-                ),
-            )
-        }
     }
 
     // 10. Reject unknown permissions in manifest by subkey
@@ -192,17 +182,5 @@ fun parseManifest(json: String): Result<PluginManifest> {
     }
 
     return Result.success(manifest)
-}
-
-internal fun isAppVersionAtLeast(required: String, current: String): Boolean {
-    val reqParts = required.trim().removePrefix("v").split(".").map { it.filter { ch -> ch.isDigit() }.toIntOrNull() ?: 0 }
-    val curParts = current.trim().removePrefix("v").split(".").map { it.filter { ch -> ch.isDigit() }.toIntOrNull() ?: 0 }
-    val maxLen = maxOf(reqParts.size, curParts.size)
-    for (i in 0 until maxLen) {
-        val r = reqParts.getOrElse(i) { 0 }
-        val c = curParts.getOrElse(i) { 0 }
-        if (c != r) return c > r
-    }
-    return true
 }
 

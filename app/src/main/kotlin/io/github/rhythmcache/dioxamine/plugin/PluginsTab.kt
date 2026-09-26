@@ -627,12 +627,7 @@ fun PluginsTab(
                         )
                     }
 
-                    if (!manifest.minAppVersion.isNullOrBlank()) {
-                        Text(
-                            text = "Min App Version: ${manifest.minAppVersion}",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    } else if (manifest.minAppVersionCode > 1) {
+                    if (manifest.minAppVersionCode > 1) {
                         Text(
                             text = stringResource(R.string.plugin_info_min_app_version, manifest.minAppVersionCode),
                             style = MaterialTheme.typography.bodyMedium,
