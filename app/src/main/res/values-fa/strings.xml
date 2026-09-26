@@ -95,16 +95,34 @@
     <string name="plugin_open_browser_btn_open">باز کردن</string>
     <string name="plugin_runner_not_found">پلاگین پیدا نشد</string>
     <string name="plugin_menu_info">اطلاعات</string>
+    <string name="plugin_menu_permissions">مجوزها</string>
     <string name="plugin_menu_uninstall">حذف نصب</string>
+    <string name="plugin_perm_btn_always_allow">همیشه مجاز باشد</string>
+    <string name="plugin_perm_btn_allow_session">برای این جلسه مجاز باشد</string>
+    <string name="plugin_perm_btn_deny_session">برای این جلسه رد شود</string>
+    <string name="plugin_perm_btn_always_deny">همیشه رد شود</string>
+    <string name="plugin_perm_dialog_plugin_title">مجوزهای %1$s</string>
+    <string name="plugin_perm_no_permissions">هیچ مجوزی اعلام نشده است</string>
+    <string name="plugin_perm_session_status_allowed">برای جلسه فعلی مجاز است</string>
+    <string name="plugin_perm_session_status_denied">برای جلسه فعلی رد شده است</string>
+    <string name="plugin_perm_session_reset">بازنشانی</string>
     <string name="plugin_info_title">جزئیات پلاگین</string>
     <string name="plugin_info_id">شناسه: %1$s</string>
     <string name="plugin_info_version">نسخه: %1$s</string>
     <string name="plugin_info_author">توسعه‌دهنده: %1$s</string>
     <string name="plugin_info_entry">نقطه ورود: %1$s</string>
+    <string name="plugin_info_size">اندازه حافظه: %1$s</string>
+    <string name="plugin_info_homepage">صفحه وب: %1$s</string>
+    <string name="plugin_info_min_app_version">حداقل بیلد برنامه: %1$d</string>
     <string name="plugin_info_permissions">مجوزها: %1$s</string>
     <string name="plugin_uninstall_title">حذف نصب پلاگین</string>
     <string name="plugin_uninstall_confirm">آیا مطمئن هستید که می‌خواهید \"%1$s\" را حذف کنید؟</string>
     <string name="plugin_msg_uninstalled">پلاگین \"%1$s\" حذف شد</string>
+    <string name="plugin_update_available">به‌روزرسانی موجود است: v%1$s</string>
+    <string name="plugin_btn_update">به‌روزرسانی</string>
+    <string name="plugin_btn_updating">در حال به‌روزرسانی…</string>
+    <string name="plugin_btn_changelog">تغییرات</string>
+    <string name="plugin_msg_download_failed">دانلود به‌روزرسانی افزونه ناموفق بود</string>
     <string name="cd_more_options">گزینه‌های بیشتر</string>
 
     <!-- Plugin Settings & Permission Manager Strings -->

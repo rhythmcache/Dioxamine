@@ -95,16 +95,34 @@
     <string name="plugin_open_browser_btn_open">打开</string>
     <string name="plugin_runner_not_found">找不到插件</string>
     <string name="plugin_menu_info">信息</string>
+    <string name="plugin_menu_permissions">权限</string>
     <string name="plugin_menu_uninstall">卸载</string>
+    <string name="plugin_perm_btn_always_allow">始终允许</string>
+    <string name="plugin_perm_btn_allow_session">仅本次会话允许</string>
+    <string name="plugin_perm_btn_deny_session">仅本次会话拒绝</string>
+    <string name="plugin_perm_btn_always_deny">始终拒绝</string>
+    <string name="plugin_perm_dialog_plugin_title">%1$s 权限</string>
+    <string name="plugin_perm_no_permissions">未声明任何权限</string>
+    <string name="plugin_perm_session_status_allowed">当前会话已允许</string>
+    <string name="plugin_perm_session_status_denied">当前会话已拒绝</string>
+    <string name="plugin_perm_session_reset">重置</string>
     <string name="plugin_info_title">插件详情</string>
     <string name="plugin_info_id">ID：%1$s</string>
     <string name="plugin_info_version">版本：%1$s</string>
     <string name="plugin_info_author">作者：%1$s</string>
     <string name="plugin_info_entry">入口：%1$s</string>
+    <string name="plugin_info_size">大小：%1$s</string>
+    <string name="plugin_info_homepage">主页：%1$s</string>
+    <string name="plugin_info_min_app_version">最低应用构建版本：%1$d</string>
     <string name="plugin_info_permissions">权限：%1$s</string>
     <string name="plugin_uninstall_title">卸载插件</string>
     <string name="plugin_uninstall_confirm">确定要卸载“%1$s”吗？</string>
     <string name="plugin_msg_uninstalled">已卸载插件“%1$s”</string>
+    <string name="plugin_update_available">有可用更新：v%1$s</string>
+    <string name="plugin_btn_update">更新</string>
+    <string name="plugin_btn_updating">正在更新…</string>
+    <string name="plugin_btn_changelog">更新日志</string>
+    <string name="plugin_msg_download_failed">下载插件更新失败</string>
     <string name="cd_more_options">更多选项</string>
 
     <!-- 插件设置和权限管理 -->

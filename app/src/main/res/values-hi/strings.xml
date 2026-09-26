@@ -95,16 +95,34 @@
     <string name="plugin_open_browser_btn_open">खोलें</string>
     <string name="plugin_runner_not_found">प्लगइन नहीं मिला</string>
     <string name="plugin_menu_info">जानकारी</string>
+    <string name="plugin_menu_permissions">अनुमतियाँ</string>
     <string name="plugin_menu_uninstall">अनइंस्टॉल करें</string>
+    <string name="plugin_perm_btn_always_allow">हमेशा अनुमति दें</string>
+    <string name="plugin_perm_btn_allow_session">इस सत्र के लिए अनुमति दें</string>
+    <string name="plugin_perm_btn_deny_session">इस सत्र के लिए अस्वीकार करें</string>
+    <string name="plugin_perm_btn_always_deny">हमेशा अस्वीकार करें</string>
+    <string name="plugin_perm_dialog_plugin_title">%1$s की अनुमतियाँ</string>
+    <string name="plugin_perm_no_permissions">कोई अनुमति घोषित नहीं की गई है</string>
+    <string name="plugin_perm_session_status_allowed">वर्तमान सत्र के लिए अनुमत</string>
+    <string name="plugin_perm_session_status_denied">वर्तमान सत्र के लिए अस्वीकृत</string>
+    <string name="plugin_perm_session_reset">रीसेट करें</string>
     <string name="plugin_info_title">प्लगइन विवरण</string>
     <string name="plugin_info_id">ID: %1$s</string>
     <string name="plugin_info_version">संस्करण: %1$s</string>
     <string name="plugin_info_author">लेखक: %1$s</string>
     <string name="plugin_info_entry">एंट्री: %1$s</string>
+    <string name="plugin_info_size">आकार: %1$s</string>
+    <string name="plugin_info_homepage">होमपेज: %1$s</string>
+    <string name="plugin_info_min_app_version">न्यूनतम ऐप बिल्ड: %1$d</string>
     <string name="plugin_info_permissions">अनुमतियां: %1$s</string>
     <string name="plugin_uninstall_title">प्लगइन अनइंस्टॉल करें</string>
     <string name="plugin_uninstall_confirm">क्या आप वाकई \"%1$s\" को अनइंस्टॉल करना चाहते हैं?</string>
     <string name="plugin_msg_uninstalled">प्लगइन \"%1$s\" अनइंस्टॉल हो गया</string>
+    <string name="plugin_update_available">अपडेट उपलब्ध: v%1$s</string>
+    <string name="plugin_btn_update">अपडेट करें</string>
+    <string name="plugin_btn_updating">अपडेट हो रहा है…</string>
+    <string name="plugin_btn_changelog">बदलाव सूची</string>
+    <string name="plugin_msg_download_failed">प्लगइन अपडेट डाउनलोड करने में विफल</string>
     <string name="cd_more_options">अधिक विकल्प</string>
 
     <!-- Plugin Settings & Permission Manager Strings -->

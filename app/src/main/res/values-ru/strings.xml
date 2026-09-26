@@ -97,16 +97,34 @@
     <string name="plugin_open_browser_btn_open">Открыть</string>
     <string name="plugin_runner_not_found">Плагин не найден</string>
     <string name="plugin_menu_info">Инфо</string>
+    <string name="plugin_menu_permissions">Разрешения</string>
     <string name="plugin_menu_uninstall">Удалить</string>
+    <string name="plugin_perm_btn_always_allow">Разрешать всегда</string>
+    <string name="plugin_perm_btn_allow_session">Разрешить для этой сессии</string>
+    <string name="plugin_perm_btn_deny_session">Запретить для этой сессии</string>
+    <string name="plugin_perm_btn_always_deny">Запрещать всегда</string>
+    <string name="plugin_perm_dialog_plugin_title">Разрешения %1$s</string>
+    <string name="plugin_perm_no_permissions">Разрешения не объявлены</string>
+    <string name="plugin_perm_session_status_allowed">Разрешено для текущей сессии</string>
+    <string name="plugin_perm_session_status_denied">Запрещено для текущей сессии</string>
+    <string name="plugin_perm_session_reset">Сбросить</string>
     <string name="plugin_info_title">Сведения о плагине</string>
     <string name="plugin_info_id">ID: %1$s</string>
     <string name="plugin_info_version">Версия: %1$s</string>
     <string name="plugin_info_author">Автор: %1$s</string>
     <string name="plugin_info_entry">Точка входа: %1$s</string>
+    <string name="plugin_info_size">Размер: %1$s</string>
+    <string name="plugin_info_homepage">Сайт: %1$s</string>
+    <string name="plugin_info_min_app_version">Мин. сборка приложения: %1$d</string>
     <string name="plugin_info_permissions">Разрешения: %1$s</string>
     <string name="plugin_uninstall_title">Удаление плагина</string>
     <string name="plugin_uninstall_confirm">Вы уверены, что хотите удалить «%1$s»?</string>
     <string name="plugin_msg_uninstalled">Плагин «%1$s» удален</string>
+    <string name="plugin_update_available">Доступно обновление: v%1$s</string>
+    <string name="plugin_btn_update">Обновить</string>
+    <string name="plugin_btn_updating">Обновление…</string>
+    <string name="plugin_btn_changelog">Список изменений</string>
+    <string name="plugin_msg_download_failed">Не удалось загрузить обновление плагина</string>
     <string name="cd_more_options">Дополнительные параметры</string>
 
     <!-- Plugin Settings & Permission Manager Strings -->

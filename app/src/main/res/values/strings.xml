@@ -100,16 +100,34 @@
     <string name="plugin_open_browser_btn_open">Open</string>
     <string name="plugin_runner_not_found">Plugin not found</string>
     <string name="plugin_menu_info">Info</string>
+    <string name="plugin_menu_permissions">Permissions</string>
     <string name="plugin_menu_uninstall">Uninstall</string>
+    <string name="plugin_perm_btn_always_allow">Always Allow</string>
+    <string name="plugin_perm_btn_allow_session">Allow for This Session</string>
+    <string name="plugin_perm_btn_deny_session">Deny for This Session</string>
+    <string name="plugin_perm_btn_always_deny">Always Deny</string>
+    <string name="plugin_perm_dialog_plugin_title">%1$s Permissions</string>
+    <string name="plugin_perm_no_permissions">No permissions declared</string>
+    <string name="plugin_perm_session_status_allowed">Allowed for current session</string>
+    <string name="plugin_perm_session_status_denied">Denied for current session</string>
+    <string name="plugin_perm_session_reset">Reset</string>
     <string name="plugin_info_title">Plugin Details</string>
     <string name="plugin_info_id">ID: %1$s</string>
     <string name="plugin_info_version">Version: %1$s</string>
     <string name="plugin_info_author">Author: %1$s</string>
     <string name="plugin_info_entry">Entry: %1$s</string>
+    <string name="plugin_info_size">Size: %1$s</string>
+    <string name="plugin_info_homepage">Homepage: %1$s</string>
+    <string name="plugin_info_min_app_version">Min App Build: %1$d</string>
     <string name="plugin_info_permissions">Permissions: %1$s</string>
     <string name="plugin_uninstall_title">Uninstall Plugin</string>
     <string name="plugin_uninstall_confirm">Are you sure you want to uninstall \"%1$s\"?</string>
     <string name="plugin_msg_uninstalled">Plugin \"%1$s\" uninstalled</string>
+    <string name="plugin_update_available">Update available: v%1$s</string>
+    <string name="plugin_btn_update">Update</string>
+    <string name="plugin_btn_updating">Updating…</string>
+    <string name="plugin_btn_changelog">Changelog</string>
+    <string name="plugin_msg_download_failed">Failed to download plugin update</string>
     <string name="cd_more_options">More options</string>
 
     <!-- Plugin Settings & Permission Manager Strings -->

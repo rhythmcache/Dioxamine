@@ -1,12 +1,17 @@
 package io.github.rhythmcache.dioxamine.plugin
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import io.github.rhythmcache.dioxamine.R
 
 @Composable
@@ -26,24 +31,101 @@ fun PluginPermissionDialogHost(gate: PluginPermissionGate) {
                 PluginPermission.FASTBOOT -> stringResource(R.string.plugin_perm_fastboot)
             }
 
+        val permissionName = request.permission.name.lowercase().replaceFirstChar { it.uppercase() }
+
         AlertDialog(
-            onDismissRequest = { request.onResult(false) },
+            onDismissRequest = { request.onDecision(PermissionDecision.DENY_SESSION) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Security,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp),
+                )
+            },
             title = {
-                Text(text = stringResource(R.string.plugin_perm_dialog_title, request.pluginName))
+                Text(
+                    text = stringResource(R.string.plugin_perm_dialog_title, request.pluginName),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
             },
             text = {
-                Text(text = permissionDescription)
-            },
-            confirmButton = {
-                TextButton(onClick = { request.onResult(true) }) {
-                    Text(text = stringResource(R.string.btn_allow))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    ) {
+                        Text(
+                            text = permissionName,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        )
+                    }
+
+                    Text(
+                        text = permissionDescription,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    Spacer(Modifier.height(10.dp))
+
+                    Button(
+                        onClick = { request.onDecision(PermissionDecision.ALWAYS_ALLOW) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plugin_perm_btn_always_allow),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+
+                    FilledTonalButton(
+                        onClick = { request.onDecision(PermissionDecision.ALLOW_SESSION) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plugin_perm_btn_allow_session),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { request.onDecision(PermissionDecision.DENY_SESSION) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plugin_perm_btn_deny_session),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+
+                    TextButton(
+                        onClick = { request.onDecision(PermissionDecision.ALWAYS_DENY) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plugin_perm_btn_always_deny),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { request.onResult(false) }) {
-                    Text(text = stringResource(R.string.btn_deny))
-                }
-            },
+            confirmButton = {},
         )
     }
 }

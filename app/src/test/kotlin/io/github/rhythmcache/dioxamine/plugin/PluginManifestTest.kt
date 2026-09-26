@@ -114,4 +114,104 @@ class PluginManifestTest {
         assertTrue(manifest.interceptBackButton)
         assertTrue(manifest.interceptVolumeButtons)
     }
+
+    @Test
+    fun testMinAppVersionCodeRejection() {
+        val json = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.futureplugin",
+                "name": "Future Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "minAppVersionCode": 999999
+            }
+        """.trimIndent()
+        val result = parseManifest(json)
+        assertTrue(result.isFailure)
+        val msg = result.exceptionOrNull()?.message.orEmpty()
+        assertTrue(msg.contains("Plugin requires app version code 999999 or higher"))
+    }
+
+    @Test
+    fun testUpdateJsonDefaultNull() {
+        val json = validJson("{}")
+        val result = parseManifest(json)
+        assertTrue(result.isSuccess)
+        assertNull(result.getOrThrow().updateJson)
+    }
+
+    @Test
+    fun testUpdateJsonValidHttpAndHttps() {
+        val httpsJson = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.updateplugin",
+                "name": "Update Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "updateJson": "https://example.com/update.json"
+            }
+        """.trimIndent()
+        val httpsResult = parseManifest(httpsJson)
+        assertTrue(httpsResult.isSuccess)
+        assertEquals("https://example.com/update.json", httpsResult.getOrThrow().updateJson)
+
+        val httpJson = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.updateplugin",
+                "name": "Update Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "updateJson": "http://192.168.1.5:8080/update.json"
+            }
+        """.trimIndent()
+        val httpResult = parseManifest(httpJson)
+        assertTrue(httpResult.isSuccess)
+        assertEquals("http://192.168.1.5:8080/update.json", httpResult.getOrThrow().updateJson)
+    }
+
+    @Test
+    fun testUpdateJsonInvalidScheme() {
+        val json = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.updateplugin",
+                "name": "Update Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "updateJson": "ftp://example.com/update.json"
+            }
+        """.trimIndent()
+        val result = parseManifest(json)
+        assertTrue(result.isFailure)
+        val msg = result.exceptionOrNull()?.message.orEmpty()
+        assertTrue(msg.contains("Invalid updateJson URL"))
+        assertTrue(msg.contains("must start with http:// or https://"))
+    }
+
+    @Test
+    fun testUpdateJsonBlank() {
+        val json = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.updateplugin",
+                "name": "Update Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "updateJson": "   "
+            }
+        """.trimIndent()
+        val result = parseManifest(json)
+        assertTrue(result.isFailure)
+        val msg = result.exceptionOrNull()?.message.orEmpty()
+        assertTrue(msg.contains("Invalid updateJson URL"))
+    }
 }
+
