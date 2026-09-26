@@ -262,6 +262,29 @@
         getLocaleAsync: function() {
             return this.getLanguageAsync();
         },
+        getAppVersion: function() {
+            if (window.DioxamineNative && typeof window.DioxamineNative.getAppVersion === 'function') {
+                try {
+                    return JSON.parse(window.DioxamineNative.getAppVersion());
+                } catch (e) {}
+            }
+            return {
+                versionName: "unknown",
+                versionCode: 0,
+                version: "unknown",
+                appName: "Dioxamine",
+                applicationId: "io.github.rhythmcache.dioxamine"
+            };
+        },
+        getVersion: function() {
+            return this.getAppVersion();
+        },
+        getAppVersionAsync: function() {
+            return callNative('getAppVersionAsync');
+        },
+        getVersionAsync: function() {
+            return this.getAppVersionAsync();
+        },
         showToast: function(message, duration) {
             if (window.DioxamineNative && typeof window.DioxamineNative.showToast === 'function') {
                 window.DioxamineNative.showToast(message || '', duration || 'short');
@@ -479,6 +502,14 @@
         window.dioxamine.log.d('Console', _formatConsoleArgs(args));
         if (_consoleDebug) _consoleDebug.apply(console, args);
     };
+
+    try {
+        Object.defineProperty(window.dioxamine, 'appVersion', {
+            get: function() { return window.dioxamine.getAppVersion(); },
+            enumerable: true,
+            configurable: true
+        });
+    } catch (e) {}
 
     window.__dioxamine_bridge_ready = true;
     window.dispatchEvent(new Event('dioxamine-bridge-ready'));

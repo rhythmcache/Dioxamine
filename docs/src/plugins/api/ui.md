@@ -309,3 +309,54 @@ document.getElementById('docs-link').addEventListener('click', () => {
 
 #### Note
 `dioxamine.openUrl(url)` is also supported as an alias.
+
+---
+
+## Host App Version and Metadata
+
+Plugins can inspect the running Dioxamine application version and identifiers synchronously or asynchronously to perform capability checks or display version info.
+
+### `dioxamine.getAppVersion()` / `dioxamine.getVersion()`
+Returns the host Dioxamine application version information synchronously.
+
+```javascript
+dioxamine.getAppVersion(): AppVersionInfo
+```
+
+### `dioxamine.getAppVersionAsync()` / `dioxamine.getVersionAsync()`
+Returns a `Promise` resolving to the host Dioxamine application version information.
+
+```javascript
+dioxamine.getAppVersionAsync(): Promise<AppVersionInfo>
+```
+
+### `dioxamine.appVersion` (Property Getter)
+Shorthand getter returning the same `AppVersionInfo` object synchronously.
+
+### `AppVersionInfo` Object Structure
+
+```typescript
+interface AppVersionInfo {
+    versionName: string;    // Human-readable release version (e.g. "0.0.4")
+    versionCode: number;    // Monotonically increasing build integer (e.g. 10004)
+    version: string;        // Alias for versionName (e.g. "0.0.4")
+    appName: string;        // Host application title ("Dioxamine")
+    applicationId: string;  // Android package identifier ("io.github.rhythmcache.dioxamine")
+}
+```
+
+### Example
+
+```javascript
+// Synchronous check
+const appInfo = dioxamine.getAppVersion();
+console.log(`Running on ${appInfo.appName} v${appInfo.versionName} (build ${appInfo.versionCode})`);
+
+// Feature check based on app version code
+if (appInfo.versionCode >= 10004) {
+    console.log("Hardware button interception is supported by this Dioxamine build");
+}
+
+// Or using the property shorthand
+document.getElementById('version-tag').textContent = `Dioxamine v${dioxamine.appVersion.versionName}`;
+```

@@ -8,6 +8,7 @@ import android.os.Looper
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.adb.AdbClient
 import io.github.rhythmcache.adb.AdbInteractiveSession
@@ -829,6 +830,43 @@ class DioxaminePluginBridge(
     @JavascriptInterface
     fun getLocaleAsync(callbackId: String) {
         getLocaleInfoAsync(callbackId)
+    }
+
+    @JavascriptInterface
+    fun getAppVersion(): String {
+        return buildJsonObject {
+            put("versionName", BuildConfig.VERSION_NAME)
+            put("versionCode", BuildConfig.VERSION_CODE)
+            put("version", BuildConfig.VERSION_NAME)
+            put("appName", BuildConfig.APP_NAME)
+            put("applicationId", BuildConfig.APPLICATION_ID)
+        }.toString()
+    }
+
+    @JavascriptInterface
+    fun getVersion(): String = getAppVersion()
+
+    @JavascriptInterface
+    fun getAppVersionAsync(callbackId: String) {
+        try {
+            resolve(
+                callbackId,
+                buildJsonObject {
+                    put("versionName", BuildConfig.VERSION_NAME)
+                    put("versionCode", BuildConfig.VERSION_CODE)
+                    put("version", BuildConfig.VERSION_NAME)
+                    put("appName", BuildConfig.APP_NAME)
+                    put("applicationId", BuildConfig.APPLICATION_ID)
+                },
+            )
+        } catch (e: Exception) {
+            reject(callbackId, e.message ?: e.toString())
+        }
+    }
+
+    @JavascriptInterface
+    fun getVersionAsync(callbackId: String) {
+        getAppVersionAsync(callbackId)
     }
 
     @JavascriptInterface
