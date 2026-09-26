@@ -580,6 +580,7 @@ fun PluginsTab(
                 }
             }
         }
+    }
 
                         FloatingActionButton(
                             onClick = { pickZipLauncher.launch(arrayOf("application/zip")) },
