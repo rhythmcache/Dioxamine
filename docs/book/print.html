@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-8918ba62.js";
+            window.path_to_searchindex_js = "searchindex-ac38ab63.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-82e0c0b4.js"></script>
@@ -2205,7 +2205,7 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <li><strong><a href="#interactive-shell-sessions-openinteractiveshell">ADB Interactive Shell Sessions</a></strong>: Open persistent bi-directional PTY streams via <code>dioxamine.adb.openInteractiveShell()</code>.</li>
 <li><strong><a href="#file-operations-and-storage-api">File Operations</a></strong>: Pull/push files via <code>dioxamine.adb.pull()</code> / <code>dioxamine.adb.push()</code>, and open system file pickers via <code>dioxamine.requestFilePicker()</code>.</li>
 <li><strong><a href="#port-forwarding-and-reverse-api">ADB Port Forwarding and Reverse</a></strong>: Manage TCP socket forwarding via <code>dioxamine.adb.forwardAdd()</code> / <code>reverseAdd()</code>.</li>
-<li><strong><a href="#ui-controls-dialogs-and-fullscreen">UI Controls, Dialogs, Buttons and Fullscreen</a></strong>: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, intercept Back and Volume buttons, and open external links in the host device browser.</li>
+<li><strong><a href="#ui-controls-dialogs-and-fullscreen">UI Controls, Dialogs, Buttons and Fullscreen</a></strong>: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, intercept Back and Volume buttons, inspect host app version, and open external links in the host device browser.</li>
 <li><strong><a href="#native-logging-and-debugging">Native Logging and Debugging</a></strong>: Forward logs and console output directly to Android Logcat.</li>
 <li><strong><a href="#dynamic-theming-and-material-3">Dynamic Theming and Material 3</a></strong>: Integrate with Dioxamine’s dynamic color schemes and listen for theme changes.</li>
 <li><strong><a href="#app-language-and-localization">App Language and Localization</a></strong>: Detect Dioxamine’s active app language, text direction (RTL/LTR), and build multi-language plugins.</li>
@@ -2771,6 +2771,41 @@ document.getElementById('docs-link').addEventListener('click', () =&gt; {
 </code></pre>
 <h4 id="note-2"><a class="header" href="#note-2">Note</a></h4>
 <p><code>dioxamine.openUrl(url)</code> is also supported as an alias.</p>
+<hr>
+<h2 id="host-app-version-and-metadata"><a class="header" href="#host-app-version-and-metadata">Host App Version and Metadata</a></h2>
+<p>Plugins can inspect the running Dioxamine application version and identifiers synchronously or asynchronously to perform capability checks or display version info.</p>
+<h3 id="dioxaminegetappversion--dioxaminegetversion"><a class="header" href="#dioxaminegetappversion--dioxaminegetversion"><code>dioxamine.getAppVersion()</code> / <code>dioxamine.getVersion()</code></a></h3>
+<p>Returns the host Dioxamine application version information synchronously.</p>
+<pre><code class="language-javascript">dioxamine.getAppVersion(): AppVersionInfo
+</code></pre>
+<h3 id="dioxaminegetappversionasync--dioxaminegetversionasync"><a class="header" href="#dioxaminegetappversionasync--dioxaminegetversionasync"><code>dioxamine.getAppVersionAsync()</code> / <code>dioxamine.getVersionAsync()</code></a></h3>
+<p>Returns a <code>Promise</code> resolving to the host Dioxamine application version information.</p>
+<pre><code class="language-javascript">dioxamine.getAppVersionAsync(): Promise&lt;AppVersionInfo&gt;
+</code></pre>
+<h3 id="dioxamineappversion-property-getter"><a class="header" href="#dioxamineappversion-property-getter"><code>dioxamine.appVersion</code> (Property Getter)</a></h3>
+<p>Shorthand getter returning the same <code>AppVersionInfo</code> object synchronously.</p>
+<h3 id="appversioninfo-object-structure"><a class="header" href="#appversioninfo-object-structure"><code>AppVersionInfo</code> Object Structure</a></h3>
+<pre><code class="language-typescript">interface AppVersionInfo {
+    versionName: string;    // Human-readable release version (e.g. "0.0.4")
+    versionCode: number;    // Monotonically increasing build integer (e.g. 10004)
+    version: string;        // Alias for versionName (e.g. "0.0.4")
+    appName: string;        // Host application title ("Dioxamine")
+    applicationId: string;  // Android package identifier ("io.github.rhythmcache.dioxamine")
+}
+</code></pre>
+<h3 id="example-5"><a class="header" href="#example-5">Example</a></h3>
+<pre><code class="language-javascript">// Synchronous check
+const appInfo = dioxamine.getAppVersion();
+console.log(`Running on ${appInfo.appName} v${appInfo.versionName} (build ${appInfo.versionCode})`);
+
+// Feature check based on app version code
+if (appInfo.versionCode &gt;= 10004) {
+    console.log("Hardware button interception is supported by this Dioxamine build");
+}
+
+// Or using the property shorthand
+document.getElementById('version-tag').textContent = `Dioxamine v${dioxamine.appVersion.versionName}`;
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="native-logging-and-debugging"><a class="header" href="#native-logging-and-debugging">Native Logging and Debugging</a></h1>
 <p>Dioxamine provides integrated logging channels that bridge JavaScript console messages and explicit log calls directly into the native Android <code>Logcat</code> stream.</p>
@@ -2784,7 +2819,7 @@ dioxamine.log.i(tag: string, message: string): void  // Info
 dioxamine.log.w(tag: string, message: string): void  // Warn
 dioxamine.log.e(tag: string, message: string): void  // Error
 </code></pre>
-<h3 id="example-5"><a class="header" href="#example-5">Example</a></h3>
+<h3 id="example-6"><a class="header" href="#example-6">Example</a></h3>
 <pre><code class="language-javascript">dioxamine.log.i("Network", "Connecting to device socket at 127.0.0.1:8080");
 dioxamine.log.e("Sync", "File transfer aborted unexpectedly");
 </code></pre>
@@ -2945,7 +2980,7 @@ console.log("Is dark theme active?", theme.isDark);
     displayName: string; // Canonical display name (e.g., "English", "简体中文", "Русский")
 }
 </code></pre>
-<h4 id="example-6"><a class="header" href="#example-6">Example</a></h4>
+<h4 id="example-7"><a class="header" href="#example-7">Example</a></h4>
 <pre><code class="language-javascript">const lang = dioxamine.getLanguage();
 console.log("Active language:", lang.language);       // "zh"
 console.log("Language tag:", lang.languageTag);       // "zh-CN"
@@ -3177,7 +3212,7 @@ console.log("Device service status:", res.data);
     deviceName?: string; // USB sysfs path (e.g. "/dev/bus/usb/001/002")
 }
 </code></pre>
-<h4 id="example-7"><a class="header" href="#example-7">Example</a></h4>
+<h4 id="example-8"><a class="header" href="#example-8">Example</a></h4>
 <pre><code class="language-javascript">const device = await dioxamine.fastboot.getActiveDevice();
 if (!device || !device.connected) {
     console.error("No Fastboot device connected. Connect device via USB OTG in bootloader mode.");
@@ -3315,7 +3350,7 @@ console.log("Device is booting image...");
     info: string[];
 }&gt;
 </code></pre>
-<h4 id="example-8"><a class="header" href="#example-8">Example</a></h4>
+<h4 id="example-8-1"><a class="header" href="#example-8-1">Example</a></h4>
 <pre><code class="language-javascript">const file = await dioxamine.requestFilePicker("open");
 
 const res = await dioxamine.fastboot.stage(file.requestId, (p) =&gt; {

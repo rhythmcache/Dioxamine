@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../../searchindex-8918ba62.js";
+            window.path_to_searchindex_js = "../../searchindex-ac38ab63.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-82e0c0b4.js"></script>
@@ -413,6 +413,41 @@ document.getElementById('docs-link').addEventListener('click', () =&gt; {
 </code></pre>
 <h4 id="note-2"><a class="header" href="#note-2">Note</a></h4>
 <p><code>dioxamine.openUrl(url)</code> is also supported as an alias.</p>
+<hr>
+<h2 id="host-app-version-and-metadata"><a class="header" href="#host-app-version-and-metadata">Host App Version and Metadata</a></h2>
+<p>Plugins can inspect the running Dioxamine application version and identifiers synchronously or asynchronously to perform capability checks or display version info.</p>
+<h3 id="dioxaminegetappversion--dioxaminegetversion"><a class="header" href="#dioxaminegetappversion--dioxaminegetversion"><code>dioxamine.getAppVersion()</code> / <code>dioxamine.getVersion()</code></a></h3>
+<p>Returns the host Dioxamine application version information synchronously.</p>
+<pre><code class="language-javascript">dioxamine.getAppVersion(): AppVersionInfo
+</code></pre>
+<h3 id="dioxaminegetappversionasync--dioxaminegetversionasync"><a class="header" href="#dioxaminegetappversionasync--dioxaminegetversionasync"><code>dioxamine.getAppVersionAsync()</code> / <code>dioxamine.getVersionAsync()</code></a></h3>
+<p>Returns a <code>Promise</code> resolving to the host Dioxamine application version information.</p>
+<pre><code class="language-javascript">dioxamine.getAppVersionAsync(): Promise&lt;AppVersionInfo&gt;
+</code></pre>
+<h3 id="dioxamineappversion-property-getter"><a class="header" href="#dioxamineappversion-property-getter"><code>dioxamine.appVersion</code> (Property Getter)</a></h3>
+<p>Shorthand getter returning the same <code>AppVersionInfo</code> object synchronously.</p>
+<h3 id="appversioninfo-object-structure"><a class="header" href="#appversioninfo-object-structure"><code>AppVersionInfo</code> Object Structure</a></h3>
+<pre><code class="language-typescript">interface AppVersionInfo {
+    versionName: string;    // Human-readable release version (e.g. "0.0.4")
+    versionCode: number;    // Monotonically increasing build integer (e.g. 10004)
+    version: string;        // Alias for versionName (e.g. "0.0.4")
+    appName: string;        // Host application title ("Dioxamine")
+    applicationId: string;  // Android package identifier ("io.github.rhythmcache.dioxamine")
+}
+</code></pre>
+<h3 id="example-5"><a class="header" href="#example-5">Example</a></h3>
+<pre><code class="language-javascript">// Synchronous check
+const appInfo = dioxamine.getAppVersion();
+console.log(`Running on ${appInfo.appName} v${appInfo.versionName} (build ${appInfo.versionCode})`);
+
+// Feature check based on app version code
+if (appInfo.versionCode &gt;= 10004) {
+    console.log("Hardware button interception is supported by this Dioxamine build");
+}
+
+// Or using the property shorthand
+document.getElementById('version-tag').textContent = `Dioxamine v${dioxamine.appVersion.versionName}`;
+</code></pre>
 
                     </main>
 
