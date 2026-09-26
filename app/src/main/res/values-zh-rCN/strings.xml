@@ -111,6 +111,7 @@
     <string name="plugin_update_available">有可用更新：v%1$s</string>
     <string name="plugin_btn_update">更新</string>
     <string name="plugin_btn_updating">正在更新…</string>
+    <string name="plugin_btn_changelog">更新日志</string>
     <string name="plugin_msg_download_failed">下载插件更新失败</string>
     <string name="cd_more_options">更多选项</string>
 

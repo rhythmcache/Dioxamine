@@ -113,6 +113,7 @@
     <string name="plugin_update_available">Доступно обновление: v%1$s</string>
     <string name="plugin_btn_update">Обновить</string>
     <string name="plugin_btn_updating">Обновление…</string>
+    <string name="plugin_btn_changelog">Список изменений</string>
     <string name="plugin_msg_download_failed">Не удалось загрузить обновление плагина</string>
     <string name="cd_more_options">Дополнительные параметры</string>
 

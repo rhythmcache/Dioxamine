@@ -1,6 +1,8 @@
 package io.github.rhythmcache.dioxamine.plugin
 
+import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -492,8 +494,31 @@ fun PluginsTab(
                                         )
                                     }
 
-                                    val isUpdating = updatingPluginIds.contains(manifest.id)
-                                    Button(
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        if (!updateInfo.changelog.isNullOrBlank()) {
+                                            TextButton(
+                                                onClick = {
+                                                    runCatching {
+                                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo.changelog))
+                                                        context.startActivity(intent)
+                                                    }
+                                                },
+                                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                                modifier = Modifier.height(34.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.plugin_btn_changelog),
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                )
+                                            }
+                                        }
+
+                                        val isUpdating = updatingPluginIds.contains(manifest.id)
+                                        Button(
                                         onClick = {
                                             coroutineScope.launch {
                                                 updatingPluginIds.add(manifest.id)

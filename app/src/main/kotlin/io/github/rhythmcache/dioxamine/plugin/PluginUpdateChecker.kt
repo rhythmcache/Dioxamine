@@ -43,21 +43,36 @@ object PluginUpdateChecker {
                 setRequestProperty("Accept", "*/*")
                 instanceFollowRedirects = false
             }
-            val responseCode = conn.responseCode
-            if (responseCode in 300..399) {
-                val location = conn.getHeaderField("Location")
-                conn.disconnect()
-                if (!location.isNullOrBlank()) {
-                    currentUrl = URL(url, location).toString()
-                    redirects++
-                    continue
+            try {
+                val responseCode = conn.responseCode
+                if (responseCode in 300..399) {
+                    val location = conn.getHeaderField("Location")
+                    conn.disconnect()
+                    if (!location.isNullOrBlank()) {
+                        currentUrl = URL(url, location).toString()
+                        redirects++
+                        continue
+                    }
                 }
+                return conn
+            } catch (e: Throwable) {
+                conn.disconnect()
+                throw e
             }
-            return conn
         }
         throw IOException("Too many redirects")
     }
 
+    /**
+     * Fetches and deserializes [PluginUpdateInfo] from the provided remote JSON URL.
+     *
+     * Validates that the payload contains a non-blank ID, version string, positive versionCode,
+     * and a valid HTTP/HTTPS download URL.
+     *
+     * Note: This method does NOT check whether [PluginUpdateInfo.id] matches the installed plugin ID
+     * or whether [PluginUpdateInfo.versionCode] is newer than the installed version. Those comparisons
+     * are performed by the caller / repository layer.
+     */
     suspend fun fetchUpdate(updateJsonUrl: String): PluginUpdateInfo? =
         withContext(Dispatchers.IO) {
             runCatching {

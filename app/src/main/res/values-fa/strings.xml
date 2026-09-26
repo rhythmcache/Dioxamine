@@ -111,6 +111,7 @@
     <string name="plugin_update_available">به‌روزرسانی موجود است: v%1$s</string>
     <string name="plugin_btn_update">به‌روزرسانی</string>
     <string name="plugin_btn_updating">در حال به‌روزرسانی…</string>
+    <string name="plugin_btn_changelog">تغییرات</string>
     <string name="plugin_msg_download_failed">دانلود به‌روزرسانی افزونه ناموفق بود</string>
     <string name="cd_more_options">گزینه‌های بیشتر</string>
 

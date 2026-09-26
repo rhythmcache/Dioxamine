@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
@@ -32,6 +34,7 @@ class PluginRepository(
 
     private val _availableUpdates = MutableStateFlow<Map<String, PluginUpdateInfo>>(emptyMap())
     val availableUpdates: StateFlow<Map<String, PluginUpdateInfo>> = _availableUpdates.asStateFlow()
+    private val checkUpdatesMutex = Mutex()
 
     init {
         scope.launch {
@@ -92,27 +95,36 @@ class PluginRepository(
 
     suspend fun checkForUpdates() =
         withContext(Dispatchers.IO) {
-            val plugins = _installedPlugins.value
-            val checkable = plugins.filter { !it.updateJson.isNullOrBlank() }
-            if (checkable.isEmpty()) {
-                _availableUpdates.value = emptyMap()
-                return@withContext
-            }
+            checkUpdatesMutex.withLock {
+                val plugins = _installedPlugins.value
+                val checkable = plugins.filter { !it.updateJson.isNullOrBlank() }
+                if (checkable.isEmpty()) {
+                    _availableUpdates.value = emptyMap()
+                    return@withLock
+                }
 
-            coroutineScope {
-                val updates = checkable.map { manifest ->
-                    async {
-                        val updateJsonUrl = manifest.updateJson ?: return@async null
-                        val updateInfo = PluginUpdateChecker.fetchUpdate(updateJsonUrl)
-                        if (updateInfo != null && updateInfo.id == manifest.id && updateInfo.versionCode > manifest.versionCode) {
-                            manifest.id to updateInfo
-                        } else {
-                            null
-                        }
+                val updates =
+                    coroutineScope {
+                        checkable.map { manifest ->
+                            async {
+                                val updateJsonUrl = manifest.updateJson ?: return@async null
+                                val updateInfo = PluginUpdateChecker.fetchUpdate(updateJsonUrl)
+                                if (updateInfo != null && updateInfo.id == manifest.id && updateInfo.versionCode > manifest.versionCode) {
+                                    manifest.id to updateInfo
+                                } else {
+                                    null
+                                }
+                            }
+                        }.awaitAll().filterNotNull().toMap()
                     }
-                }.awaitAll().filterNotNull().toMap()
 
-                _availableUpdates.value = updates
+                _availableUpdates.update { currentUpdates ->
+                    val latestInstalled = _installedPlugins.value.associateBy { it.id }
+                    (currentUpdates + updates).filter { (id, update) ->
+                        val installed = latestInstalled[id]
+                        installed != null && update.versionCode > installed.versionCode
+                    }
+                }
             }
         }
 

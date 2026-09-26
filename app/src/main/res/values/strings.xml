@@ -116,6 +116,7 @@
     <string name="plugin_update_available">Update available: v%1$s</string>
     <string name="plugin_btn_update">Update</string>
     <string name="plugin_btn_updating">Updating…</string>
+    <string name="plugin_btn_changelog">Changelog</string>
     <string name="plugin_msg_download_failed">Failed to download plugin update</string>
     <string name="cd_more_options">More options</string>
 
