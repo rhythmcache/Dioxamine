@@ -31,7 +31,7 @@ object PluginUpdateChecker {
     private const val MAX_REDIRECTS = 5
     private const val MAX_FILE_SIZE_BYTES = 500L * 1024L * 1024L // 500MB safety limit
 
-    private fun openConnectionWithRedirects(initialUrl: String, maxRedirects: Int = MAX_REDIRECTS): HttpURLConnection {
+    internal fun openConnectionWithRedirects(initialUrl: String, maxRedirects: Int = MAX_REDIRECTS): HttpURLConnection {
         var currentUrl = initialUrl
         var redirects = 0
         while (redirects < maxRedirects) {

@@ -81,6 +81,36 @@
     <string name="plugins_browse_placeholder_title">Browse Plugins</string>
     <string name="plugins_browse_placeholder_desc">Online plugin repository and community extensions will be available here soon.</string>
     <string name="plugins_browse_coming_soon">Coming Soon</string>
+    <string name="settings_plugins_repos_title">Plugin Repositories</string>
+    <string name="settings_plugins_repos_desc">Manage online repository sources for plugin downloads</string>
+    <string name="dialog_repos_title">Plugin Repositories</string>
+    <string name="dialog_repos_desc">Configure repository sources for browsing and installing plugins.</string>
+    <string name="dialog_repos_btn_add">Add Repository</string>
+    <string name="dialog_repos_add_title">Add Repository URL</string>
+    <string name="dialog_repos_add_prompt">Enter the URL of the repository index.json:</string>
+    <string name="dialog_repos_url_placeholder">https://example.com/index.json</string>
+    <string name="dialog_repos_default_badge">Default</string>
+    <string name="dialog_repos_invalid_url">URL must start with http:// or https://</string>
+    <string name="dialog_repos_duplicate_url">Repository URL already exists</string>
+    <string name="dialog_repos_empty">No repositories configured.</string>
+    <string name="plugins_browse_refresh">Refresh</string>
+    <string name="plugins_browse_refreshed">Repository updated</string>
+    <string name="plugins_browse_refresh_failed">Failed to update: %1$s</string>
+    <string name="plugins_browse_last_updated">Last updated: %1$s</string>
+    <string name="plugins_browse_empty">No plugins found in repository</string>
+    <string name="plugins_browse_search_hint">Search plugins…</string>
+    <string name="plugins_browse_btn_install">Install</string>
+    <string name="plugins_browse_btn_update">Update</string>
+    <string name="plugins_browse_btn_installed">Installed</string>
+    <string name="plugins_browse_btn_reinstall">Reinstall</string>
+    <string name="plugins_browse_installing">Installing…</string>
+    <string name="plugins_browse_time_unknown">recently</string>
+    <string name="plugins_browse_details_by">by %1$s</string>
+    <string name="plugins_browse_details_version">Version %1$s (%2$d)</string>
+    <string name="plugins_browse_details_homepage">Homepage</string>
+    <string name="plugins_browse_details_repo">Repository</string>
+    <string name="plugins_browse_details_permissions">Permissions Required</string>
+    <string name="plugins_browse_details_no_permissions">No permissions required</string>
 
     <!-- Plugin Permission Dialog Strings -->
     <string name="btn_allow">Allow</string>
