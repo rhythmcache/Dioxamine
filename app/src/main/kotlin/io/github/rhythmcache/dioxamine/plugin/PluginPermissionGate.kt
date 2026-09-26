@@ -104,15 +104,26 @@ class PluginPermissionStore(context: android.content.Context) {
     }
 }
 
+enum class PermissionDecision {
+    ALWAYS_ALLOW,
+    ALLOW_SESSION,
+    DENY_SESSION,
+    ALWAYS_DENY,
+}
+
 data class PendingPermissionRequest(
     val pluginId: String,
     val pluginName: String,
     val permission: PluginPermission,
-    val onResult: (granted: Boolean) -> Unit,
-)
+    val onDecision: (decision: PermissionDecision) -> Unit,
+) {
+    fun onResult(granted: Boolean) {
+        onDecision(if (granted) PermissionDecision.ALLOW_SESSION else PermissionDecision.DENY_SESSION)
+    }
+}
 
 class PluginPermissionGate(
-    private val store: PluginPermissionStore? = null,
+    val store: PluginPermissionStore? = null,
 ) {
     private val _pendingRequest = MutableStateFlow<PendingPermissionRequest?>(null)
     val pendingRequest: StateFlow<PendingPermissionRequest?> = _pendingRequest.asStateFlow()
@@ -120,6 +131,20 @@ class PluginPermissionGate(
     private val gateMutex = Mutex()
     private val grantedMutex = Mutex()
     private val grantedPermissions = mutableMapOf<String, MutableSet<PluginPermission>>()
+    private val deniedPermissions = mutableMapOf<String, MutableSet<PluginPermission>>()
+
+    fun isSessionGranted(pluginId: String, permission: PluginPermission): Boolean {
+        return grantedPermissions[pluginId]?.contains(permission) == true
+    }
+
+    fun isSessionDenied(pluginId: String, permission: PluginPermission): Boolean {
+        return deniedPermissions[pluginId]?.contains(permission) == true
+    }
+
+    fun clearSessionPermission(pluginId: String, permission: PluginPermission) {
+        grantedPermissions[pluginId]?.remove(permission)
+        deniedPermissions[pluginId]?.remove(permission)
+    }
 
     suspend fun checkPermission(
         pluginId: String,
@@ -141,52 +166,92 @@ class PluginPermissionGate(
             }
         }
 
-        // 2. If already granted this session -> return true immediately
+        // 2. If already granted or denied this session -> return immediately
         grantedMutex.withLock {
             if (grantedPermissions[pluginId]?.contains(required) == true) {
                 return true
+            }
+            if (deniedPermissions[pluginId]?.contains(required) == true) {
+                return false
             }
         }
 
         // 3. Otherwise: serialize requests via gateMutex so concurrent checks do not overwrite _pendingRequest
         return gateMutex.withLock {
-            // Re-check inside lock in case a previous queued request granted it
+            // Re-check persistent policy inside lock
+            store?.let { s ->
+                when (s.getPolicy(pluginId, required)) {
+                    PermissionPolicy.ALWAYS_ALLOW -> return@withLock true
+                    PermissionPolicy.ALWAYS_DENY -> return@withLock false
+                    PermissionPolicy.ASK -> {}
+                }
+            }
+
+            // Re-check inside lock in case a previous queued request resolved it
             grantedMutex.withLock {
                 if (grantedPermissions[pluginId]?.contains(required) == true) {
                     return@withLock true
                 }
+                if (deniedPermissions[pluginId]?.contains(required) == true) {
+                    return@withLock false
+                }
             }
 
-            val deferred = CompletableDeferred<Boolean>()
+            val deferred = CompletableDeferred<PermissionDecision>()
 
             val request =
                 PendingPermissionRequest(
                     pluginId = pluginId,
                     pluginName = pluginName,
                     permission = required,
-                    onResult = { granted ->
+                    onDecision = { decision ->
                         if (!deferred.isCompleted) {
-                            deferred.complete(granted)
+                            deferred.complete(decision)
                         }
                     },
                 )
 
             _pendingRequest.value = request
 
-            val result =
+            val decision =
                 try {
                     deferred.await()
                 } finally {
                     _pendingRequest.value = null
                 }
 
-            if (result) {
-                grantedMutex.withLock {
-                    grantedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
+            when (decision) {
+                PermissionDecision.ALWAYS_ALLOW -> {
+                    store?.setPolicy(pluginId, required, PermissionPolicy.ALWAYS_ALLOW)
+                    grantedMutex.withLock {
+                        deniedPermissions[pluginId]?.remove(required)
+                        grantedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
+                    }
+                    true
+                }
+                PermissionDecision.ALLOW_SESSION -> {
+                    grantedMutex.withLock {
+                        deniedPermissions[pluginId]?.remove(required)
+                        grantedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
+                    }
+                    true
+                }
+                PermissionDecision.DENY_SESSION -> {
+                    grantedMutex.withLock {
+                        grantedPermissions[pluginId]?.remove(required)
+                        deniedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
+                    }
+                    false
+                }
+                PermissionDecision.ALWAYS_DENY -> {
+                    store?.setPolicy(pluginId, required, PermissionPolicy.ALWAYS_DENY)
+                    grantedMutex.withLock {
+                        grantedPermissions[pluginId]?.remove(required)
+                        deniedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
+                    }
+                    false
                 }
             }
-
-            result
         }
     }
 }

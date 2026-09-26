@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,10 +65,13 @@ enum class PluginTopTab(
 @Composable
 fun PluginsTab(
     repo: PluginRepository,
+    permissionGate: PluginPermissionGate? = null,
+    permissionStore: PluginPermissionStore? = null,
     onOpenPlugin: (pluginId: String) -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val permStore = remember(context) { permissionStore ?: permissionGate?.store ?: PluginPermissionStore(context.applicationContext) }
     val installedPlugins by repo.installedPlugins.collectAsState()
     val availableUpdates by repo.availableUpdates.collectAsState()
     val updatingPluginIds = remember { mutableStateListOf<String>() }
@@ -77,6 +81,7 @@ fun PluginsTab(
     }
 
     var infoDialogManifest by remember { mutableStateOf<PluginManifest?>(null) }
+    var permissionsDialogManifest by remember { mutableStateOf<PluginManifest?>(null) }
     var uninstallConfirmManifest by remember { mutableStateOf<PluginManifest?>(null) }
 
     val linkColor = MaterialTheme.colorScheme.primary
@@ -434,6 +439,19 @@ fun PluginsTab(
                                             onClick = {
                                                 menuExpanded = false
                                                 infoDialogManifest = manifest
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.plugin_menu_permissions)) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Security,
+                                                    contentDescription = null,
+                                                )
+                                            },
+                                            onClick = {
+                                                menuExpanded = false
+                                                permissionsDialogManifest = manifest
                                             },
                                         )
                                         DropdownMenuItem(
@@ -830,6 +848,207 @@ fun PluginsTab(
             },
         )
     }
+
+    permissionsDialogManifest?.let { manifest ->
+        PluginSinglePermissionsDialog(
+            manifest = manifest,
+            permissionStore = permStore,
+            permissionGate = permissionGate,
+            onDismiss = { permissionsDialogManifest = null },
+        )
+    }
+}
+
+@Composable
+private fun PluginSinglePermissionsDialog(
+    manifest: PluginManifest,
+    permissionStore: PluginPermissionStore,
+    permissionGate: PluginPermissionGate?,
+    onDismiss: () -> Unit,
+) {
+    var triggerUpdate by remember { mutableStateOf(0) }
+    val declaredPermissions = remember(manifest.id) {
+        manifest.permissions.allList().mapNotNull { PluginPermission.fromManifestString(it) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Security,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp),
+            )
+        },
+        title = {
+            Text(
+                text = stringResource(R.string.plugin_perm_dialog_plugin_title, manifest.name),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            if (declaredPermissions.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.plugin_perm_no_permissions),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    declaredPermissions.forEach { perm ->
+                        key(triggerUpdate, manifest.id, perm) {
+                            val currentPolicy = permissionStore.getPolicy(manifest.id, perm)
+                            val isSessionGranted = permissionGate?.isSessionGranted(manifest.id, perm) == true
+                            val isSessionDenied = permissionGate?.isSessionDenied(manifest.id, perm) == true
+
+                            val permDesc = when (perm) {
+                                PluginPermission.SHELL -> stringResource(R.string.plugin_perm_shell)
+                                PluginPermission.PUSH -> stringResource(R.string.plugin_perm_push)
+                                PluginPermission.PULL -> stringResource(R.string.plugin_perm_pull)
+                                PluginPermission.INSTALL -> stringResource(R.string.plugin_perm_install)
+                                PluginPermission.FORWARD -> stringResource(R.string.plugin_perm_forward)
+                                PluginPermission.REVERSE -> stringResource(R.string.plugin_perm_reverse)
+                                PluginPermission.NETWORK -> stringResource(R.string.plugin_perm_network)
+                                PluginPermission.FASTBOOT -> stringResource(R.string.plugin_perm_fastboot)
+                            }
+
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                ),
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = perm.name.lowercase().replaceFirstChar { it.uppercase() },
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+
+                                        var expandedDropdown by remember { mutableStateOf(false) }
+
+                                        Box {
+                                            OutlinedButton(
+                                                onClick = { expandedDropdown = true },
+                                                shape = RoundedCornerShape(8.dp),
+                                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                                modifier = Modifier.height(34.dp),
+                                            ) {
+                                                val label = when (currentPolicy) {
+                                                    PermissionPolicy.ALWAYS_ALLOW -> stringResource(R.string.plugin_policy_always_allow)
+                                                    PermissionPolicy.ALWAYS_DENY -> stringResource(R.string.plugin_policy_always_deny)
+                                                    PermissionPolicy.ASK -> stringResource(R.string.plugin_policy_ask)
+                                                }
+                                                Text(label, style = MaterialTheme.typography.bodySmall)
+                                            }
+
+                                            DropdownMenu(
+                                                expanded = expandedDropdown,
+                                                onDismissRequest = { expandedDropdown = false },
+                                            ) {
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(R.string.plugin_policy_ask_default)) },
+                                                    onClick = {
+                                                        permissionStore.setPolicy(manifest.id, perm, PermissionPolicy.ASK)
+                                                        expandedDropdown = false
+                                                        triggerUpdate++
+                                                    },
+                                                )
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(R.string.plugin_policy_always_allow)) },
+                                                    onClick = {
+                                                        permissionStore.setPolicy(manifest.id, perm, PermissionPolicy.ALWAYS_ALLOW)
+                                                        permissionGate?.clearSessionPermission(manifest.id, perm)
+                                                        expandedDropdown = false
+                                                        triggerUpdate++
+                                                    },
+                                                )
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(R.string.plugin_policy_always_deny)) },
+                                                    onClick = {
+                                                        permissionStore.setPolicy(manifest.id, perm, PermissionPolicy.ALWAYS_DENY)
+                                                        permissionGate?.clearSessionPermission(manifest.id, perm)
+                                                        expandedDropdown = false
+                                                        triggerUpdate++
+                                                    },
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Text(
+                                        text = permDesc,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+
+                                    if (currentPolicy == PermissionPolicy.ASK && (isSessionGranted || isSessionDenied)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text = if (isSessionGranted) {
+                                                    stringResource(R.string.plugin_perm_session_status_allowed)
+                                                } else {
+                                                    stringResource(R.string.plugin_perm_session_status_denied)
+                                                },
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (isSessionGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                            )
+                                            TextButton(
+                                                onClick = {
+                                                    permissionGate?.clearSessionPermission(manifest.id, perm)
+                                                    triggerUpdate++
+                                                },
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                                modifier = Modifier.height(28.dp),
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.plugin_perm_session_reset),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_close))
+            }
+        },
+    )
 }
 
 @Composable

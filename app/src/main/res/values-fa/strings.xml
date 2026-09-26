@@ -95,7 +95,17 @@
     <string name="plugin_open_browser_btn_open">باز کردن</string>
     <string name="plugin_runner_not_found">پلاگین پیدا نشد</string>
     <string name="plugin_menu_info">اطلاعات</string>
+    <string name="plugin_menu_permissions">مجوزها</string>
     <string name="plugin_menu_uninstall">حذف نصب</string>
+    <string name="plugin_perm_btn_always_allow">همیشه مجاز باشد</string>
+    <string name="plugin_perm_btn_allow_session">برای این جلسه مجاز باشد</string>
+    <string name="plugin_perm_btn_deny_session">برای این جلسه رد شود</string>
+    <string name="plugin_perm_btn_always_deny">همیشه رد شود</string>
+    <string name="plugin_perm_dialog_plugin_title">مجوزهای %1$s</string>
+    <string name="plugin_perm_no_permissions">هیچ مجوزی اعلام نشده است</string>
+    <string name="plugin_perm_session_status_allowed">برای جلسه فعلی مجاز است</string>
+    <string name="plugin_perm_session_status_denied">برای جلسه فعلی رد شده است</string>
+    <string name="plugin_perm_session_reset">بازنشانی</string>
     <string name="plugin_info_title">جزئیات پلاگین</string>
     <string name="plugin_info_id">شناسه: %1$s</string>
     <string name="plugin_info_version">نسخه: %1$s</string>

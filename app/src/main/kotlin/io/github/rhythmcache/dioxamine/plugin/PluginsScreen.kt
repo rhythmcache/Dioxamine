@@ -41,6 +41,7 @@ fun PluginsScreen(
     } else {
         PluginsTab(
             repo = pluginRepo,
+            permissionGate = permissionGate,
             onOpenPlugin = { pluginId ->
                 activePluginId = pluginId
             }

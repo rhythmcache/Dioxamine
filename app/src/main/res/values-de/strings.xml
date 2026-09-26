@@ -95,7 +95,17 @@
     <string name="plugin_open_browser_btn_open">Öffnen</string>
     <string name="plugin_runner_not_found">Plugin nicht gefunden</string>
     <string name="plugin_menu_info">Info</string>
+    <string name="plugin_menu_permissions">Berechtigungen</string>
     <string name="plugin_menu_uninstall">Deinstallieren</string>
+    <string name="plugin_perm_btn_always_allow">Immer erlauben</string>
+    <string name="plugin_perm_btn_allow_session">Für diese Sitzung erlauben</string>
+    <string name="plugin_perm_btn_deny_session">Für diese Sitzung ablehnen</string>
+    <string name="plugin_perm_btn_always_deny">Immer ablehnen</string>
+    <string name="plugin_perm_dialog_plugin_title">Berechtigungen für %1$s</string>
+    <string name="plugin_perm_no_permissions">Keine Berechtigungen deklariert</string>
+    <string name="plugin_perm_session_status_allowed">Für aktuelle Sitzung erlaubt</string>
+    <string name="plugin_perm_session_status_denied">Für aktuelle Sitzung abgelehnt</string>
+    <string name="plugin_perm_session_reset">Zurücksetzen</string>
     <string name="plugin_info_title">Plugin-Details</string>
     <string name="plugin_info_id">ID: %1$s</string>
     <string name="plugin_info_version">Version: %1$s</string>
