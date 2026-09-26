@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -60,6 +61,7 @@ import io.github.rhythmcache.dioxamine.plugin.PermissionPolicy
 import io.github.rhythmcache.dioxamine.plugin.PluginManifest
 import io.github.rhythmcache.dioxamine.plugin.PluginPermission
 import io.github.rhythmcache.dioxamine.plugin.PluginPermissionStore
+import io.github.rhythmcache.dioxamine.plugin.PluginPermissionTile
 import io.github.rhythmcache.dioxamine.plugin.PluginRepository
 import kotlinx.coroutines.launch
 import java.util.zip.ZipOutputStream
@@ -1081,8 +1083,20 @@ private fun PluginPermissionsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Security,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp),
+            )
+        },
         title = {
-            Text(stringResource(R.string.settings_plugins_permissions_title), fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.settings_plugins_permissions_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
         },
         text = {
             if (plugins.isEmpty()) {
@@ -1100,112 +1114,17 @@ private fun PluginPermissionsDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 420.dp)
+                        .heightIn(max = 450.dp)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     plugins.forEach { plugin ->
-                        val declaredPermissions = remember(plugin.id) {
-                            plugin.permissions.allList().mapNotNull { PluginPermission.fromManifestString(it) }
-                        }
-
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = plugin.name,
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                Text(
-                                    text = plugin.id,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                Spacer(Modifier.height(8.dp))
-
-                                if (declaredPermissions.isEmpty()) {
-                                    Text(
-                                        stringResource(R.string.settings_plugins_no_permissions),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.outline
-                                    )
-                                } else {
-                                    declaredPermissions.forEach { perm ->
-                                        key(triggerUpdate, plugin.id, perm) {
-                                            val currentPolicy = permissionStore.getPolicy(plugin.id, perm)
-
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 4.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = perm.name.lowercase().replaceFirstChar { it.uppercase() },
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-
-                                                var expandedDropdown by remember { mutableStateOf(false) }
-
-                                                Box {
-                                                    OutlinedButton(
-                                                        onClick = { expandedDropdown = true },
-                                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                                        modifier = Modifier.height(36.dp)
-                                                    ) {
-                                                        val label = when (currentPolicy) {
-                                                            PermissionPolicy.ALWAYS_ALLOW -> stringResource(R.string.plugin_policy_always_allow)
-                                                            PermissionPolicy.ALWAYS_DENY -> stringResource(R.string.plugin_policy_always_deny)
-                                                            PermissionPolicy.ASK -> stringResource(R.string.plugin_policy_ask)
-                                                        }
-                                                        Text(label, style = MaterialTheme.typography.bodySmall)
-                                                    }
-
-                                                    DropdownMenu(
-                                                        expanded = expandedDropdown,
-                                                        onDismissRequest = { expandedDropdown = false }
-                                                    ) {
-                                                        DropdownMenuItem(
-                                                            text = { Text(stringResource(R.string.plugin_policy_ask_default)) },
-                                                            onClick = {
-                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ASK)
-                                                                expandedDropdown = false
-                                                                triggerUpdate++
-                                                            }
-                                                        )
-                                                        DropdownMenuItem(
-                                                            text = { Text(stringResource(R.string.plugin_policy_always_allow)) },
-                                                            onClick = {
-                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ALWAYS_ALLOW)
-                                                                expandedDropdown = false
-                                                                triggerUpdate++
-                                                            }
-                                                        )
-                                                        DropdownMenuItem(
-                                                            text = { Text(stringResource(R.string.plugin_policy_always_deny)) },
-                                                            onClick = {
-                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ALWAYS_DENY)
-                                                                expandedDropdown = false
-                                                                triggerUpdate++
-                                                            }
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        PluginPermissionItemCard(
+                            plugin = plugin,
+                            permissionStore = permissionStore,
+                            triggerUpdate = triggerUpdate,
+                            onPolicyChange = { triggerUpdate++ }
+                        )
                     }
                 }
             }
@@ -1228,6 +1147,108 @@ private fun PluginPermissionsDialog(
             }
         }
     )
+}
+
+@Composable
+private fun PluginPermissionItemCard(
+    plugin: PluginManifest,
+    permissionStore: PluginPermissionStore,
+    triggerUpdate: Int,
+    onPolicyChange: () -> Unit
+) {
+    var expanded by remember(plugin.id) { mutableStateOf(false) }
+    val declaredPermissions = remember(plugin.id) {
+        plugin.permissions.allList().mapNotNull { PluginPermission.fromManifestString(it) }
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = plugin.name,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = plugin.id,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = stringResource(if (expanded) R.string.cd_collapse else R.string.cd_expand),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        if (declaredPermissions.isEmpty()) {
+                            Text(
+                                stringResource(R.string.settings_plugins_no_permissions),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        } else {
+                            declaredPermissions.forEachIndexed { index, perm ->
+                                key(triggerUpdate, plugin.id, perm) {
+                                    val currentPolicy = permissionStore.getPolicy(plugin.id, perm)
+
+                                    PluginPermissionTile(
+                                        permission = perm,
+                                        currentPolicy = currentPolicy,
+                                        onPolicyChange = { newPolicy ->
+                                            permissionStore.setPolicy(plugin.id, perm, newPolicy)
+                                            onPolicyChange()
+                                        }
+                                    )
+
+                                    if (index < declaredPermissions.lastIndex) {
+                                        HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

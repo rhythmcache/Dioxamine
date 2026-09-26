@@ -914,17 +914,6 @@ private fun PluginSinglePermissionsDialog(
                             val isSessionGranted = permissionGate?.isSessionGranted(manifest.id, perm) == true
                             val isSessionDenied = permissionGate?.isSessionDenied(manifest.id, perm) == true
 
-                            val permDesc = when (perm) {
-                                PluginPermission.SHELL -> stringResource(R.string.plugin_perm_shell)
-                                PluginPermission.PUSH -> stringResource(R.string.plugin_perm_push)
-                                PluginPermission.PULL -> stringResource(R.string.plugin_perm_pull)
-                                PluginPermission.INSTALL -> stringResource(R.string.plugin_perm_install)
-                                PluginPermission.FORWARD -> stringResource(R.string.plugin_perm_forward)
-                                PluginPermission.REVERSE -> stringResource(R.string.plugin_perm_reverse)
-                                PluginPermission.NETWORK -> stringResource(R.string.plugin_perm_network)
-                                PluginPermission.FASTBOOT -> stringResource(R.string.plugin_perm_fastboot)
-                            }
-
                             Card(
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -932,111 +921,24 @@ private fun PluginSinglePermissionsDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                             ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Text(
-                                            text = perm.name.lowercase().replaceFirstChar { it.uppercase() },
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-
-                                        var expandedDropdown by remember { mutableStateOf(false) }
-
-                                        Box {
-                                            OutlinedButton(
-                                                onClick = { expandedDropdown = true },
-                                                shape = RoundedCornerShape(8.dp),
-                                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                                modifier = Modifier.height(34.dp),
-                                            ) {
-                                                val label = when (currentPolicy) {
-                                                    PermissionPolicy.ALWAYS_ALLOW -> stringResource(R.string.plugin_policy_always_allow)
-                                                    PermissionPolicy.ALWAYS_DENY -> stringResource(R.string.plugin_policy_always_deny)
-                                                    PermissionPolicy.ASK -> stringResource(R.string.plugin_policy_ask)
-                                                }
-                                                Text(label, style = MaterialTheme.typography.bodySmall)
-                                            }
-
-                                            DropdownMenu(
-                                                expanded = expandedDropdown,
-                                                onDismissRequest = { expandedDropdown = false },
-                                            ) {
-                                                DropdownMenuItem(
-                                                    text = { Text(stringResource(R.string.plugin_policy_ask_default)) },
-                                                    onClick = {
-                                                        permissionStore.setPolicy(manifest.id, perm, PermissionPolicy.ASK)
-                                                        expandedDropdown = false
-                                                        triggerUpdate++
-                                                    },
-                                                )
-                                                DropdownMenuItem(
-                                                    text = { Text(stringResource(R.string.plugin_policy_always_allow)) },
-                                                    onClick = {
-                                                        permissionStore.setPolicy(manifest.id, perm, PermissionPolicy.ALWAYS_ALLOW)
-                                                        permissionGate?.clearSessionPermission(manifest.id, perm)
-                                                        expandedDropdown = false
-                                                        triggerUpdate++
-                                                    },
-                                                )
-                                                DropdownMenuItem(
-                                                    text = { Text(stringResource(R.string.plugin_policy_always_deny)) },
-                                                    onClick = {
-                                                        permissionStore.setPolicy(manifest.id, perm, PermissionPolicy.ALWAYS_DENY)
-                                                        permissionGate?.clearSessionPermission(manifest.id, perm)
-                                                        expandedDropdown = false
-                                                        triggerUpdate++
-                                                    },
-                                                )
-                                            }
+                                PluginPermissionTile(
+                                    permission = perm,
+                                    currentPolicy = currentPolicy,
+                                    onPolicyChange = { newPolicy ->
+                                        permissionStore.setPolicy(manifest.id, perm, newPolicy)
+                                        if (newPolicy != PermissionPolicy.ASK) {
+                                            permissionGate?.clearSessionPermission(manifest.id, perm)
                                         }
-                                    }
-
-                                    Text(
-                                        text = permDesc,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-
-                                    if (currentPolicy == PermissionPolicy.ASK && (isSessionGranted || isSessionDenied)) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            Text(
-                                                text = if (isSessionGranted) {
-                                                    stringResource(R.string.plugin_perm_session_status_allowed)
-                                                } else {
-                                                    stringResource(R.string.plugin_perm_session_status_denied)
-                                                },
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = if (isSessionGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                            )
-                                            TextButton(
-                                                onClick = {
-                                                    permissionGate?.clearSessionPermission(manifest.id, perm)
-                                                    triggerUpdate++
-                                                },
-                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
-                                                modifier = Modifier.height(28.dp),
-                                            ) {
-                                                Text(
-                                                    text = stringResource(R.string.plugin_perm_session_reset),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
+                                        triggerUpdate++
+                                    },
+                                    isSessionGranted = isSessionGranted,
+                                    isSessionDenied = isSessionDenied,
+                                    onResetSession = {
+                                        permissionGate?.clearSessionPermission(manifest.id, perm)
+                                        triggerUpdate++
+                                    },
+                                    modifier = Modifier.padding(14.dp),
+                                )
                             }
                         }
                     }
