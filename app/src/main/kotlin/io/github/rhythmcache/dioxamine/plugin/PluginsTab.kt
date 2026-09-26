@@ -168,8 +168,8 @@ fun PluginsTab(
                                 Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = tab.icon,
