@@ -19,6 +19,32 @@ class PluginInstaller(private val context: Context) {
 
     suspend fun installFromZip(zipUri: Uri): PluginInstallResult =
         withContext(Dispatchers.IO) {
+            val zipSizeBytes = runCatching {
+                context.contentResolver.openFileDescriptor(zipUri, "r")?.use { it.statSize }
+            }.getOrNull() ?: -1L
+
+            installInternal(
+                zipSizeBytes = zipSizeBytes,
+                openStream = { context.contentResolver.openInputStream(zipUri) },
+            )
+        }
+
+    suspend fun installFromZipFile(file: File): PluginInstallResult =
+        withContext(Dispatchers.IO) {
+            if (!file.exists() || !file.isFile) {
+                return@withContext PluginInstallResult.Error("File not found")
+            }
+            installInternal(
+                zipSizeBytes = file.length(),
+                openStream = { file.inputStream() },
+            )
+        }
+
+    private suspend fun installInternal(
+        zipSizeBytes: Long,
+        openStream: () -> java.io.InputStream?,
+    ): PluginInstallResult =
+        withContext(Dispatchers.IO) {
             val pluginsDir = File(context.filesDir, "plugins").apply { mkdirs() }
             val stagingDir = File(context.cacheDir, "plugin_staging/${UUID.randomUUID()}").apply { mkdirs() }
 
@@ -26,10 +52,6 @@ class PluginInstaller(private val context: Context) {
                 val minStorageBuffer = 100L * 1024L * 1024L // 100MB safety reserve
                 val maxSizeBytes = 500L * 1024L * 1024L // 500MB total limit
                 val maxEntries = 5000
-
-                val zipSizeBytes = runCatching {
-                    context.contentResolver.openFileDescriptor(zipUri, "r")?.use { it.statSize }
-                }.getOrNull() ?: -1L
 
                 if (zipSizeBytes > maxSizeBytes) {
                     return@withContext PluginInstallResult.Error("Plugin zip exceeds 500MB limit")
@@ -40,7 +62,7 @@ class PluginInstaller(private val context: Context) {
                     return@withContext PluginInstallResult.Error("Insufficient storage space for plugin installation")
                 }
 
-                val inputStream = context.contentResolver.openInputStream(zipUri)
+                val inputStream = openStream()
                     ?: return@withContext PluginInstallResult.Error("Could not open file")
 
                 var totalBytes = 0L

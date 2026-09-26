@@ -110,6 +110,10 @@
     <string name="plugin_uninstall_title">Удаление плагина</string>
     <string name="plugin_uninstall_confirm">Вы уверены, что хотите удалить «%1$s»?</string>
     <string name="plugin_msg_uninstalled">Плагин «%1$s» удален</string>
+    <string name="plugin_update_available">Доступно обновление: v%1$s</string>
+    <string name="plugin_btn_update">Обновить</string>
+    <string name="plugin_btn_updating">Обновление…</string>
+    <string name="plugin_msg_download_failed">Не удалось загрузить обновление плагина</string>
     <string name="cd_more_options">Дополнительные параметры</string>
 
     <!-- Plugin Settings & Permission Manager Strings -->

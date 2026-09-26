@@ -32,6 +32,7 @@ data class PluginManifest(
     val minAppVersionCode: Int = 1,
     val permissions: PluginPermissionsConfig = PluginPermissionsConfig(),
     val homepage: String? = null,
+    val updateJson: String? = null,
     val fullscreen: Boolean = false,
     val interceptBackButton: Boolean = false,
     val interceptVolumeButtons: Boolean = false,
@@ -179,6 +180,16 @@ fun parseManifest(json: String): Result<PluginManifest> {
             )
         }
         return Result.failure(IllegalArgumentException("Unknown fastboot permission '$unknown' in plugin manifest"))
+    }
+
+    // 11. updateJson validation: if provided, must be a valid http or https URL
+    manifest.updateJson?.let { updateUrl ->
+        val trimmed = updateUrl.trim()
+        if (trimmed.isBlank() || (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true))) {
+            return Result.failure(
+                IllegalArgumentException("Invalid updateJson URL '$updateUrl': must start with http:// or https://"),
+            )
+        }
     }
 
     return Result.success(manifest)

@@ -108,6 +108,10 @@
     <string name="plugin_uninstall_title">卸载插件</string>
     <string name="plugin_uninstall_confirm">确定要卸载“%1$s”吗？</string>
     <string name="plugin_msg_uninstalled">已卸载插件“%1$s”</string>
+    <string name="plugin_update_available">有可用更新：v%1$s</string>
+    <string name="plugin_btn_update">更新</string>
+    <string name="plugin_btn_updating">正在更新…</string>
+    <string name="plugin_msg_download_failed">下载插件更新失败</string>
     <string name="cd_more_options">更多选项</string>
 
     <!-- 插件设置和权限管理 -->

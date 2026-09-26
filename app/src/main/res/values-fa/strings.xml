@@ -108,6 +108,10 @@
     <string name="plugin_uninstall_title">حذف نصب پلاگین</string>
     <string name="plugin_uninstall_confirm">آیا مطمئن هستید که می‌خواهید \"%1$s\" را حذف کنید؟</string>
     <string name="plugin_msg_uninstalled">پلاگین \"%1$s\" حذف شد</string>
+    <string name="plugin_update_available">به‌روزرسانی موجود است: v%1$s</string>
+    <string name="plugin_btn_update">به‌روزرسانی</string>
+    <string name="plugin_btn_updating">در حال به‌روزرسانی…</string>
+    <string name="plugin_msg_download_failed">دانلود به‌روزرسانی افزونه ناموفق بود</string>
     <string name="cd_more_options">گزینه‌های بیشتر</string>
 
     <!-- Plugin Settings & Permission Manager Strings -->

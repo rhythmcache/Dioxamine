@@ -17,10 +17,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -65,6 +67,12 @@ fun PluginsTab(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val installedPlugins by repo.installedPlugins.collectAsState()
+    val availableUpdates by repo.availableUpdates.collectAsState()
+    val updatingPluginIds = remember { mutableStateListOf<String>() }
+
+    LaunchedEffect(installedPlugins) {
+        repo.checkForUpdates()
+    }
 
     var infoDialogManifest by remember { mutableStateOf<PluginManifest?>(null) }
     var uninstallConfirmManifest by remember { mutableStateOf<PluginManifest?>(null) }
@@ -297,155 +305,246 @@ fun PluginsTab(
                     }
 
                     Card(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable { onOpenPlugin(manifest.id) },
+                        modifier = Modifier.fillMaxWidth(),
                         colors =
                             CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             ),
                         shape = RoundedCornerShape(16.dp),
                     ) {
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            // Left: Plugin Icon / Placeholder
-                            if (iconBitmap != null) {
-                                Image(
-                                    bitmap = iconBitmap,
-                                    contentDescription = null,
-                                    modifier =
-                                        Modifier
-                                            .size(50.dp)
-                                            .clip(RoundedCornerShape(10.dp)),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            } else {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier.size(50.dp),
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Extension,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(28.dp),
-                                        )
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onOpenPlugin(manifest.id) }
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                // Left: Plugin Icon / Placeholder
+                                if (iconBitmap != null) {
+                                    Image(
+                                        bitmap = iconBitmap,
+                                        contentDescription = null,
+                                        modifier =
+                                            Modifier
+                                                .size(50.dp)
+                                                .clip(RoundedCornerShape(10.dp)),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                } else {
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        modifier = Modifier.size(50.dp),
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Extension,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(28.dp),
+                                            )
+                                        }
                                     }
                                 }
-                            }
 
-                            Spacer(Modifier.width(14.dp))
+                                Spacer(Modifier.width(14.dp))
 
-                            // Center: Title + Version & Author + Description
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.Center,
-                            ) {
-                                Text(
-                                    text = manifest.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                // Center: Title + Version & Author + Description
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                    Text(
+                                        text = manifest.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     ) {
-                                        Text(
-                                            text = "v${manifest.version}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                        ) {
+                                            Text(
+                                                text = "v${manifest.version}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                            )
+                                        }
+                                        if (!manifest.author.isNullOrBlank()) {
+                                            Text(
+                                                text = stringResource(R.string.plugin_info_author, manifest.author),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
                                     }
-                                    if (!manifest.author.isNullOrBlank()) {
+
+                                    if (manifest.description.isNotBlank()) {
+                                        Spacer(Modifier.height(6.dp))
                                         Text(
-                                            text = stringResource(R.string.plugin_info_author, manifest.author),
+                                            text = manifest.description,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
+                                            maxLines = 2,
                                             overflow = TextOverflow.Ellipsis,
                                         )
                                     }
                                 }
 
-                                if (manifest.description.isNotBlank()) {
-                                    Spacer(Modifier.height(6.dp))
-                                    Text(
-                                        text = manifest.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
+                                // Right: 3-dots Menu Button (Vertically centered)
+                                Box(
+                                    modifier = Modifier.padding(start = 4.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    IconButton(
+                                        onClick = { menuExpanded = true },
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.MoreVert,
+                                            contentDescription = stringResource(R.string.cd_more_options),
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = menuExpanded,
+                                        onDismissRequest = { menuExpanded = false },
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.plugin_menu_info)) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Info,
+                                                    contentDescription = null,
+                                                )
+                                            },
+                                            onClick = {
+                                                menuExpanded = false
+                                                infoDialogManifest = manifest
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = stringResource(R.string.plugin_menu_uninstall),
+                                                    color = MaterialTheme.colorScheme.error,
+                                                )
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Delete,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.error,
+                                                )
+                                            },
+                                            onClick = {
+                                                menuExpanded = false
+                                                uninstallConfirmManifest = manifest
+                                            },
+                                        )
+                                    }
                                 }
                             }
 
-                            // Right: 3-dots Menu Button (Vertically centered)
-                            Box(
-                                modifier = Modifier.padding(start = 4.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                IconButton(
-                                    onClick = { menuExpanded = true },
+                            val updateInfo = availableUpdates[manifest.id]
+                            if (updateInfo != null && updateInfo.versionCode > manifest.versionCode) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f),
+                                )
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.MoreVert,
-                                        contentDescription = stringResource(R.string.cd_more_options),
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = menuExpanded,
-                                    onDismissRequest = { menuExpanded = false },
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.plugin_menu_info)) },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = Icons.Filled.Info,
-                                                contentDescription = null,
-                                            )
-                                        },
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.SystemUpdate,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.plugin_update_available, updateInfo.version),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+
+                                    val isUpdating = updatingPluginIds.contains(manifest.id)
+                                    Button(
                                         onClick = {
-                                            menuExpanded = false
-                                            infoDialogManifest = manifest
+                                            coroutineScope.launch {
+                                                updatingPluginIds.add(manifest.id)
+                                                val result = repo.downloadAndInstallUpdate(manifest, updateInfo)
+                                                updatingPluginIds.remove(manifest.id)
+                                                val message =
+                                                    when (result) {
+                                                        is PluginInstallResult.Installed ->
+                                                            context.getString(R.string.plugins_msg_installed, result.manifest.name)
+
+                                                        is PluginInstallResult.Updated ->
+                                                            context.getString(R.string.plugins_msg_updated, result.new.name, result.new.version)
+
+                                                        is PluginInstallResult.UpdateRejected ->
+                                                            context.getString(R.string.plugins_msg_rejected)
+
+                                                        is PluginInstallResult.Error ->
+                                                            context.getString(R.string.plugins_msg_error, result.message)
+                                                    }
+                                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                            }
                                         },
-                                    )
-                                    DropdownMenuItem(
-                                        text = {
+                                        enabled = !isUpdating,
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                        modifier = Modifier.height(34.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                    ) {
+                                        if (isUpdating) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp,
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                            )
+                                            Spacer(Modifier.width(6.dp))
                                             Text(
-                                                text = stringResource(R.string.plugin_menu_uninstall),
-                                                color = MaterialTheme.colorScheme.error,
+                                                text = stringResource(R.string.plugin_btn_updating),
+                                                style = MaterialTheme.typography.labelMedium,
                                             )
-                                        },
-                                        leadingIcon = {
+                                        } else {
                                             Icon(
-                                                imageVector = Icons.Filled.Delete,
+                                                imageVector = Icons.Filled.Download,
                                                 contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(16.dp),
                                             )
-                                        },
-                                        onClick = {
-                                            menuExpanded = false
-                                            uninstallConfirmManifest = manifest
-                                        },
-                                    )
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(
+                                                text = stringResource(R.string.plugin_btn_update),
+                                                style = MaterialTheme.typography.labelMedium,
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

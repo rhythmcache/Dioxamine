@@ -22,7 +22,8 @@ Every Dioxamine plugin must include a valid `plugin.json` file at the root of it
     ]
   },
   "fullscreen": true,
-  "homepage": "https://github.com/rhythmcache/dioxamine"
+  "homepage": "https://github.com/rhythmcache/dioxamine",
+  "updateJson": "https://raw.githubusercontent.com/rhythmcache/dioxamine/main/update.json"
 }
 ```
 
@@ -45,6 +46,7 @@ Every Dioxamine plugin must include a valid `plugin.json` file at the root of it
 | `interceptBackButton` | `Boolean` | No | If `true`, intercepts Android Back button/gesture on plugin launch and forwards events to JavaScript. Default: `false`. |
 | `interceptVolumeButtons` | `Boolean` | No | If `true`, intercepts hardware Volume buttons on plugin launch and forwards events to JavaScript. Default: `false`. |
 | `homepage` | `String` | No | Web URL pointing to the plugin repository, source code, or documentation. |
+| `updateJson` | `String` | No | HTTP or HTTPS URL pointing to a remote JSON file used to check for plugin updates and install new releases. |
 
 ## Validation Rules
 
@@ -64,3 +66,29 @@ When installing or loading a plugin, Dioxamine strictly enforces the following v
    - Unknown permissions or permissions placed in the wrong subkey will fail manifest validation with an explicit error.
 4. **App Version Compatibility**:
    - If `minAppVersionCode` exceeds the running Dioxamine application version, installation will be blocked with a compatibility notice.
+5. **Update URL Validation**:
+   - If `updateJson` is specified, it must be a valid `http://` or `https://` URL. Other schemes or blank values will fail validation.
+
+## Plugin Update Format (updateJson)
+
+When `updateJson` is declared in `plugin.json`, Dioxamine queries the provided URL whenever the user enters the Plugins tab. If the remote `versionCode` is greater than the currently installed plugin `versionCode`, an **Update** option is displayed directly on the plugin tile.
+
+### Remote JSON Structure
+
+```json
+{
+  "id": "io.github.rhythmcache.dioxamine.xtermterminal",
+  "version": "1.0.2",
+  "versionCode": 3,
+  "download": "https://github.com/dioxamine-plugins/xtermterminal/releases/download/v1.0.2/xtermterminal-1.0.2.zip",
+  "changelog": "https://raw.githubusercontent.com/dioxamine-plugins/xtermterminal/main/CHANGELOG.md"
+}
+```
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `String` | **Yes** | Must match the plugin `id`. |
+| `version` | `String` | **Yes** | Human-readable version string of the update. |
+| `versionCode` | `Integer` | **Yes** | Integer version code. Must be greater than the installed `versionCode` to trigger an update. |
+| `download` | `String` | **Yes** | HTTP or HTTPS URL to the plugin zip file to download and install. |
+| `changelog` | `String` | No | Optional URL pointing to release notes or changelog. |

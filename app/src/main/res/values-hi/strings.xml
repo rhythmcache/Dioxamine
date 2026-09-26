@@ -108,6 +108,10 @@
     <string name="plugin_uninstall_title">प्लगइन अनइंस्टॉल करें</string>
     <string name="plugin_uninstall_confirm">क्या आप वाकई \"%1$s\" को अनइंस्टॉल करना चाहते हैं?</string>
     <string name="plugin_msg_uninstalled">प्लगइन \"%1$s\" अनइंस्टॉल हो गया</string>
+    <string name="plugin_update_available">अपडेट उपलब्ध: v%1$s</string>
+    <string name="plugin_btn_update">अपडेट करें</string>
+    <string name="plugin_btn_updating">अपडेट हो रहा है…</string>
+    <string name="plugin_msg_download_failed">प्लगइन अपडेट डाउनलोड करने में विफल</string>
     <string name="cd_more_options">अधिक विकल्प</string>
 
     <!-- Plugin Settings & Permission Manager Strings -->
