@@ -3,22 +3,22 @@
 <text x="12" y="20" fill="#c9d1d9" font-size="13" font-weight="bold">Translation Coverage</text>
 <text x="12" y="46" fill="#c9d1d9" font-size="12">German (de)</text>
 <rect x="172" y="36" width="200" height="10" rx="5" fill="#30363d"/>
-<rect x="172" y="36" width="200" height="10" rx="5" fill="#4c1"/>
-<text x="382" y="46" fill="#8b949e" font-size="12">100%</text>
+<rect x="172" y="36" width="198" height="10" rx="5" fill="#4c1"/>
+<text x="382" y="46" fill="#8b949e" font-size="12">99%</text>
 <text x="12" y="70" fill="#c9d1d9" font-size="12">Persian (fa)</text>
 <rect x="172" y="60" width="200" height="10" rx="5" fill="#30363d"/>
-<rect x="172" y="60" width="200" height="10" rx="5" fill="#4c1"/>
-<text x="382" y="70" fill="#8b949e" font-size="12">100%</text>
+<rect x="172" y="60" width="198" height="10" rx="5" fill="#4c1"/>
+<text x="382" y="70" fill="#8b949e" font-size="12">99%</text>
 <text x="12" y="94" fill="#c9d1d9" font-size="12">Hindi (hi)</text>
 <rect x="172" y="84" width="200" height="10" rx="5" fill="#30363d"/>
-<rect x="172" y="84" width="199" height="10" rx="5" fill="#4c1"/>
-<text x="382" y="94" fill="#8b949e" font-size="12">100%</text>
+<rect x="172" y="84" width="197" height="10" rx="5" fill="#4c1"/>
+<text x="382" y="94" fill="#8b949e" font-size="12">99%</text>
 <text x="12" y="118" fill="#c9d1d9" font-size="12">Russian (ru)</text>
 <rect x="172" y="108" width="200" height="10" rx="5" fill="#30363d"/>
-<rect x="172" y="108" width="199" height="10" rx="5" fill="#4c1"/>
-<text x="382" y="118" fill="#8b949e" font-size="12">100%</text>
+<rect x="172" y="108" width="197" height="10" rx="5" fill="#4c1"/>
+<text x="382" y="118" fill="#8b949e" font-size="12">99%</text>
 <text x="12" y="142" fill="#c9d1d9" font-size="12">Chinese (Simplified, China) (zh-CN)</text>
 <rect x="172" y="132" width="200" height="10" rx="5" fill="#30363d"/>
-<rect x="172" y="132" width="199" height="10" rx="5" fill="#4c1"/>
-<text x="382" y="142" fill="#8b949e" font-size="12">100%</text>
+<rect x="172" y="132" width="197" height="10" rx="5" fill="#4c1"/>
+<text x="382" y="142" fill="#8b949e" font-size="12">99%</text>
 </svg>
