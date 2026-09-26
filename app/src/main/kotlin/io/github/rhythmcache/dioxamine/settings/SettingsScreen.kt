@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -1118,71 +1119,12 @@ private fun PluginPermissionsDialog(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     plugins.forEach { plugin ->
-                        val declaredPermissions = remember(plugin.id) {
-                            plugin.permissions.allList().mapNotNull { PluginPermission.fromManifestString(it) }
-                        }
-
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            ),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        text = plugin.name,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Text(
-                                        text = plugin.id,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                )
-
-                                if (declaredPermissions.isEmpty()) {
-                                    Text(
-                                        stringResource(R.string.settings_plugins_no_permissions),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.outline
-                                    )
-                                } else {
-                                    declaredPermissions.forEachIndexed { index, perm ->
-                                        key(triggerUpdate, plugin.id, perm) {
-                                            val currentPolicy = permissionStore.getPolicy(plugin.id, perm)
-
-                                            PluginPermissionTile(
-                                                permission = perm,
-                                                currentPolicy = currentPolicy,
-                                                onPolicyChange = { newPolicy ->
-                                                    permissionStore.setPolicy(plugin.id, perm, newPolicy)
-                                                    triggerUpdate++
-                                                }
-                                            )
-
-                                            if (index < declaredPermissions.lastIndex) {
-                                                HorizontalDivider(
-                                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
-                                                    modifier = Modifier.padding(vertical = 4.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        PluginPermissionItemCard(
+                            plugin = plugin,
+                            permissionStore = permissionStore,
+                            triggerUpdate = triggerUpdate,
+                            onPolicyChange = { triggerUpdate++ }
+                        )
                     }
                 }
             }
@@ -1205,6 +1147,108 @@ private fun PluginPermissionsDialog(
             }
         }
     )
+}
+
+@Composable
+private fun PluginPermissionItemCard(
+    plugin: PluginManifest,
+    permissionStore: PluginPermissionStore,
+    triggerUpdate: Int,
+    onPolicyChange: () -> Unit
+) {
+    var expanded by remember(plugin.id) { mutableStateOf(false) }
+    val declaredPermissions = remember(plugin.id) {
+        plugin.permissions.allList().mapNotNull { PluginPermission.fromManifestString(it) }
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = plugin.name,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = plugin.id,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = stringResource(if (expanded) R.string.cd_collapse else R.string.cd_expand),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        if (declaredPermissions.isEmpty()) {
+                            Text(
+                                stringResource(R.string.settings_plugins_no_permissions),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        } else {
+                            declaredPermissions.forEachIndexed { index, perm ->
+                                key(triggerUpdate, plugin.id, perm) {
+                                    val currentPolicy = permissionStore.getPolicy(plugin.id, perm)
+
+                                    PluginPermissionTile(
+                                        permission = perm,
+                                        currentPolicy = currentPolicy,
+                                        onPolicyChange = { newPolicy ->
+                                            permissionStore.setPolicy(plugin.id, perm, newPolicy)
+                                            onPolicyChange()
+                                        }
+                                    )
+
+                                    if (index < declaredPermissions.lastIndex) {
+                                        HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
