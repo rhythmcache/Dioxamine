@@ -1,16 +1,17 @@
 package io.github.rhythmcache.dioxamine.plugin
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 
 class PluginPermissionGateTest {
 
     @Test
-    fun testUndeclaredPermissionRejectedImmediately() = runTest {
+    fun testUndeclaredPermissionRejectedImmediately() = runBlocking(Dispatchers.Default) {
         val gate = PluginPermissionGate(store = null)
         val declared = listOf(PluginPermission.SHELL)
         val result = gate.checkPermission(
@@ -24,7 +25,7 @@ class PluginPermissionGateTest {
     }
 
     @Test
-    fun testAllowSessionGrantsForSession() = runTest {
+    fun testAllowSessionGrantsForSession() = runBlocking(Dispatchers.Default) {
         val gate = PluginPermissionGate(store = null)
         val declared = listOf(PluginPermission.SHELL)
 
@@ -59,7 +60,7 @@ class PluginPermissionGateTest {
     }
 
     @Test
-    fun testDenySessionDeniesForSession() = runTest {
+    fun testDenySessionDeniesForSession() = runBlocking(Dispatchers.Default) {
         val gate = PluginPermissionGate(store = null)
         val declared = listOf(PluginPermission.PUSH)
 
@@ -91,7 +92,7 @@ class PluginPermissionGateTest {
     }
 
     @Test
-    fun testClearSessionPermissionResetsState() = runTest {
+    fun testClearSessionPermissionResetsState() = runBlocking(Dispatchers.Default) {
         val gate = PluginPermissionGate(store = null)
         val declared = listOf(PluginPermission.INSTALL)
 
@@ -114,7 +115,7 @@ class PluginPermissionGateTest {
     }
 
     @Test
-    fun testClearSessionResetsAllPermissionsForPlugin() = runTest {
+    fun testClearSessionResetsAllPermissionsForPlugin() = runBlocking(Dispatchers.Default) {
         val gate = PluginPermissionGate(store = null)
         val declared = listOf(PluginPermission.SHELL, PluginPermission.NETWORK)
 
@@ -142,7 +143,7 @@ class PluginPermissionGateTest {
     }
 
     @Test
-    fun testClearAllSessionsResetsAllPlugins() = runTest {
+    fun testClearAllSessionsResetsAllPlugins() = runBlocking(Dispatchers.Default) {
         val gate = PluginPermissionGate(store = null)
 
         val check1 = async {
