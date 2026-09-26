@@ -39,7 +39,8 @@ Every Dioxamine plugin must include a valid `plugin.json` file at the root of it
 | `author` | `String` | No | Author or organization name. |
 | `entry` | `String` | **Yes** | Relative path to the HTML entrypoint file (for example, `"index.html"` or `"ui/main.html"`). Path traversal (`..`) is forbidden. |
 | `icon` | `String` | No | Relative path to the plugin icon image (PNG, WebP, JPG, or SVG). Default: `null`. |
-| `minAppVersionCode` | `Integer` | No | Minimum Dioxamine app `versionCode` required to execute this plugin. Default: `1`. |
+| `minAppVersionCode` | `Integer` | No | Minimum Dioxamine app `versionCode` required to execute this plugin (e.g. `10004`). Default: `1`. |
+| `minAppVersion` | `String` | No | Minimum Dioxamine app semantic version required (e.g. `"0.0.4"`). Default: `null`. |
 | `permissions` | `Object` | No | Declared permission groups. Supported subkeys: `adb` (list of ADB permissions) and `common` (list of general permissions, e.g. `"network"`). Default: `{}`. |
 | `fullscreen` | `Boolean` | No | If `true`, hides the Dioxamine top bar on launch to provide an edge-to-edge full-screen display. Default: `false`. |
 | `interceptBackButton` | `Boolean` | No | If `true`, intercepts Android Back button/gesture on plugin launch and forwards events to JavaScript. Default: `false`. |
@@ -63,4 +64,4 @@ When installing or loading a plugin, Dioxamine strictly enforces the following v
    - Fastboot permissions in `permissions.fastboot` must only be: `fastboot` (or `access`).
    - Unknown permissions or permissions placed in the wrong subkey will fail manifest validation with an explicit error.
 4. **App Version Compatibility**:
-   - If `minAppVersionCode` exceeds the running Dioxamine application version, installation will be blocked with a compatibility notice.
+   - If `minAppVersionCode` or `minAppVersion` exceeds the running Dioxamine application version, installation will be blocked with a compatibility notice.

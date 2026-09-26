@@ -114,4 +114,53 @@ class PluginManifestTest {
         assertTrue(manifest.interceptBackButton)
         assertTrue(manifest.interceptVolumeButtons)
     }
+
+    @Test
+    fun testMinAppVersionCodeRejection() {
+        val json = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.futureplugin",
+                "name": "Future Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "minAppVersionCode": 999999
+            }
+        """.trimIndent()
+        val result = parseManifest(json)
+        assertTrue(result.isFailure)
+        val msg = result.exceptionOrNull()?.message.orEmpty()
+        assertTrue(msg.contains("Plugin requires app version code 999999 or higher"))
+    }
+
+    @Test
+    fun testMinAppVersionStringComparison() {
+        assertTrue(isAppVersionAtLeast("0.0.4", "0.0.4"))
+        assertTrue(isAppVersionAtLeast("0.0.3", "0.0.4"))
+        assertTrue(isAppVersionAtLeast("0.0.1", "1.0.0"))
+        assertFalse(isAppVersionAtLeast("0.0.5", "0.0.4"))
+        assertFalse(isAppVersionAtLeast("1.0.0", "0.0.4"))
+        assertFalse(isAppVersionAtLeast("0.1.0", "0.0.4"))
+    }
+
+    @Test
+    fun testMinAppVersionRejection() {
+        val json = """
+            {
+                "schemaVersion": 1,
+                "id": "com.example.futureplugin",
+                "name": "Future Plugin",
+                "version": "1.0.0",
+                "versionCode": 1,
+                "entry": "index.html",
+                "minAppVersion": "99.0.0"
+            }
+        """.trimIndent()
+        val result = parseManifest(json)
+        assertTrue(result.isFailure)
+        val msg = result.exceptionOrNull()?.message.orEmpty()
+        assertTrue(msg.contains("Plugin requires Dioxamine version 99.0.0 or higher"))
+    }
 }
+
