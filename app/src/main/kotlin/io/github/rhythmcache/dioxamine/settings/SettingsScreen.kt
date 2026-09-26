@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Tune
@@ -59,9 +60,11 @@ import io.github.rhythmcache.dioxamine.core.DioxForegroundService
 import io.github.rhythmcache.dioxamine.core.UpdateChecker
 import io.github.rhythmcache.dioxamine.plugin.PermissionPolicy
 import io.github.rhythmcache.dioxamine.plugin.PluginManifest
+import io.github.rhythmcache.dioxamine.plugin.PluginOnlineRepositoryManager
 import io.github.rhythmcache.dioxamine.plugin.PluginPermission
 import io.github.rhythmcache.dioxamine.plugin.PluginPermissionStore
 import io.github.rhythmcache.dioxamine.plugin.PluginPermissionTile
+import io.github.rhythmcache.dioxamine.plugin.PluginRepositoriesDialog
 import io.github.rhythmcache.dioxamine.plugin.PluginRepository
 import kotlinx.coroutines.launch
 import java.util.zip.ZipOutputStream
@@ -133,8 +136,10 @@ fun SettingsScreen(vm: AdbViewModel) {
         mutableStateOf(prefs.getBoolean("plugin_webview_debug", false))
     }
     var showPluginPermissionsDialog by remember { mutableStateOf(false) }
+    var showPluginRepositoriesDialog by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
+    val repoManager = remember { PluginOnlineRepositoryManager(context.applicationContext) }
     val permissionStore = remember { PluginPermissionStore(context.applicationContext) }
     val pluginRepo = remember { PluginRepository(context.applicationContext, scope) }
     val installedPlugins by pluginRepo.installedPlugins.collectAsState()
@@ -798,6 +803,54 @@ fun SettingsScreen(vm: AdbViewModel) {
                                 Text(stringResource(R.string.settings_plugins_btn_manage), style = MaterialTheme.typography.bodySmall)
                             }
                         }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                        // Plugin Repositories Manager Tile
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showPluginRepositoriesDialog = true
+                                }
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f).padding(end = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Filled.Public,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        stringResource(R.string.settings_plugins_repos_title),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        stringResource(R.string.settings_plugins_repos_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Button(
+                                onClick = {
+                                    showPluginRepositoriesDialog = true
+                                },
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(36.dp)
+                            ) {
+                                Text(stringResource(R.string.settings_plugins_btn_manage), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -1069,6 +1122,13 @@ fun SettingsScreen(vm: AdbViewModel) {
             plugins = installedPlugins,
             permissionStore = permissionStore,
             onDismiss = { showPluginPermissionsDialog = false }
+        )
+    }
+
+    if (showPluginRepositoriesDialog) {
+        PluginRepositoriesDialog(
+            repoManager = repoManager,
+            onDismiss = { showPluginRepositoriesDialog = false }
         )
     }
 }
