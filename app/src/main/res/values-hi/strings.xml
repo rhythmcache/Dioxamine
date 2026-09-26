@@ -103,10 +103,6 @@
     <string name="plugin_info_entry">एंट्री: %1$s</string>
     <string name="plugin_info_size">आकार: %1$s</string>
     <string name="plugin_info_homepage">होमपेज: %1$s</string>
-    <string name="plugin_info_features">सुविधाएं: %1$s</string>
-    <string name="plugin_feature_fullscreen">पूर्ण स्क्रीन</string>
-    <string name="plugin_feature_back_button">बैक बटन</string>
-    <string name="plugin_feature_volume_buttons">वॉल्यूम बटन</string>
     <string name="plugin_info_min_app_version">न्यूनतम ऐप बिल्ड: %1$d</string>
     <string name="plugin_info_permissions">अनुमतियां: %1$s</string>
     <string name="plugin_uninstall_title">प्लगइन अनइंस्टॉल करें</string>

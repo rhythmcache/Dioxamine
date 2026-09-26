@@ -108,10 +108,6 @@
     <string name="plugin_info_entry">Entry: %1$s</string>
     <string name="plugin_info_size">Size: %1$s</string>
     <string name="plugin_info_homepage">Homepage: %1$s</string>
-    <string name="plugin_info_features">Features: %1$s</string>
-    <string name="plugin_feature_fullscreen">Fullscreen</string>
-    <string name="plugin_feature_back_button">Back button</string>
-    <string name="plugin_feature_volume_buttons">Volume buttons</string>
     <string name="plugin_info_min_app_version">Min App Build: %1$d</string>
     <string name="plugin_info_permissions">Permissions: %1$s</string>
     <string name="plugin_uninstall_title">Uninstall Plugin</string>

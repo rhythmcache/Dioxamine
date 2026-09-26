@@ -501,14 +501,6 @@ fun PluginsTab(
             }
         }
 
-        val features = remember(manifest) {
-            buildList {
-                if (manifest.fullscreen) add(context.getString(R.string.plugin_feature_fullscreen))
-                if (manifest.interceptBackButton) add(context.getString(R.string.plugin_feature_back_button))
-                if (manifest.interceptVolumeButtons) add(context.getString(R.string.plugin_feature_volume_buttons))
-            }
-        }
-
         AlertDialog(
             onDismissRequest = { infoDialogManifest = null },
             title = {
@@ -638,13 +630,6 @@ fun PluginsTab(
                     if (manifest.minAppVersionCode > 1) {
                         Text(
                             text = stringResource(R.string.plugin_info_min_app_version, manifest.minAppVersionCode),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-
-                    if (features.isNotEmpty()) {
-                        Text(
-                            text = stringResource(R.string.plugin_info_features, features.joinToString(", ")),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }

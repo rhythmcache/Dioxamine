@@ -103,10 +103,6 @@
     <string name="plugin_info_entry">نقطه ورود: %1$s</string>
     <string name="plugin_info_size">اندازه حافظه: %1$s</string>
     <string name="plugin_info_homepage">صفحه وب: %1$s</string>
-    <string name="plugin_info_features">قابلیت‌ها: %1$s</string>
-    <string name="plugin_feature_fullscreen">تمام‌صفحه</string>
-    <string name="plugin_feature_back_button">دکمه بازگشت</string>
-    <string name="plugin_feature_volume_buttons">دکمه‌های صدا</string>
     <string name="plugin_info_min_app_version">حداقل بیلد برنامه: %1$d</string>
     <string name="plugin_info_permissions">مجوزها: %1$s</string>
     <string name="plugin_uninstall_title">حذف نصب پلاگین</string>
