@@ -137,8 +137,105 @@ class PluginOnlineRepositoryTest {
         assertNotNull(timeMs)
         assertTrue(timeMs!! > 0)
 
+        val isoMillis = "2026-09-26T14:00:00.000Z"
+        val timeMsMillis = parseIsoTimeMs(isoMillis)
+        assertNotNull(timeMsMillis)
+        assertEquals(timeMs, timeMsMillis)
+
         val invalidIso = "not-a-date"
         val invalidResult = parseIsoTimeMs(invalidIso)
         assertNull(invalidResult)
+    }
+
+    @Test
+    fun testMalformedPermissionsRejectsEntry() {
+        val jsonWithBadPerms = """
+        {
+          "schemaVersion": 1,
+          "plugins": [
+            {
+              "id": "valid.entry",
+              "name": "Valid Entry",
+              "version": "1.0.0",
+              "versionCode": 1,
+              "download": "https://example.com/valid.zip",
+              "permissions": {
+                "adb": ["shell"]
+              }
+            },
+            {
+              "id": "bad.perms.string",
+              "name": "Bad Perms String",
+              "version": "1.0.0",
+              "versionCode": 1,
+              "download": "https://example.com/bad.zip",
+              "permissions": "not-an-object"
+            },
+            {
+              "id": "bad.perms.array",
+              "name": "Bad Perms Array",
+              "version": "1.0.0",
+              "versionCode": 1,
+              "download": "https://example.com/bad2.zip",
+              "permissions": ["adb.shell"]
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val result = parsePluginIndex(jsonWithBadPerms)
+        assertTrue(result.isSuccess)
+        val plugins = result.getOrThrow().plugins
+        assertEquals(1, plugins.size)
+        assertEquals("valid.entry", plugins[0].id)
+    }
+
+    @Test
+    fun testDeduplicatePluginsRepoPriorityPreventsShadowing() {
+        val officialPluginV1 = PluginIndexItem(
+            id = "org.dioxamine.core",
+            name = "Official Plugin",
+            version = "1.0.0",
+            versionCode = 10,
+            download = "https://official.example.com/plugin-v1.zip",
+        )
+        val officialPluginV2 = PluginIndexItem(
+            id = "org.dioxamine.core",
+            name = "Official Plugin",
+            version = "2.0.0",
+            versionCode = 20,
+            download = "https://official.example.com/plugin-v2.zip",
+        )
+        val maliciousSpoof = PluginIndexItem(
+            id = "org.dioxamine.core",
+            name = "Official Plugin Impostor",
+            version = "99.0.0",
+            versionCode = 9999,
+            download = "https://malicious.example.com/evil.zip",
+        )
+        val untrustedUnique = PluginIndexItem(
+            id = "org.untrusted.unique",
+            name = "Community Plugin",
+            version = "1.0.0",
+            versionCode = 1,
+            download = "https://community.example.com/plugin.zip",
+        )
+
+        // Repo 1 (official): contains both v1 and v2
+        val repo1 = listOf(officialPluginV1, officialPluginV2)
+        // Repo 2 (untrusted/community): tries to shadow official ID with versionCode 9999, plus has unique plugin
+        val repo2 = listOf(maliciousSpoof, untrustedUnique)
+
+        val merged = deduplicatePlugins(listOf(repo1, repo2))
+
+        assertEquals(2, merged.size)
+        val official = merged.first { it.id == "org.dioxamine.core" }
+        // Verify official repo's highest version (v2, versionCode 20) won, NOT the spoof from repo 2
+        assertEquals(20, official.versionCode)
+        assertEquals("https://official.example.com/plugin-v2.zip", official.download)
+
+        // Verify untrusted unique plugin was included
+        val community = merged.first { it.id == "org.untrusted.unique" }
+        assertEquals(1, community.versionCode)
     }
 }

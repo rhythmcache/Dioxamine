@@ -80,13 +80,6 @@ fun parsePluginIndex(jsonString: String): Result<PluginIndex> {
                 runCatching {
                     val item = runCatching {
                         onlineJsonParser.decodeFromJsonElement<PluginIndexItem>(itemElement)
-                    }.recoverCatching {
-                        if (itemElement is JsonObject) {
-                            val withoutPerms = JsonObject(itemElement.filterKeys { it != "permissions" })
-                            onlineJsonParser.decodeFromJsonElement<PluginIndexItem>(withoutPerms)
-                        } else {
-                            throw it
-                        }
                     }.getOrNull() ?: return@mapNotNull null
 
                     val trimmedId = item.id.trim()
@@ -154,10 +147,17 @@ fun parseIsoTimeMs(iso: String): Long? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             java.time.Instant.parse(iso).toEpochMilli()
         } else {
-            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+            val cleaned = iso.trim()
+            val pattern = when {
+                cleaned.endsWith("Z", ignoreCase = true) && cleaned.contains(".") -> "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+                cleaned.endsWith("Z", ignoreCase = true) -> "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                cleaned.contains(".") -> "yyyy-MM-dd'T'HH:mm:ss.SSS"
+                else -> "yyyy-MM-dd'T'HH:mm:ss"
+            }
+            val sdf = SimpleDateFormat(pattern, Locale.US).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
             }
-            sdf.parse(iso)?.time
+            sdf.parse(cleaned)?.time
         }
     }.getOrNull()
 }
@@ -288,7 +288,7 @@ class PluginOnlineRepositoryManager(private val context: Context) {
             return@withContext Result.failure(IllegalStateException("No repository URLs configured"))
         }
 
-        val allPlugins = mutableListOf<PluginIndexItem>()
+        val repoPluginsList = mutableListOf<List<PluginIndexItem>>()
         var latestUpdated: String? = null
         var anySuccess = false
         var lastError: Throwable? = null
@@ -303,8 +303,8 @@ class PluginOnlineRepositoryManager(private val context: Context) {
                         parsed.fold(
                             onSuccess = { index ->
                                 anySuccess = true
-                                allPlugins.addAll(index.plugins)
-                                if (index.updated != null) {
+                                repoPluginsList.add(index.plugins)
+                                if (latestUpdated == null && index.updated != null) {
                                     latestUpdated = index.updated
                                 }
                             },
@@ -327,11 +327,7 @@ class PluginOnlineRepositoryManager(private val context: Context) {
         }
 
         if (anySuccess) {
-            // Deduplicate plugins by ID, picking highest versionCode
-            val deduplicated = allPlugins.groupBy { it.id }.map { (_, items) ->
-                items.maxByOrNull { it.versionCode }!!
-            }.sortedBy { it.name.lowercase() }
-
+            val deduplicated = deduplicatePlugins(repoPluginsList)
             val feed = CachedPluginFeed(
                 fetchedAtMs = System.currentTimeMillis(),
                 updated = latestUpdated,
@@ -343,4 +339,24 @@ class PluginOnlineRepositoryManager(private val context: Context) {
             Result.failure(lastError ?: IOException("Failed to fetch repository"))
         }
     }
+}
+
+internal fun deduplicatePlugins(
+    repoPluginsList: List<List<PluginIndexItem>>,
+): List<PluginIndexItem> {
+    // Repositories are processed in priority order (first repository has highest priority).
+    // A plugin ID claimed by a higher-priority repository cannot be shadowed by later repositories.
+    // Within the same repository, if multiple versions of the same plugin exist, the highest versionCode wins.
+    val result = LinkedHashMap<String, PluginIndexItem>()
+    for (pluginsInRepo in repoPluginsList) {
+        val repoBest = pluginsInRepo.groupBy { it.id }.mapValues { (_, items) ->
+            items.maxByOrNull { it.versionCode }!!
+        }
+        for ((id, item) in repoBest) {
+            if (!result.containsKey(id)) {
+                result[id] = item
+            }
+        }
+    }
+    return result.values.sortedBy { it.name.lowercase() }
 }
