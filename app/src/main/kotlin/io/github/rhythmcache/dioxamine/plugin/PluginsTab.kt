@@ -11,7 +11,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -43,6 +45,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
+import io.github.rhythmcache.dioxamine.core.formatFileSize
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -302,13 +305,13 @@ fun PluginsTab(
                             CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             ),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(16.dp),
                     ) {
                         Row(
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
@@ -319,45 +322,46 @@ fun PluginsTab(
                                     contentDescription = null,
                                     modifier =
                                         Modifier
-                                            .size(42.dp)
-                                            .clip(RoundedCornerShape(8.dp)),
+                                            .size(50.dp)
+                                            .clip(RoundedCornerShape(10.dp)),
                                     contentScale = ContentScale.Crop,
                                 )
                             } else {
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(10.dp),
                                     color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier.size(42.dp),
+                                    modifier = Modifier.size(50.dp),
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Filled.Extension,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(24.dp),
+                                            modifier = Modifier.size(28.dp),
                                         )
                                     }
                                 }
                             }
 
-                            Spacer(Modifier.width(12.dp))
+                            Spacer(Modifier.width(14.dp))
 
-                            // Center: Title + Version + Description
+                            // Center: Title + Version & Author + Description
                             Column(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.Center,
                             ) {
+                                Text(
+                                    text = manifest.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Spacer(Modifier.height(4.dp))
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    Text(
-                                        text = manifest.name,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
                                     Surface(
                                         shape = RoundedCornerShape(6.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -365,14 +369,24 @@ fun PluginsTab(
                                         Text(
                                             text = "v${manifest.version}",
                                             style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        )
+                                    }
+                                    if (!manifest.author.isNullOrBlank()) {
+                                        Text(
+                                            text = stringResource(R.string.plugin_info_author, manifest.author),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
                                         )
                                     }
                                 }
 
                                 if (manifest.description.isNotBlank()) {
-                                    Spacer(Modifier.height(4.dp))
+                                    Spacer(Modifier.height(6.dp))
                                     Text(
                                         text = manifest.description,
                                         style = MaterialTheme.typography.bodySmall,
@@ -463,25 +477,117 @@ fun PluginsTab(
     }
 
     infoDialogManifest?.let { manifest ->
+        val dialogIconBitmap = remember(manifest.id, manifest.icon) {
+            val pluginDir = File(context.filesDir, "plugins/${manifest.id}")
+            val iconFileName = manifest.icon ?: "icon.png"
+            val iconFile = File(pluginDir, iconFileName)
+            if (iconFile.exists() && iconFile.isFile) {
+                try {
+                    BitmapFactory.decodeFile(iconFile.absolutePath)?.asImageBitmap()
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
+        }
+
+        val pluginDirSize = remember(manifest.id) {
+            val dir = File(context.filesDir, "plugins/${manifest.id}")
+            if (dir.exists()) {
+                dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+            } else {
+                0L
+            }
+        }
+
+        val features = remember(manifest) {
+            buildList {
+                if (manifest.fullscreen) add(context.getString(R.string.plugin_feature_fullscreen))
+                if (manifest.interceptBackButton) add(context.getString(R.string.plugin_feature_back_button))
+                if (manifest.interceptVolumeButtons) add(context.getString(R.string.plugin_feature_volume_buttons))
+            }
+        }
+
         AlertDialog(
             onDismissRequest = { infoDialogManifest = null },
             title = {
-                Text(
-                    text = manifest.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (dialogIconBitmap != null) {
+                        Image(
+                            bitmap = dialogIconBitmap,
+                            contentDescription = null,
+                            modifier =
+                                Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(44.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Filled.Extension,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = manifest.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.padding(top = 2.dp),
+                        ) {
+                            Text(
+                                text = "v${manifest.version} (${manifest.versionCode})",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
+                }
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (manifest.description.isNotBlank()) {
+                        Text(
+                            text = manifest.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    }
+
                     Text(
                         text = stringResource(R.string.plugin_info_id, manifest.id),
                         style = MaterialTheme.typography.bodyMedium,
                     )
+
                     Text(
-                        text = stringResource(R.string.plugin_info_version, manifest.version),
+                        text = stringResource(R.string.plugin_info_version, "${manifest.version} (${manifest.versionCode})"),
                         style = MaterialTheme.typography.bodyMedium,
                     )
+
                     val author = manifest.author
                     if (!author.isNullOrBlank()) {
                         Text(
@@ -489,22 +595,68 @@ fun PluginsTab(
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
-                    Text(
-                        text = stringResource(R.string.plugin_info_entry, manifest.entry),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    if (manifest.description.isNotBlank()) {
-                        Spacer(Modifier.height(4.dp))
+
+                    if (pluginDirSize > 0L) {
                         Text(
-                            text = manifest.description,
+                            text = stringResource(R.string.plugin_info_size, formatFileSize(pluginDirSize)),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+
+                    val homepage = manifest.homepage
+                    if (!homepage.isNullOrBlank()) {
+                        val homepageText = stringResource(R.string.plugin_info_homepage, homepage)
+                        val prefix = homepageText.substringBefore(homepage)
+                        val homepageAnnotated =
+                            remember(homepage, prefix, linkColor) {
+                                buildAnnotatedString {
+                                    append(prefix)
+                                    withLink(
+                                        LinkAnnotation.Url(
+                                            url = homepage,
+                                            styles =
+                                                TextLinkStyles(
+                                                    style =
+                                                        SpanStyle(
+                                                            color = linkColor,
+                                                            textDecoration = TextDecoration.Underline,
+                                                            fontWeight = FontWeight.Medium,
+                                                        ),
+                                                ),
+                                        ),
+                                    ) {
+                                        append(homepage)
+                                    }
+                                }
+                            }
+                        Text(
+                            text = homepageAnnotated,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    if (manifest.minAppVersionCode > 1) {
+                        Text(
+                            text = stringResource(R.string.plugin_info_min_app_version, manifest.minAppVersionCode),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    if (features.isNotEmpty()) {
+                        Text(
+                            text = stringResource(R.string.plugin_info_features, features.joinToString(", ")),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
                     if (manifest.permissions.isNotEmpty()) {
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = stringResource(R.string.plugin_info_permissions, manifest.permissions.allList().joinToString(", ")),
+                            text =
+                                stringResource(
+                                    R.string.plugin_info_permissions,
+                                    manifest.permissions.allList().joinToString(", "),
+                                ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary,
                         )

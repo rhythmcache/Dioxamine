@@ -101,6 +101,13 @@
     <string name="plugin_info_version">版本：%1$s</string>
     <string name="plugin_info_author">作者：%1$s</string>
     <string name="plugin_info_entry">入口：%1$s</string>
+    <string name="plugin_info_size">大小：%1$s</string>
+    <string name="plugin_info_homepage">主页：%1$s</string>
+    <string name="plugin_info_features">特性：%1$s</string>
+    <string name="plugin_feature_fullscreen">全屏</string>
+    <string name="plugin_feature_back_button">返回键拦截</string>
+    <string name="plugin_feature_volume_buttons">音量键拦截</string>
+    <string name="plugin_info_min_app_version">最低应用构建版本：%1$d</string>
     <string name="plugin_info_permissions">权限：%1$s</string>
     <string name="plugin_uninstall_title">卸载插件</string>
     <string name="plugin_uninstall_confirm">确定要卸载“%1$s”吗？</string>

@@ -103,6 +103,13 @@
     <string name="plugin_info_version">Версия: %1$s</string>
     <string name="plugin_info_author">Автор: %1$s</string>
     <string name="plugin_info_entry">Точка входа: %1$s</string>
+    <string name="plugin_info_size">Размер: %1$s</string>
+    <string name="plugin_info_homepage">Сайт: %1$s</string>
+    <string name="plugin_info_features">Возможности: %1$s</string>
+    <string name="plugin_feature_fullscreen">Полноэкранный режим</string>
+    <string name="plugin_feature_back_button">Кнопка «Назад»</string>
+    <string name="plugin_feature_volume_buttons">Кнопки громкости</string>
+    <string name="plugin_info_min_app_version">Мин. сборка приложения: %1$d</string>
     <string name="plugin_info_permissions">Разрешения: %1$s</string>
     <string name="plugin_uninstall_title">Удаление плагина</string>
     <string name="plugin_uninstall_confirm">Вы уверены, что хотите удалить «%1$s»?</string>

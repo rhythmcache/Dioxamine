@@ -101,6 +101,13 @@
     <string name="plugin_info_version">Version: %1$s</string>
     <string name="plugin_info_author">Autor: %1$s</string>
     <string name="plugin_info_entry">Einstiegspunkt: %1$s</string>
+    <string name="plugin_info_size">Größe: %1$s</string>
+    <string name="plugin_info_homepage">Homepage: %1$s</string>
+    <string name="plugin_info_features">Funktionen: %1$s</string>
+    <string name="plugin_feature_fullscreen">Vollbild</string>
+    <string name="plugin_feature_back_button">Zurück-Taste</string>
+    <string name="plugin_feature_volume_buttons">Lautstärketasten</string>
+    <string name="plugin_info_min_app_version">Min. App-Build: %1$d</string>
     <string name="plugin_info_permissions">Berechtigungen: %1$s</string>
     <string name="plugin_uninstall_title">Plugin deinstallieren</string>
     <string name="plugin_uninstall_confirm">Möchtest du „%1$s“ wirklich deinstallieren?</string>
