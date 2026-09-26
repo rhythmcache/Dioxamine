@@ -67,7 +67,8 @@ object PluginUpdateChecker {
      * Fetches and deserializes [PluginUpdateInfo] from the provided remote JSON URL.
      *
      * Validates that the payload contains a non-blank ID, version string, positive versionCode,
-     * and a valid HTTP/HTTPS download URL.
+     * and a valid HTTP/HTTPS download URL. Also ensures changelog URL, if present, is a valid
+     * HTTP/HTTPS scheme.
      *
      * Note: This method does NOT check whether [PluginUpdateInfo.id] matches the installed plugin ID
      * or whether [PluginUpdateInfo.versionCode] is newer than the installed version. Those comparisons
@@ -94,7 +95,17 @@ object PluginUpdateChecker {
                     if (downloadUrl.isBlank() || (!downloadUrl.startsWith("http://", ignoreCase = true) && !downloadUrl.startsWith("https://", ignoreCase = true))) {
                         return@runCatching null
                     }
-                    parsed
+                    val changelogUrl = parsed.changelog?.trim()
+                    val validChangelog = if (!changelogUrl.isNullOrBlank() &&
+                        (changelogUrl.startsWith("http://", ignoreCase = true) || changelogUrl.startsWith("https://", ignoreCase = true))) {
+                        changelogUrl
+                    } else {
+                        null
+                    }
+                    parsed.copy(
+                        download = downloadUrl,
+                        changelog = validChangelog,
+                    )
                 } finally {
                     conn.disconnect()
                 }

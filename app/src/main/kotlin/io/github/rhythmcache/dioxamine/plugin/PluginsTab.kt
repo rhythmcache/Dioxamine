@@ -498,11 +498,14 @@ fun PluginsTab(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        if (!updateInfo.changelog.isNullOrBlank()) {
+                                        val changelogUrl = updateInfo.changelog?.trim()
+                                        val isHttpChangelog = !changelogUrl.isNullOrBlank() &&
+                                            (changelogUrl.startsWith("http://", ignoreCase = true) || changelogUrl.startsWith("https://", ignoreCase = true))
+                                        if (isHttpChangelog) {
                                             TextButton(
                                                 onClick = {
                                                     runCatching {
-                                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo.changelog))
+                                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(changelogUrl))
                                                         context.startActivity(intent)
                                                     }
                                                 },

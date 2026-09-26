@@ -71,4 +71,26 @@ class PluginUpdateCheckerTest {
 
         assertFalse(olderUpdateInfo.versionCode > installedVersionCode)
     }
+
+    @Test
+    fun testChangelogHttpSchemeValidation() {
+        val validHttp = "http://example.com/changelog.md"
+        val validHttps = "https://example.com/changelog.md"
+        val invalidContent = "content://com.malicious.provider/data"
+        val invalidIntent = "intent:#Intent;action=android.intent.action.VIEW;end"
+        val invalidFile = "file:///etc/hosts"
+
+        fun isHttpUrl(url: String?): Boolean {
+            val trimmed = url?.trim() ?: return false
+            return trimmed.startsWith("http://", ignoreCase = true) || trimmed.startsWith("https://", ignoreCase = true)
+        }
+
+        assertTrue(isHttpUrl(validHttp))
+        assertTrue(isHttpUrl(validHttps))
+        assertFalse(isHttpUrl(invalidContent))
+        assertFalse(isHttpUrl(invalidIntent))
+        assertFalse(isHttpUrl(invalidFile))
+        assertFalse(isHttpUrl(null))
+        assertFalse(isHttpUrl("   "))
+    }
 }

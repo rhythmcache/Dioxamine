@@ -91,4 +91,4 @@ When `updateJson` is declared in `plugin.json`, Dioxamine queries the provided U
 | `version` | `String` | **Yes** | Human-readable version string of the update. |
 | `versionCode` | `Integer` | **Yes** | Integer version code. Must be greater than the installed `versionCode` to trigger an update. |
 | `download` | `String` | **Yes** | HTTP or HTTPS URL to the plugin zip file to download and install. |
-| `changelog` | `String` | No | Optional URL pointing to release notes or changelog. |
+| `changelog` | `String` | No | Optional HTTP or HTTPS URL pointing to release notes or changelog. |
