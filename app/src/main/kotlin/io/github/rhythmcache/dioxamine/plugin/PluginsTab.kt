@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,7 +25,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -43,9 +46,12 @@ import io.github.rhythmcache.dioxamine.R
 import kotlinx.coroutines.launch
 import java.io.File
 
-enum class PluginTopTab(@StringRes val labelRes: Int) {
-    INSTALLED(R.string.plugins_tab_installed),
-    BROWSE(R.string.plugins_tab_browse),
+enum class PluginTopTab(
+    @StringRes val labelRes: Int,
+    val icon: ImageVector,
+) {
+    INSTALLED(R.string.plugins_tab_installed, Icons.Filled.Extension),
+    BROWSE(R.string.plugins_tab_browse, Icons.Filled.Search),
 }
 
 @Composable
@@ -116,16 +122,71 @@ fun PluginsTab(
     var selectedTopTab by rememberSaveable { mutableStateOf(PluginTopTab.INSTALLED) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        PrimaryTabRow(
-            selectedTabIndex = selectedTopTab.ordinal,
-            modifier = Modifier.fillMaxWidth(),
+        Surface(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         ) {
-            PluginTopTab.entries.forEach { tab ->
-                Tab(
-                    selected = selectedTopTab == tab,
-                    onClick = { selectedTopTab = tab },
-                    text = { Text(stringResource(tab.labelRes)) },
-                )
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                PluginTopTab.entries.forEach { tab ->
+                    val isSelected = selectedTopTab == tab
+                    val backgroundColor by animateColorAsState(
+                        targetValue =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                Color.Transparent
+                            },
+                        label = "tab_background",
+                    )
+                    val contentColor by animateColorAsState(
+                        targetValue =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        label = "tab_content",
+                    )
+                    Surface(
+                        onClick = { selectedTopTab = tab },
+                        shape = RoundedCornerShape(8.dp),
+                        color = backgroundColor,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = null,
+                                tint = contentColor,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(tab.labelRes),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = contentColor,
+                            )
+                        }
+                    }
+                }
             }
         }
 
