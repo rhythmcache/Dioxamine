@@ -122,6 +122,13 @@ fun PluginsTab(
     var selectedTopTab by rememberSaveable { mutableStateOf(PluginTopTab.INSTALLED) }
 
     Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = stringResource(R.string.tab_plugins),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+        )
+
         Surface(
             modifier =
                 Modifier
