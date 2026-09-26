@@ -112,4 +112,59 @@ class PluginPermissionGateTest {
         gate.clearSessionPermission("test.plugin", PluginPermission.INSTALL)
         assertFalse(gate.isSessionGranted("test.plugin", PluginPermission.INSTALL))
     }
+
+    @Test
+    fun testClearSessionResetsAllPermissionsForPlugin() = runTest {
+        val gate = PluginPermissionGate(store = null)
+        val declared = listOf(PluginPermission.SHELL, PluginPermission.NETWORK)
+
+        val check1 = async {
+            gate.checkPermission("test.plugin", "Test Plugin", declared, PluginPermission.SHELL)
+        }
+        val req1 = gate.pendingRequest.filterNotNull().first()
+        req1.onDecision(PermissionDecision.ALLOW_SESSION)
+        assertTrue(check1.await())
+
+        val check2 = async {
+            gate.checkPermission("test.plugin", "Test Plugin", declared, PluginPermission.NETWORK)
+        }
+        val req2 = gate.pendingRequest.filterNotNull().first()
+        req2.onDecision(PermissionDecision.DENY_SESSION)
+        assertFalse(check2.await())
+
+        assertTrue(gate.isSessionGranted("test.plugin", PluginPermission.SHELL))
+        assertTrue(gate.isSessionDenied("test.plugin", PluginPermission.NETWORK))
+
+        gate.clearSession("test.plugin")
+
+        assertFalse(gate.isSessionGranted("test.plugin", PluginPermission.SHELL))
+        assertFalse(gate.isSessionDenied("test.plugin", PluginPermission.NETWORK))
+    }
+
+    @Test
+    fun testClearAllSessionsResetsAllPlugins() = runTest {
+        val gate = PluginPermissionGate(store = null)
+
+        val check1 = async {
+            gate.checkPermission("plugin.a", "Plugin A", listOf(PluginPermission.SHELL), PluginPermission.SHELL)
+        }
+        val req1 = gate.pendingRequest.filterNotNull().first()
+        req1.onDecision(PermissionDecision.ALLOW_SESSION)
+        assertTrue(check1.await())
+
+        val check2 = async {
+            gate.checkPermission("plugin.b", "Plugin B", listOf(PluginPermission.NETWORK), PluginPermission.NETWORK)
+        }
+        val req2 = gate.pendingRequest.filterNotNull().first()
+        req2.onDecision(PermissionDecision.ALLOW_SESSION)
+        assertTrue(check2.await())
+
+        assertTrue(gate.isSessionGranted("plugin.a", PluginPermission.SHELL))
+        assertTrue(gate.isSessionGranted("plugin.b", PluginPermission.NETWORK))
+
+        gate.clearAllSessions()
+
+        assertFalse(gate.isSessionGranted("plugin.a", PluginPermission.SHELL))
+        assertFalse(gate.isSessionGranted("plugin.b", PluginPermission.NETWORK))
+    }
 }

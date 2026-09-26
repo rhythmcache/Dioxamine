@@ -129,21 +129,39 @@ class PluginPermissionGate(
     val pendingRequest: StateFlow<PendingPermissionRequest?> = _pendingRequest.asStateFlow()
 
     private val gateMutex = Mutex()
-    private val grantedMutex = Mutex()
+    private val sessionLock = Any()
     private val grantedPermissions = mutableMapOf<String, MutableSet<PluginPermission>>()
     private val deniedPermissions = mutableMapOf<String, MutableSet<PluginPermission>>()
 
-    fun isSessionGranted(pluginId: String, permission: PluginPermission): Boolean {
-        return grantedPermissions[pluginId]?.contains(permission) == true
-    }
+    fun isSessionGranted(pluginId: String, permission: PluginPermission): Boolean =
+        synchronized(sessionLock) {
+            grantedPermissions[pluginId]?.contains(permission) == true
+        }
 
-    fun isSessionDenied(pluginId: String, permission: PluginPermission): Boolean {
-        return deniedPermissions[pluginId]?.contains(permission) == true
-    }
+    fun isSessionDenied(pluginId: String, permission: PluginPermission): Boolean =
+        synchronized(sessionLock) {
+            deniedPermissions[pluginId]?.contains(permission) == true
+        }
 
     fun clearSessionPermission(pluginId: String, permission: PluginPermission) {
-        grantedPermissions[pluginId]?.remove(permission)
-        deniedPermissions[pluginId]?.remove(permission)
+        synchronized(sessionLock) {
+            grantedPermissions[pluginId]?.remove(permission)
+            deniedPermissions[pluginId]?.remove(permission)
+        }
+    }
+
+    fun clearSession(pluginId: String) {
+        synchronized(sessionLock) {
+            grantedPermissions.remove(pluginId)
+            deniedPermissions.remove(pluginId)
+        }
+    }
+
+    fun clearAllSessions() {
+        synchronized(sessionLock) {
+            grantedPermissions.clear()
+            deniedPermissions.clear()
+        }
     }
 
     suspend fun checkPermission(
@@ -167,7 +185,7 @@ class PluginPermissionGate(
         }
 
         // 2. If already granted or denied this session -> return immediately
-        grantedMutex.withLock {
+        synchronized(sessionLock) {
             if (grantedPermissions[pluginId]?.contains(required) == true) {
                 return true
             }
@@ -188,14 +206,16 @@ class PluginPermissionGate(
             }
 
             // Re-check inside lock in case a previous queued request resolved it
-            grantedMutex.withLock {
+            val cachedResult = synchronized(sessionLock) {
                 if (grantedPermissions[pluginId]?.contains(required) == true) {
-                    return@withLock true
-                }
-                if (deniedPermissions[pluginId]?.contains(required) == true) {
-                    return@withLock false
+                    true
+                } else if (deniedPermissions[pluginId]?.contains(required) == true) {
+                    false
+                } else {
+                    null
                 }
             }
+            if (cachedResult != null) return@withLock cachedResult
 
             val deferred = CompletableDeferred<PermissionDecision>()
 
@@ -223,21 +243,21 @@ class PluginPermissionGate(
             when (decision) {
                 PermissionDecision.ALWAYS_ALLOW -> {
                     store?.setPolicy(pluginId, required, PermissionPolicy.ALWAYS_ALLOW)
-                    grantedMutex.withLock {
+                    synchronized(sessionLock) {
                         deniedPermissions[pluginId]?.remove(required)
                         grantedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
                     }
                     true
                 }
                 PermissionDecision.ALLOW_SESSION -> {
-                    grantedMutex.withLock {
+                    synchronized(sessionLock) {
                         deniedPermissions[pluginId]?.remove(required)
                         grantedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
                     }
                     true
                 }
                 PermissionDecision.DENY_SESSION -> {
-                    grantedMutex.withLock {
+                    synchronized(sessionLock) {
                         grantedPermissions[pluginId]?.remove(required)
                         deniedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
                     }
@@ -245,7 +265,7 @@ class PluginPermissionGate(
                 }
                 PermissionDecision.ALWAYS_DENY -> {
                     store?.setPolicy(pluginId, required, PermissionPolicy.ALWAYS_DENY)
-                    grantedMutex.withLock {
+                    synchronized(sessionLock) {
                         grantedPermissions[pluginId]?.remove(required)
                         deniedPermissions.getOrPut(pluginId) { mutableSetOf() }.add(required)
                     }
