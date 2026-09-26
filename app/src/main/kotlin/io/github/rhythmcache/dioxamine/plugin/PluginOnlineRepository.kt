@@ -15,10 +15,11 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -71,8 +72,8 @@ fun parsePluginIndex(jsonString: String): Result<PluginIndex> {
             throw IllegalArgumentException("Root element must be a JSON object")
         }
 
-        val schemaVersion = root["schemaVersion"]?.jsonPrimitive?.intOrNull ?: 1
-        val updated = root["updated"]?.jsonPrimitive?.contentOrNull
+        val schemaVersion = (root["schemaVersion"] as? JsonPrimitive)?.intOrNull ?: 1
+        val updated = (root["updated"] as? JsonPrimitive)?.takeIf { it !is JsonNull }?.content
         val pluginsElement = root["plugins"]
 
         val pluginsList = if (pluginsElement is JsonArray) {

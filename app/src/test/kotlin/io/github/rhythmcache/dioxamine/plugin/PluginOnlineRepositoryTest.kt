@@ -121,6 +121,7 @@ class PluginOnlineRepositoryTest {
         assertEquals("valid.one", plugins[0].id)
         assertEquals("valid.two", plugins[1].id)
         assertNull("Invalid changelog URL should be set to null", plugins[1].changelog)
+        assertNull("Missing updated field should parse as null", result.getOrThrow().updated)
     }
 
     @Test
