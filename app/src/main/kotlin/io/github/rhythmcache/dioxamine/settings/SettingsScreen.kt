@@ -60,6 +60,7 @@ import io.github.rhythmcache.dioxamine.plugin.PermissionPolicy
 import io.github.rhythmcache.dioxamine.plugin.PluginManifest
 import io.github.rhythmcache.dioxamine.plugin.PluginPermission
 import io.github.rhythmcache.dioxamine.plugin.PluginPermissionStore
+import io.github.rhythmcache.dioxamine.plugin.PluginPermissionTile
 import io.github.rhythmcache.dioxamine.plugin.PluginRepository
 import kotlinx.coroutines.launch
 import java.util.zip.ZipOutputStream
@@ -1081,8 +1082,20 @@ private fun PluginPermissionsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Security,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp),
+            )
+        },
         title = {
-            Text(stringResource(R.string.settings_plugins_permissions_title), fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.settings_plugins_permissions_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
         },
         text = {
             if (plugins.isEmpty()) {
@@ -1100,9 +1113,9 @@ private fun PluginPermissionsDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 420.dp)
+                        .heightIn(max = 450.dp)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     plugins.forEach { plugin ->
                         val declaredPermissions = remember(plugin.id) {
@@ -1113,21 +1126,31 @@ private fun PluginPermissionsDialog(
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                             ),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = plugin.name,
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                Text(
-                                    text = plugin.id,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        text = plugin.name,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        text = plugin.id,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
 
-                                Spacer(Modifier.height(8.dp))
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                )
 
                                 if (declaredPermissions.isEmpty()) {
                                     Text(
@@ -1136,70 +1159,24 @@ private fun PluginPermissionsDialog(
                                         color = MaterialTheme.colorScheme.outline
                                     )
                                 } else {
-                                    declaredPermissions.forEach { perm ->
+                                    declaredPermissions.forEachIndexed { index, perm ->
                                         key(triggerUpdate, plugin.id, perm) {
                                             val currentPolicy = permissionStore.getPolicy(plugin.id, perm)
 
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 4.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = perm.name.lowercase().replaceFirstChar { it.uppercase() },
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-
-                                                var expandedDropdown by remember { mutableStateOf(false) }
-
-                                                Box {
-                                                    OutlinedButton(
-                                                        onClick = { expandedDropdown = true },
-                                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                                        modifier = Modifier.height(36.dp)
-                                                    ) {
-                                                        val label = when (currentPolicy) {
-                                                            PermissionPolicy.ALWAYS_ALLOW -> stringResource(R.string.plugin_policy_always_allow)
-                                                            PermissionPolicy.ALWAYS_DENY -> stringResource(R.string.plugin_policy_always_deny)
-                                                            PermissionPolicy.ASK -> stringResource(R.string.plugin_policy_ask)
-                                                        }
-                                                        Text(label, style = MaterialTheme.typography.bodySmall)
-                                                    }
-
-                                                    DropdownMenu(
-                                                        expanded = expandedDropdown,
-                                                        onDismissRequest = { expandedDropdown = false }
-                                                    ) {
-                                                        DropdownMenuItem(
-                                                            text = { Text(stringResource(R.string.plugin_policy_ask_default)) },
-                                                            onClick = {
-                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ASK)
-                                                                expandedDropdown = false
-                                                                triggerUpdate++
-                                                            }
-                                                        )
-                                                        DropdownMenuItem(
-                                                            text = { Text(stringResource(R.string.plugin_policy_always_allow)) },
-                                                            onClick = {
-                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ALWAYS_ALLOW)
-                                                                expandedDropdown = false
-                                                                triggerUpdate++
-                                                            }
-                                                        )
-                                                        DropdownMenuItem(
-                                                            text = { Text(stringResource(R.string.plugin_policy_always_deny)) },
-                                                            onClick = {
-                                                                permissionStore.setPolicy(plugin.id, perm, PermissionPolicy.ALWAYS_DENY)
-                                                                expandedDropdown = false
-                                                                triggerUpdate++
-                                                            }
-                                                        )
-                                                    }
+                                            PluginPermissionTile(
+                                                permission = perm,
+                                                currentPolicy = currentPolicy,
+                                                onPolicyChange = { newPolicy ->
+                                                    permissionStore.setPolicy(plugin.id, perm, newPolicy)
+                                                    triggerUpdate++
                                                 }
+                                            )
+
+                                            if (index < declaredPermissions.lastIndex) {
+                                                HorizontalDivider(
+                                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                                                    modifier = Modifier.padding(vertical = 4.dp)
+                                                )
                                             }
                                         }
                                     }

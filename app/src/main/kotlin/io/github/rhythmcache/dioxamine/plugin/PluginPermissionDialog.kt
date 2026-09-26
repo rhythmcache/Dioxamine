@@ -1,13 +1,15 @@
 package io.github.rhythmcache.dioxamine.plugin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -15,22 +17,24 @@ import androidx.compose.ui.unit.dp
 import io.github.rhythmcache.dioxamine.R
 
 @Composable
+fun pluginPermissionDescription(permission: PluginPermission): String =
+    when (permission) {
+        PluginPermission.SHELL -> stringResource(R.string.plugin_perm_shell)
+        PluginPermission.PUSH -> stringResource(R.string.plugin_perm_push)
+        PluginPermission.PULL -> stringResource(R.string.plugin_perm_pull)
+        PluginPermission.INSTALL -> stringResource(R.string.plugin_perm_install)
+        PluginPermission.FORWARD -> stringResource(R.string.plugin_perm_forward)
+        PluginPermission.REVERSE -> stringResource(R.string.plugin_perm_reverse)
+        PluginPermission.NETWORK -> stringResource(R.string.plugin_perm_network)
+        PluginPermission.FASTBOOT -> stringResource(R.string.plugin_perm_fastboot)
+    }
+
+@Composable
 fun PluginPermissionDialogHost(gate: PluginPermissionGate) {
     val pendingRequest by gate.pendingRequest.collectAsState()
 
     pendingRequest?.let { request ->
-        val permissionDescription =
-            when (request.permission) {
-                PluginPermission.SHELL -> stringResource(R.string.plugin_perm_shell)
-                PluginPermission.PUSH -> stringResource(R.string.plugin_perm_push)
-                PluginPermission.PULL -> stringResource(R.string.plugin_perm_pull)
-                PluginPermission.INSTALL -> stringResource(R.string.plugin_perm_install)
-                PluginPermission.FORWARD -> stringResource(R.string.plugin_perm_forward)
-                PluginPermission.REVERSE -> stringResource(R.string.plugin_perm_reverse)
-                PluginPermission.NETWORK -> stringResource(R.string.plugin_perm_network)
-                PluginPermission.FASTBOOT -> stringResource(R.string.plugin_perm_fastboot)
-            }
-
+        val permissionDescription = pluginPermissionDescription(request.permission)
         val permissionName = request.permission.name.lowercase().replaceFirstChar { it.uppercase() }
 
         AlertDialog(
@@ -127,5 +131,148 @@ fun PluginPermissionDialogHost(gate: PluginPermissionGate) {
             },
             confirmButton = {},
         )
+    }
+}
+
+@Composable
+fun PluginPermissionTile(
+    permission: PluginPermission,
+    currentPolicy: PermissionPolicy,
+    onPolicyChange: (PermissionPolicy) -> Unit,
+    modifier: Modifier = Modifier,
+    isSessionGranted: Boolean = false,
+    isSessionDenied: Boolean = false,
+    onResetSession: (() -> Unit)? = null,
+) {
+    val permTitle = permission.name.lowercase().replaceFirstChar { it.uppercase() }
+    val permDesc = pluginPermissionDescription(permission)
+    var expandedDropdown by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = permTitle,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = permDesc,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Box(contentAlignment = Alignment.CenterEnd) {
+                OutlinedButton(
+                    onClick = { expandedDropdown = true },
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(36.dp),
+                ) {
+                    val label = when (currentPolicy) {
+                        PermissionPolicy.ALWAYS_ALLOW -> stringResource(R.string.plugin_policy_always_allow)
+                        PermissionPolicy.ALWAYS_DENY -> stringResource(R.string.plugin_policy_always_deny)
+                        PermissionPolicy.ASK -> stringResource(R.string.plugin_policy_ask)
+                    }
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expandedDropdown,
+                    onDismissRequest = { expandedDropdown = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.plugin_policy_ask_default)) },
+                        onClick = {
+                            onPolicyChange(PermissionPolicy.ASK)
+                            expandedDropdown = false
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.plugin_policy_always_allow)) },
+                        onClick = {
+                            onPolicyChange(PermissionPolicy.ALWAYS_ALLOW)
+                            expandedDropdown = false
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.plugin_policy_always_deny)) },
+                        onClick = {
+                            onPolicyChange(PermissionPolicy.ALWAYS_DENY)
+                            expandedDropdown = false
+                        },
+                    )
+                }
+            }
+        }
+
+        if (currentPolicy == PermissionPolicy.ASK && (isSessionGranted || isSessionDenied) && onResetSession != null) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                thickness = 0.5.dp,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(
+                                color = if (isSessionGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                shape = CircleShape,
+                            ),
+                    )
+                    Text(
+                        text = if (isSessionGranted) {
+                            stringResource(R.string.plugin_perm_session_status_allowed)
+                        } else {
+                            stringResource(R.string.plugin_perm_session_status_denied)
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isSessionGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    )
+                }
+
+                TextButton(
+                    onClick = onResetSession,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    modifier = Modifier.height(26.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.plugin_perm_session_reset),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
+        }
     }
 }
