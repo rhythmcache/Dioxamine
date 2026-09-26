@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-ac38ab63.js";
+            window.path_to_searchindex_js = "searchindex-098730df.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-82e0c0b4.js"></script>
@@ -1897,7 +1897,8 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
     ]
   },
   "fullscreen": true,
-  "homepage": "https://github.com/rhythmcache/dioxamine"
+  "homepage": "https://github.com/rhythmcache/dioxamine",
+  "updateJson": "https://raw.githubusercontent.com/rhythmcache/dioxamine/main/update.json"
 }
 </code></pre>
 <h2 id="field-reference"><a class="header" href="#field-reference">Field Reference</a></h2>
@@ -1916,12 +1917,13 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <tr><td style="text-align: left"><code>author</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left">No</td><td style="text-align: left">Author or organization name.</td></tr>
 <tr><td style="text-align: left"><code>entry</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left"><strong>Yes</strong></td><td style="text-align: left">Relative path to the HTML entrypoint file (for example, <code>"index.html"</code> or <code>"ui/main.html"</code>). Path traversal (<code>..</code>) is forbidden.</td></tr>
 <tr><td style="text-align: left"><code>icon</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left">No</td><td style="text-align: left">Relative path to the plugin icon image (PNG, WebP, JPG, or SVG). Default: <code>null</code>.</td></tr>
-<tr><td style="text-align: left"><code>minAppVersionCode</code></td><td style="text-align: left"><code>Integer</code></td><td style="text-align: left">No</td><td style="text-align: left">Minimum Dioxamine app <code>versionCode</code> required to execute this plugin. Default: <code>1</code>.</td></tr>
+<tr><td style="text-align: left"><code>minAppVersionCode</code></td><td style="text-align: left"><code>Integer</code></td><td style="text-align: left">No</td><td style="text-align: left">Minimum Dioxamine app <code>versionCode</code> required to execute this plugin (e.g. <code>10004</code>). Default: <code>1</code>.</td></tr>
 <tr><td style="text-align: left"><code>permissions</code></td><td style="text-align: left"><code>Object</code></td><td style="text-align: left">No</td><td style="text-align: left">Declared permission groups. Supported subkeys: <code>adb</code> (list of ADB permissions) and <code>common</code> (list of general permissions, e.g. <code>"network"</code>). Default: <code>{}</code>.</td></tr>
 <tr><td style="text-align: left"><code>fullscreen</code></td><td style="text-align: left"><code>Boolean</code></td><td style="text-align: left">No</td><td style="text-align: left">If <code>true</code>, hides the Dioxamine top bar on launch to provide an edge-to-edge full-screen display. Default: <code>false</code>.</td></tr>
 <tr><td style="text-align: left"><code>interceptBackButton</code></td><td style="text-align: left"><code>Boolean</code></td><td style="text-align: left">No</td><td style="text-align: left">If <code>true</code>, intercepts Android Back button/gesture on plugin launch and forwards events to JavaScript. Default: <code>false</code>.</td></tr>
 <tr><td style="text-align: left"><code>interceptVolumeButtons</code></td><td style="text-align: left"><code>Boolean</code></td><td style="text-align: left">No</td><td style="text-align: left">If <code>true</code>, intercepts hardware Volume buttons on plugin launch and forwards events to JavaScript. Default: <code>false</code>.</td></tr>
 <tr><td style="text-align: left"><code>homepage</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left">No</td><td style="text-align: left">Web URL pointing to the plugin repository, source code, or documentation.</td></tr>
+<tr><td style="text-align: left"><code>updateJson</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left">No</td><td style="text-align: left">HTTP or HTTPS URL pointing to a remote JSON file used to check for plugin updates and install new releases.</td></tr>
 </tbody>
 </table>
 </div>
@@ -1954,7 +1956,37 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <li>If <code>minAppVersionCode</code> exceeds the running Dioxamine application version, installation will be blocked with a compatibility notice.</li>
 </ul>
 </li>
+<li><strong>Update URL Validation</strong>:
+<ul>
+<li>If <code>updateJson</code> is specified, it must be a valid <code>http://</code> or <code>https://</code> URL. Other schemes or blank values will fail validation.</li>
+</ul>
+</li>
 </ol>
+<h2 id="plugin-update-format-updatejson"><a class="header" href="#plugin-update-format-updatejson">Plugin Update Format (updateJson)</a></h2>
+<p>When <code>updateJson</code> is declared in <code>plugin.json</code>, Dioxamine queries the provided URL whenever the user enters the Plugins tab. If the remote <code>versionCode</code> is greater than the currently installed plugin <code>versionCode</code>, an <strong>Update</strong> option is displayed directly on the plugin tile.</p>
+<h3 id="remote-json-structure"><a class="header" href="#remote-json-structure">Remote JSON Structure</a></h3>
+<pre><code class="language-json">{
+  "id": "io.github.rhythmcache.dioxamine.xtermterminal",
+  "version": "1.0.2",
+  "versionCode": 3,
+  "download": "https://github.com/dioxamine-plugins/xtermterminal/releases/download/v1.0.2/xtermterminal-1.0.2.zip",
+  "changelog": "https://raw.githubusercontent.com/dioxamine-plugins/xtermterminal/main/CHANGELOG.md"
+}
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">Field</th><th style="text-align: left">Type</th><th style="text-align: left">Required</th><th style="text-align: left">Description</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left"><code>id</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left"><strong>Yes</strong></td><td style="text-align: left">Must match the plugin <code>id</code>.</td></tr>
+<tr><td style="text-align: left"><code>version</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left"><strong>Yes</strong></td><td style="text-align: left">Human-readable version string of the update.</td></tr>
+<tr><td style="text-align: left"><code>versionCode</code></td><td style="text-align: left"><code>Integer</code></td><td style="text-align: left"><strong>Yes</strong></td><td style="text-align: left">Integer version code. Must be greater than the installed <code>versionCode</code> to trigger an update.</td></tr>
+<tr><td style="text-align: left"><code>download</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left"><strong>Yes</strong></td><td style="text-align: left">HTTP or HTTPS URL to the plugin zip file to download and install.</td></tr>
+<tr><td style="text-align: left"><code>changelog</code></td><td style="text-align: left"><code>String</code></td><td style="text-align: left">No</td><td style="text-align: left">Optional HTTP or HTTPS URL pointing to release notes or changelog.</td></tr>
+</tbody>
+</table>
+</div>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="permissions-and-security-model"><a class="header" href="#permissions-and-security-model">Permissions and Security Model</a></h1>
 <p>Dioxamine enforces a strict permission model to protect connected devices and the host Android system from unauthorized operations.</p>
