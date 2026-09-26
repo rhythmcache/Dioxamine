@@ -76,6 +76,11 @@
     <string name="plugins_msg_updated">Updated %1$s to %2$s</string>
     <string name="plugins_msg_rejected">Installed version is newer or the same</string>
     <string name="plugins_msg_error">Install failed: %1$s</string>
+    <string name="plugins_tab_installed">Installed</string>
+    <string name="plugins_tab_browse">Browse</string>
+    <string name="plugins_browse_placeholder_title">Browse Plugins</string>
+    <string name="plugins_browse_placeholder_desc">Online plugin repository and community extensions will be available here soon.</string>
+    <string name="plugins_browse_coming_soon">Coming Soon</string>
 
     <!-- Plugin Permission Dialog Strings -->
     <string name="btn_allow">Allow</string>

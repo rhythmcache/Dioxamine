@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,8 +17,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +42,11 @@ import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
 import kotlinx.coroutines.launch
 import java.io.File
+
+enum class PluginTopTab(@StringRes val labelRes: Int) {
+    INSTALLED(R.string.plugins_tab_installed),
+    BROWSE(R.string.plugins_tab_browse),
+}
 
 @Composable
 fun PluginsTab(
@@ -105,8 +113,27 @@ fun PluginsTab(
             }
         }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (installedPlugins.isEmpty()) {
+    var selectedTopTab by rememberSaveable { mutableStateOf(PluginTopTab.INSTALLED) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        PrimaryTabRow(
+            selectedTabIndex = selectedTopTab.ordinal,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            PluginTopTab.entries.forEach { tab ->
+                Tab(
+                    selected = selectedTopTab == tab,
+                    onClick = { selectedTopTab = tab },
+                    text = { Text(stringResource(tab.labelRes)) },
+                )
+            }
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (selectedTopTab) {
+                PluginTopTab.INSTALLED -> {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (installedPlugins.isEmpty()) {
             Column(
                 modifier =
                     Modifier
@@ -345,17 +372,25 @@ fun PluginsTab(
             }
         }
 
-        FloatingActionButton(
-            onClick = { pickZipLauncher.launch(arrayOf("application/zip")) },
-            modifier =
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = stringResource(R.string.plugins_cd_install),
-            )
+                        FloatingActionButton(
+                            onClick = { pickZipLauncher.launch(arrayOf("application/zip")) },
+                            modifier =
+                                Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(16.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = stringResource(R.string.plugins_cd_install),
+                            )
+                        }
+                    }
+                }
+
+                PluginTopTab.BROWSE -> {
+                    PluginBrowsePlaceholder()
+                }
+            }
         }
     }
 
@@ -463,3 +498,49 @@ fun PluginsTab(
         )
     }
 }
+
+@Composable
+private fun PluginBrowsePlaceholder() {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Search,
+            contentDescription = null,
+            modifier = Modifier.size(56.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.plugins_browse_placeholder_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.plugins_browse_placeholder_desc),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+        ) {
+            Text(
+                text = stringResource(R.string.plugins_browse_coming_soon),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            )
+        }
+    }
+}
+
