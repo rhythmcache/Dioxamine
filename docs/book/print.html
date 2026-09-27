@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-098730df.js";
+            window.path_to_searchindex_js = "searchindex-7d40b290.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-82e0c0b4.js"></script>
+        <script src="toc-97d3260d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -2079,6 +2079,7 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <li><code>dioxamine.buttons.*</code> button management</li>
 <li><code>dioxamine.openBrowser()</code> / <code>dioxamine.openUrl()</code> (prompts user with a native confirmation dialog showing the target URL before launching)</li>
 <li><code>dioxamine.requestFilePicker()</code> (delegates to Android Storage Access Framework with user file picker)</li>
+<li><code>dioxamine.tempFile.create()</code> (prompts user with a native consent dialog to allocate session-scoped temporary storage)</li>
 <li><code>dioxamine.log.*</code> and <code>console.*</code> forwarding</li>
 <li><code>dioxamine.getTheme()</code> and <code>dioxamine.onThemeChange()</code></li>
 <li>Base64 / UTF-8 conversion helpers</li>
@@ -2215,6 +2216,7 @@ function flushBatch() {
 <ul>
 <li><strong><code>dioxamine.adb.*</code></strong>: ADB device operations (shell, sync, port forwarding).</li>
 <li><strong><code>dioxamine.fastboot.*</code></strong>: Fastboot bootloader operations (variables, raw commands, flash, boot, reboot).</li>
+<li><strong><code>dioxamine.tempFile.*</code></strong>: Session-scoped temporary file streaming API.</li>
 <li><strong><code>dioxamine.*</code></strong>: Common UI dialogs, file pickers, theming, logging, and HTTP client.</li>
 </ul>
 <h2 id="bridge-initialization"><a class="header" href="#bridge-initialization">Bridge Initialization</a></h2>
@@ -2235,7 +2237,7 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <li><strong><a href="#device-management-api">ADB Device Management</a></strong>: Query the active ADB connection status via <code>dioxamine.adb.getActiveDevice()</code>.</li>
 <li><strong><a href="#single-command-execution-shellexec">ADB Single Command Execution</a></strong>: Run non-interactive commands via <code>dioxamine.adb.shellExec()</code>.</li>
 <li><strong><a href="#interactive-shell-sessions-openinteractiveshell">ADB Interactive Shell Sessions</a></strong>: Open persistent bi-directional PTY streams via <code>dioxamine.adb.openInteractiveShell()</code>.</li>
-<li><strong><a href="#file-operations-and-storage-api">File Operations</a></strong>: Pull/push files via <code>dioxamine.adb.pull()</code> / <code>dioxamine.adb.push()</code>, and open system file pickers via <code>dioxamine.requestFilePicker()</code>.</li>
+<li><strong><a href="#file-operations-and-storage-api">File Operations and Temporary Storage</a></strong>: Pull/push files via <code>dioxamine.adb.pull()</code> / <code>dioxamine.adb.push()</code>, open system file pickers via <code>dioxamine.requestFilePicker()</code>, and stream payloads to disk using session-scoped temporary files via <code>dioxamine.tempFile.create()</code>.</li>
 <li><strong><a href="#port-forwarding-and-reverse-api">ADB Port Forwarding and Reverse</a></strong>: Manage TCP socket forwarding via <code>dioxamine.adb.forwardAdd()</code> / <code>reverseAdd()</code>.</li>
 <li><strong><a href="#ui-controls-dialogs-and-fullscreen">UI Controls, Dialogs, Buttons and Fullscreen</a></strong>: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, intercept Back and Volume buttons, inspect host app version, and open external links in the host device browser.</li>
 <li><strong><a href="#native-logging-and-debugging">Native Logging and Debugging</a></strong>: Forward logs and console output directly to Android Logcat.</li>
@@ -2528,6 +2530,67 @@ async function startTerminal() {
     // 2. Stream directly from SAF file to target device
     const result = await dioxamine.adb.push(picker.requestId, remotePath);
     console.log(`Uploaded ${result.bytesTransferred} bytes`);
+}
+</code></pre>
+<hr>
+<h2 id="session-scoped-temporary-files-dioxaminetempfile"><a class="header" href="#session-scoped-temporary-files-dioxaminetempfile">Session-Scoped Temporary Files (<code>dioxamine.tempFile</code>)</a></h2>
+<p>Dioxamine provides a session-scoped temporary file API that allows plugins to stream large payloads directly to disk on the host device without buffering them into JavaScript RAM.</p>
+<h3 id="security-and-lifecycle"><a class="header" href="#security-and-lifecycle">Security and Lifecycle</a></h3>
+<ul>
+<li><strong>Interactive Consent</strong>: Creating a temporary file prompts the user with a native confirmation dialog. No manifest permission entry is required.</li>
+<li><strong>Session Scoped</strong>: All temporary files and in-memory handles are automatically wiped when the plugin runner session exits or when the app is restarted.</li>
+<li><strong>Path Isolation</strong>: Real filesystem paths on the Android host are never exposed to JavaScript. Operations reference an opaque token wrapped in closure methods.</li>
+<li><strong>Append-Only Streaming</strong>: Writes are append-only and serialized with a per-handle mutex to prevent race conditions.</li>
+<li><strong>Lazy File Creation</strong>: Files on disk are only created upon the first write operation.</li>
+</ul>
+<h3 id="dioxaminetempfilecreate"><a class="header" href="#dioxaminetempfilecreate"><code>dioxamine.tempFile.create()</code></a></h3>
+<p>Requests permission to create a temporary file handle. Returns a <code>Promise</code> resolving to a file handle object.</p>
+<pre><code class="language-javascript">dioxamine.tempFile.create(): Promise&lt;TempFileHandle&gt;
+</code></pre>
+<h4 id="tempfilehandle-interface"><a class="header" href="#tempfilehandle-interface"><code>TempFileHandle</code> Interface</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Method</th><th>Return Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>write(base64Chunk)</code></td><td><code>Promise&lt;{ bytesWritten: number }&gt;</code></td><td>Appends a Base64-encoded chunk to the temporary file.</td></tr>
+<tr><td><code>read(offset, length)</code></td><td><code>Promise&lt;string&gt;</code></td><td>Reads up to <code>length</code> bytes (clamped to max 16MB per chunk) starting from byte <code>offset</code>. Returns Base64 string. Returns <code>""</code> if unwritten or at EOF.</td></tr>
+<tr><td><code>size()</code></td><td><code>Promise&lt;number&gt;</code></td><td>Returns the current file size on disk in bytes (<code>0</code> if not yet written).</td></tr>
+<tr><td><code>delete()</code></td><td><code>Promise&lt;{ success: boolean }&gt;</code></td><td>Deletes the file immediately and invalidates the handle.</td></tr>
+<tr><td><code>seek(position)</code></td><td><code>void</code></td><td>Moves the local cursor to <code>position</code> bytes (clamped to <code>&gt;= 0</code>). Local operation (no native round-trip).</td></tr>
+<tr><td><code>tell()</code></td><td><code>number</code></td><td>Returns the current local cursor position. Local operation (no native round-trip).</td></tr>
+<tr><td><code>readNext(length)</code></td><td><code>Promise&lt;string&gt;</code></td><td>Reads up to <code>length</code> bytes from the current cursor, advances the cursor by the decoded byte count (<code>atob(b64).length</code>), and returns the Base64 chunk.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="streaming-example"><a class="header" href="#streaming-example">Streaming Example</a></h3>
+<pre><code class="language-javascript">async function streamPayloadToDisk() {
+    // 1. Request a temporary file handle (prompts user consent dialog)
+    const file = await dioxamine.tempFile.create();
+
+    try {
+        // 2. Stream chunks to disk
+        const chunk1 = dioxamine.utf8ToBase64("Hello, ");
+        const chunk2 = dioxamine.utf8ToBase64("Dioxamine Streaming!");
+        await file.write(chunk1);
+        await file.write(chunk2);
+
+        console.log("Current file size in bytes:", await file.size());
+
+        // 3. Read back using cursor-based streaming
+        file.seek(0);
+        const totalSize = await file.size();
+        while (file.tell() &lt; totalSize) {
+            const b64Chunk = await file.readNext(1024);
+            if (!b64Chunk) break;
+            const textChunk = dioxamine.base64ToUtf8(b64Chunk);
+            console.log("Read chunk:", textChunk);
+        }
+    } finally {
+        // 4. Clean up file immediately when done (or let session teardown clean it up)
+        await file.delete();
+    }
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>

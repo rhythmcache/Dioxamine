@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../searchindex-098730df.js";
+            window.path_to_searchindex_js = "../searchindex-7d40b290.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-82e0c0b4.js"></script>
+        <script src="../toc-97d3260d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -185,6 +185,7 @@
 <ul>
 <li><strong><code>dioxamine.adb.*</code></strong>: ADB device operations (shell, sync, port forwarding).</li>
 <li><strong><code>dioxamine.fastboot.*</code></strong>: Fastboot bootloader operations (variables, raw commands, flash, boot, reboot).</li>
+<li><strong><code>dioxamine.tempFile.*</code></strong>: Session-scoped temporary file streaming API.</li>
 <li><strong><code>dioxamine.*</code></strong>: Common UI dialogs, file pickers, theming, logging, and HTTP client.</li>
 </ul>
 <h2 id="bridge-initialization"><a class="header" href="#bridge-initialization">Bridge Initialization</a></h2>
@@ -205,7 +206,7 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <li><strong><a href="api/device.html">ADB Device Management</a></strong>: Query the active ADB connection status via <code>dioxamine.adb.getActiveDevice()</code>.</li>
 <li><strong><a href="api/shell.html">ADB Single Command Execution</a></strong>: Run non-interactive commands via <code>dioxamine.adb.shellExec()</code>.</li>
 <li><strong><a href="api/interactive-shell.html">ADB Interactive Shell Sessions</a></strong>: Open persistent bi-directional PTY streams via <code>dioxamine.adb.openInteractiveShell()</code>.</li>
-<li><strong><a href="api/files.html">File Operations</a></strong>: Pull/push files via <code>dioxamine.adb.pull()</code> / <code>dioxamine.adb.push()</code>, and open system file pickers via <code>dioxamine.requestFilePicker()</code>.</li>
+<li><strong><a href="api/files.html">File Operations and Temporary Storage</a></strong>: Pull/push files via <code>dioxamine.adb.pull()</code> / <code>dioxamine.adb.push()</code>, open system file pickers via <code>dioxamine.requestFilePicker()</code>, and stream payloads to disk using session-scoped temporary files via <code>dioxamine.tempFile.create()</code>.</li>
 <li><strong><a href="api/port-forwarding.html">ADB Port Forwarding and Reverse</a></strong>: Manage TCP socket forwarding via <code>dioxamine.adb.forwardAdd()</code> / <code>reverseAdd()</code>.</li>
 <li><strong><a href="api/ui.html">UI Controls, Dialogs, Buttons and Fullscreen</a></strong>: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, intercept Back and Volume buttons, inspect host app version, and open external links in the host device browser.</li>
 <li><strong><a href="api/logging.html">Native Logging and Debugging</a></strong>: Forward logs and console output directly to Android Logcat.</li>
