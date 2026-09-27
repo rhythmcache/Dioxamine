@@ -223,9 +223,70 @@
         }
     };
 
+    var tempFile = {
+        create: function() {
+            return callNative('requestTempFile').then(function(res) {
+                var token = (res && typeof res === 'object' && res.token) ? res.token : res;
+                var cursor = 0;
+
+                return {
+                    write: function(base64Chunk) {
+                        if (typeof base64Chunk !== 'string') {
+                            return Promise.reject(new Error("base64Chunk must be a string"));
+                        }
+                        return callNative('writeTempFileChunk', token, base64Chunk);
+                    },
+                    read: function(offset, length) {
+                        var off = typeof offset === 'number' ? offset : 0;
+                        var len = typeof length === 'number' ? length : 0;
+                        return callNative('readTempFileChunk', token, off, len).then(function(res) {
+                            if (res && typeof res === 'object' && res.data !== undefined) {
+                                return res.data;
+                            }
+                            return typeof res === 'string' ? res : '';
+                        });
+                    },
+                    size: function() {
+                        return callNative('getTempFileSize', token).then(function(res) {
+                            var s = (res && typeof res === 'object' && res.size !== undefined) ? res.size : res;
+                            return Number(s);
+                        });
+                    },
+                    delete: function() {
+                        return callNative('deleteTempFile', token);
+                    },
+                    seek: function(pos) {
+                        var p = typeof pos === 'number' ? pos : 0;
+                        cursor = p < 0 ? 0 : p;
+                    },
+                    tell: function() {
+                        return cursor;
+                    },
+                    readNext: function(length) {
+                        var self = this;
+                        var currentPos = cursor;
+                        return self.read(currentPos, length).then(function(b64) {
+                            var decodedLength = 0;
+                            if (b64 && typeof b64 === 'string') {
+                                try {
+                                    decodedLength = atob(b64).length;
+                                } catch (e) {
+                                    decodedLength = 0;
+                                }
+                            }
+                            cursor = currentPos + decodedLength;
+                            return b64;
+                        });
+                    }
+                };
+            });
+        }
+    };
+
     window.dioxamine = {
         adb: adb,
         fastboot: fastboot,
+        tempFile: tempFile,
         requestFilePicker: function(mode) { return callNative('requestFilePicker', mode); },
         utf8ToBase64: function(str) { return btoa(unescape(encodeURIComponent(str))); },
         base64ToUtf8: function(b64) { return decodeURIComponent(escape(atob(b64))); },

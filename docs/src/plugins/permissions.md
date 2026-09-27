@@ -77,6 +77,7 @@ The following bridge methods are safe UI/context utilities and do not require de
 - `dioxamine.buttons.*` button management
 - `dioxamine.openBrowser()` / `dioxamine.openUrl()` (prompts user with a native confirmation dialog showing the target URL before launching)
 - `dioxamine.requestFilePicker()` (delegates to Android Storage Access Framework with user file picker)
+- `dioxamine.tempFile.create()` (prompts user with a native consent dialog to allocate session-scoped temporary storage)
 - `dioxamine.log.*` and `console.*` forwarding
 - `dioxamine.getTheme()` and `dioxamine.onThemeChange()`
 - Base64 / UTF-8 conversion helpers

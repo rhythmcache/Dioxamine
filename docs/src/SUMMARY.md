@@ -45,7 +45,7 @@
     - [Device Management](plugins/api/device.md)
     - [Single Command Execution (shellExec)](plugins/api/shell.md)
     - [Interactive Shell Sessions (openInteractiveShell)](plugins/api/interactive-shell.md)
-    - [File Operations (Push, Pull, Install, SAF)](plugins/api/files.md)
+    - [File Operations and Temporary Storage](plugins/api/files.md)
     - [Port Forwarding and Reverse](plugins/api/port-forwarding.md)
     - [UI Controls, Dialogs and Fullscreen](plugins/api/ui.md)
     - [Native Logging and Debugging](plugins/api/logging.md)
