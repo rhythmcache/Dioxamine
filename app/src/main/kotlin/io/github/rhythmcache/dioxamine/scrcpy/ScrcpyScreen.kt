@@ -47,7 +47,15 @@ import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 import io.github.rhythmcache.dioxamine.core.Constants
 import io.github.rhythmcache.adb.AdbDeviceMode
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
@@ -118,6 +126,11 @@ fun ScrcpyScreen(
     var isMirroring by remember { mutableStateOf(false) }
     var isRecording by remember { mutableStateOf(false) }
     var isFullScreen by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = isFullScreen) {
+        isFullScreen = false
+    }
+
     var showFloatingNav by remember { mutableStateOf(false) }
     var selectedTab by remember(isDeviceConnected) {
         mutableStateOf(if (isDeviceConnected) ScrcpyTab.CONFIGURATOR else ScrcpyTab.RECORDINGS)
@@ -1466,6 +1479,7 @@ private fun FloatingVerticalNavBar(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun ScrcpyVideoPlayer(
     modifier: Modifier,
@@ -1564,32 +1578,6 @@ private fun ScrcpyVideoPlayer(
                             false
                         }
                     }
-                    setOnTouchListener { view, event ->
-                        if (bindVolumeKeys) {
-                            view.requestFocus()
-                        }
-                        when (event.actionMasked) {
-                            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-                                val idx = event.actionIndex
-                                onTouchEvent(0, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), view.width, view.height)
-                            }
-                            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                                val idx = event.actionIndex
-                                onTouchEvent(1, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), view.width, view.height)
-                            }
-                            MotionEvent.ACTION_MOVE -> {
-                                for (i in 0 until event.pointerCount) {
-                                    onTouchEvent(2, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), view.width, view.height)
-                                }
-                            }
-                            MotionEvent.ACTION_CANCEL -> {
-                                for (i in 0 until event.pointerCount) {
-                                    onTouchEvent(1, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), view.width, view.height)
-                                }
-                            }
-                        }
-                        true
-                    }
                     holder.addCallback(object : SurfaceHolder.Callback {
                         override fun surfaceCreated(holder: SurfaceHolder) {
                             onSurfaceCreated(holder)
@@ -1610,7 +1598,42 @@ private fun ScrcpyVideoPlayer(
             )
         }
 
-        // Floating Draggable & Edge-Aware Controls
+        var playerWidth by remember { mutableIntStateOf(0) }
+        var playerHeight by remember { mutableIntStateOf(0) }
+
+        Box(
+            modifier = playerModifier
+                .onSizeChanged {
+                    playerWidth = it.width
+                    playerHeight = it.height
+                }
+                .pointerInteropFilter { event ->
+                    if (videoSourceIsCamera) return@pointerInteropFilter false
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                            val idx = event.actionIndex
+                            onTouchEvent(0, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), playerWidth, playerHeight)
+                        }
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                            val idx = event.actionIndex
+                            onTouchEvent(1, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), playerWidth, playerHeight)
+                        }
+                        MotionEvent.ACTION_MOVE -> {
+                            for (i in 0 until event.pointerCount) {
+                                onTouchEvent(2, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), playerWidth, playerHeight)
+                            }
+                        }
+                        MotionEvent.ACTION_CANCEL -> {
+                            for (i in 0 until event.pointerCount) {
+                                onTouchEvent(1, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), playerWidth, playerHeight)
+                            }
+                        }
+                    }
+                    true
+                }
+        )
+
+        // Floating Draggable & Edge-Aware Sticky Controls
         val density = LocalDensity.current
         val buttonSizePx = with(density) { 48.dp.toPx() }
         val paddingPx = with(density) { 12.dp.toPx() }
@@ -1628,27 +1651,35 @@ private fun ScrcpyVideoPlayer(
         var normX by rememberSaveable { mutableFloatStateOf(1f) }
         var normY by rememberSaveable { mutableFloatStateOf(0f) }
 
-        val offsetX = minX + normX * (maxX - minX)
-        val offsetY = minY + normY * (maxY - minY)
+        val animNormX = remember { Animatable(normX) }
+        val animNormY = remember { Animatable(normY) }
+        val coroutineScope = rememberCoroutineScope()
+
+        LaunchedEffect(normX, normY) {
+            if (!animNormX.isRunning && animNormX.targetValue != normX) {
+                animNormX.snapTo(normX)
+            }
+            if (!animNormY.isRunning && animNormY.targetValue != normY) {
+                animNormY.snapTo(normY)
+            }
+        }
 
         var layoutWidth by remember { mutableIntStateOf(0) }
         var layoutHeight by remember { mutableIntStateOf(0) }
 
-        val side = remember(offsetX, offsetY, minX, maxX, minY, maxY) {
-            if (maxX <= minX || maxY <= minY) {
-                ControlSide.RIGHT
-            } else {
-                val distLeft = offsetX - minX
-                val distRight = maxX - offsetX
-                val distTop = offsetY - minY
-                val distBottom = maxY - offsetY
-                val minDist = minOf(distRight, distLeft, distTop, distBottom)
-                when (minDist) {
-                    distRight -> ControlSide.RIGHT
-                    distLeft -> ControlSide.LEFT
-                    distTop -> ControlSide.TOP
-                    else -> ControlSide.BOTTOM
-                }
+        val side = remember(animNormX.value, animNormY.value) {
+            val curX = animNormX.value
+            val curY = animNormY.value
+            val distLeft = curX
+            val distRight = 1f - curX
+            val distTop = curY
+            val distBottom = 1f - curY
+            val minDist = minOf(distRight, distLeft, distTop, distBottom)
+            when (minDist) {
+                distRight -> ControlSide.RIGHT
+                distLeft -> ControlSide.LEFT
+                distTop -> ControlSide.TOP
+                else -> ControlSide.BOTTOM
             }
         }
 
@@ -1724,6 +1755,62 @@ private fun ScrcpyVideoPlayer(
         val currentSpanX by rememberUpdatedState(maxX - minX)
         val currentSpanY by rememberUpdatedState(maxY - minY)
 
+        fun snapToNearestEdge() {
+            val curX = animNormX.value
+            val curY = animNormY.value
+
+            val distLeft = curX
+            val distRight = 1f - curX
+            val distTop = curY
+            val distBottom = 1f - curY
+
+            val minDist = minOf(distLeft, distRight, distTop, distBottom)
+
+            val targetX: Float
+            val targetY: Float
+
+            when (minDist) {
+                distLeft -> {
+                    targetX = 0f
+                    targetY = curY
+                }
+                distRight -> {
+                    targetX = 1f
+                    targetY = curY
+                }
+                distTop -> {
+                    targetX = curX
+                    targetY = 0f
+                }
+                else -> {
+                    targetX = curX
+                    targetY = 1f
+                }
+            }
+
+            normX = targetX
+            normY = targetY
+
+            coroutineScope.launch {
+                animNormX.animateTo(
+                    targetValue = targetX,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+            coroutineScope.launch {
+                animNormY.animateTo(
+                    targetValue = targetY,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+        }
+
         val arrowButton = @Composable {
             Box(
                 modifier = Modifier.pointerInput(Unit) {
@@ -1734,11 +1821,19 @@ private fun ScrcpyVideoPlayer(
                         onDrag = { change, dragAmount ->
                             change.consume()
                             if (currentSpanX > 0f) {
-                                normX = (normX + dragAmount.x / currentSpanX).coerceIn(0f, 1f)
+                                val nextX = (animNormX.value + dragAmount.x / currentSpanX).coerceIn(0f, 1f)
+                                coroutineScope.launch { animNormX.snapTo(nextX) }
                             }
                             if (currentSpanY > 0f) {
-                                normY = (normY + dragAmount.y / currentSpanY).coerceIn(0f, 1f)
+                                val nextY = (animNormY.value + dragAmount.y / currentSpanY).coerceIn(0f, 1f)
+                                coroutineScope.launch { animNormY.snapTo(nextY) }
                             }
+                        },
+                        onDragEnd = {
+                            snapToNearestEdge()
+                        },
+                        onDragCancel = {
+                            snapToNearestEdge()
                         }
                     )
                 }
@@ -1762,33 +1857,36 @@ private fun ScrcpyVideoPlayer(
             val effW = if (layoutWidth > 0) layoutWidth else buttonSizePx.roundToInt()
             val effH = if (layoutHeight > 0) layoutHeight else buttonSizePx.roundToInt()
 
+            val curOffsetX = minX + animNormX.value * (maxX - minX)
+            val curOffsetY = minY + animNormY.value * (maxY - minY)
+
             val x = when (side) {
                 ControlSide.RIGHT -> {
                     val extraW = maxOf(0, effW - buttonSizePx.roundToInt())
-                    maxOf(paddingPx.roundToInt(), (offsetX - extraW).roundToInt())
+                    maxOf(paddingPx.roundToInt(), (curOffsetX - extraW).roundToInt())
                 }
                 ControlSide.LEFT -> {
                     val maxXInt = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
-                    minOf(offsetX.roundToInt(), maxXInt)
+                    minOf(curOffsetX.roundToInt(), maxXInt)
                 }
                 ControlSide.TOP, ControlSide.BOTTOM -> {
                     val maxXInt = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
-                    offsetX.roundToInt().coerceIn(paddingPx.roundToInt(), maxXInt)
+                    curOffsetX.roundToInt().coerceIn(paddingPx.roundToInt(), maxXInt)
                 }
             }
 
             val y = when (side) {
                 ControlSide.BOTTOM -> {
                     val extraH = maxOf(0, effH - buttonSizePx.roundToInt())
-                    maxOf((topInsetPx + paddingPx).roundToInt(), (offsetY - extraH).roundToInt())
+                    maxOf((topInsetPx + paddingPx).roundToInt(), (curOffsetY - extraH).roundToInt())
                 }
                 ControlSide.TOP -> {
                     val maxYInt = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
-                    minOf(offsetY.roundToInt(), maxYInt)
+                    minOf(curOffsetY.roundToInt(), maxYInt)
                 }
                 ControlSide.LEFT, ControlSide.RIGHT -> {
                     val maxYInt = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
-                    offsetY.roundToInt().coerceIn((topInsetPx + paddingPx).roundToInt(), maxYInt)
+                    curOffsetY.roundToInt().coerceIn((topInsetPx + paddingPx).roundToInt(), maxYInt)
                 }
             }
 
@@ -1799,6 +1897,7 @@ private fun ScrcpyVideoPlayer(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .then(layoutOffsetModifier)
+                .zIndex(10f)
                 .onSizeChanged {
                     layoutWidth = it.width
                     layoutHeight = it.height
