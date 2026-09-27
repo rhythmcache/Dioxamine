@@ -289,15 +289,23 @@ class PluginOnlineRepositoryManager(private val context: Context) {
 
     @OptIn(ExperimentalSerializationApi::class)
     fun saveCache(feed: CachedPluginFeed) {
+        val parent = cacheFile.parentFile ?: return
         runCatching {
-            cacheFile.parentFile?.mkdirs()
-            val tempFile = File(cacheFile.parentFile, "${cacheFile.name}.tmp")
-            tempFile.outputStream().buffered().use { output ->
-                onlineJsonParser.encodeToStream(feed, output)
-            }
-            if (tempFile.exists()) {
-                if (cacheFile.exists()) cacheFile.delete()
-                tempFile.renameTo(cacheFile)
+            parent.mkdirs()
+            val tempFile = File.createTempFile("plugin_feed_", ".tmp", parent)
+            try {
+                tempFile.outputStream().buffered().use { output ->
+                    onlineJsonParser.encodeToStream(feed, output)
+                }
+                // Atomically replace cacheFile without deleting it beforehand to prevent data loss
+                if (!tempFile.renameTo(cacheFile)) {
+                    tempFile.copyTo(cacheFile, overwrite = true)
+                    tempFile.delete()
+                }
+            } finally {
+                if (tempFile.exists()) {
+                    tempFile.delete()
+                }
             }
         }.onFailure { e ->
             AppLogger.w(TAG, "Failed to write plugin cache: ${e.message}")
@@ -320,6 +328,7 @@ class PluginOnlineRepositoryManager(private val context: Context) {
                 val conn = PluginUpdateChecker.openConnectionWithRedirects(repoUrl)
                 try {
                     if (conn.responseCode in 200..299) {
+                        // Fast-path pre-check if server advertises Content-Length; the streaming loop enforces the true cap
                         val contentLength = conn.contentLengthLong
                         if (contentLength > MAX_REPO_INDEX_SIZE_BYTES) {
                             AppLogger.w(TAG, "Repository at $repoUrl rejected: Content-Length $contentLength exceeds 10MB limit")
@@ -329,20 +338,7 @@ class PluginOnlineRepositoryManager(private val context: Context) {
 
                         val tempFile = File.createTempFile("repo_index_", ".json", context.cacheDir)
                         try {
-                            var totalBytes = 0L
-                            conn.inputStream.use { input ->
-                                tempFile.outputStream().buffered().use { output ->
-                                    val buffer = ByteArray(8192)
-                                    var bytes: Int
-                                    while (input.read(buffer).also { bytes = it } >= 0) {
-                                        totalBytes += bytes
-                                        if (totalBytes > MAX_REPO_INDEX_SIZE_BYTES) {
-                                            throw IOException("Repository index exceeds maximum allowed size of 10MB")
-                                        }
-                                        output.write(buffer, 0, bytes)
-                                    }
-                                }
-                            }
+                            downloadIndexStreamToTempFile(conn.inputStream, tempFile, MAX_REPO_INDEX_SIZE_BYTES)
 
                             val parsed = tempFile.inputStream().buffered().use { parsePluginIndex(it) }
                             parsed.fold(
@@ -409,4 +405,24 @@ internal fun deduplicatePlugins(
         }
     }
     return result.values.sortedBy { it.name.lowercase() }
+}
+
+internal fun downloadIndexStreamToTempFile(
+    input: InputStream,
+    destination: File,
+    maxBytes: Long = PluginOnlineRepositoryManager.MAX_REPO_INDEX_SIZE_BYTES,
+): Long {
+    var totalBytes = 0L
+    destination.outputStream().buffered().use { output ->
+        val buffer = ByteArray(8192)
+        var bytes: Int
+        while (input.read(buffer).also { bytes = it } >= 0) {
+            totalBytes += bytes
+            if (totalBytes > maxBytes) {
+                throw IOException("Repository index exceeds maximum allowed size of ${maxBytes / (1024 * 1024)}MB")
+            }
+            output.write(buffer, 0, bytes)
+        }
+    }
+    return totalBytes
 }
