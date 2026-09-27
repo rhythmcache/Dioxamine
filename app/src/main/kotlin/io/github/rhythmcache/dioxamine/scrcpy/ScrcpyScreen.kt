@@ -33,7 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,6 +52,7 @@ import kotlin.math.roundToInt
 
 private enum class ScrcpyTab { CONFIGURATOR, LOGS, RECORDINGS }
 private enum class AddCustomDialogType { MAX_SIZE, FPS, BITRATE, AUDIO_BITRATE }
+private enum class ControlSide { LEFT, TOP, RIGHT, BOTTOM }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1606,95 +1609,258 @@ private fun ScrcpyVideoPlayer(
             )
         }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .then(if (isFullScreen) Modifier.statusBarsPadding() else Modifier)
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            AnimatedVisibility(
-                visible = controlsExpanded,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally()
+        // Floating Draggable & Edge-Aware Controls
+        val density = LocalDensity.current
+        val buttonSizePx = with(density) { 48.dp.toPx() }
+        val paddingPx = with(density) { 12.dp.toPx() }
+        val containerWidthPx = with(density) { maxWidth.toPx() }
+        val containerHeightPx = with(density) { maxHeight.toPx() }
+        val topInsetPx = if (isFullScreen) {
+            with(density) { WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx() }
+        } else 0f
+
+        var offsetX by remember { mutableFloatStateOf(-1f) }
+        var offsetY by remember { mutableFloatStateOf(-1f) }
+        var layoutWidth by remember { mutableIntStateOf(0) }
+        var layoutHeight by remember { mutableIntStateOf(0) }
+
+        LaunchedEffect(containerWidthPx, containerHeightPx, topInsetPx) {
+            if (containerWidthPx > 0f && containerHeightPx > 0f) {
+                if (offsetX < 0f || offsetY < 0f) {
+                    offsetX = containerWidthPx - buttonSizePx - paddingPx
+                    offsetY = topInsetPx + paddingPx
+                } else {
+                    offsetX = offsetX.coerceIn(paddingPx, maxOf(paddingPx, containerWidthPx - buttonSizePx - paddingPx))
+                    offsetY = offsetY.coerceIn(topInsetPx + paddingPx, maxOf(topInsetPx + paddingPx, containerHeightPx - buttonSizePx - paddingPx))
+                }
+            }
+        }
+
+        val side = remember(offsetX, offsetY, containerWidthPx, containerHeightPx, topInsetPx) {
+            if (containerWidthPx <= 0f || containerHeightPx <= 0f) {
+                ControlSide.RIGHT
+            } else {
+                val distLeft = offsetX
+                val distRight = containerWidthPx - (offsetX + buttonSizePx)
+                val distTop = offsetY - topInsetPx
+                val distBottom = containerHeightPx - (offsetY + buttonSizePx)
+                val minDist = minOf(distLeft, distRight, distTop, distBottom)
+                when (minDist) {
+                    distLeft -> ControlSide.LEFT
+                    distRight -> ControlSide.RIGHT
+                    distTop -> ControlSide.TOP
+                    else -> ControlSide.BOTTOM
+                }
+            }
+        }
+
+        val arrowIcon = when (side) {
+            ControlSide.TOP -> if (controlsExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+            ControlSide.BOTTOM -> if (controlsExpanded) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp
+            ControlSide.LEFT -> if (controlsExpanded) Icons.AutoMirrored.Filled.KeyboardArrowLeft else Icons.AutoMirrored.Filled.KeyboardArrowRight
+            ControlSide.RIGHT -> if (controlsExpanded) Icons.AutoMirrored.Filled.KeyboardArrowRight else Icons.AutoMirrored.Filled.KeyboardArrowLeft
+        }
+
+        val actionButtons = @Composable {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (canRecord) {
-                        IconButton(
-                            onClick = onToggleRecord,
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = if (isRecording) Color.Red.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
-                            )
-                        ) {
-                            Icon(
-                                if (isRecording) Icons.Filled.Stop else Icons.Filled.FiberManualRecord,
-                                contentDescription = stringResource(if (isRecording) R.string.scrcpy_recording_stopped else R.string.scrcpy_recording_started),
-                                tint = if (isRecording) Color.White else Color.Red
-                            )
-                        }
-                    }
-                    if (videoSourceIsCamera) {
-                        IconButton(
-                            onClick = onToggleTorch,
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-                        ) {
-                            Icon(
-                                if (torchOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
-                                contentDescription = stringResource(R.string.cd_toggle_torch),
-                                tint = if (torchOn) Color.Yellow else Color.White
-                            )
-                        }
-                    }
-                    if (!videoSourceIsCamera) {
-                        IconButton(
-                            onClick = onRotateDevice,
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-                        ) {
-                            Icon(
-                                Icons.Filled.ScreenRotation,
-                                contentDescription = stringResource(R.string.cd_rotate_device),
-                                tint = Color.White
-                            )
-                        }
-                    }
+                if (canRecord) {
                     IconButton(
-                        onClick = onToggleFullScreen,
+                        onClick = onToggleRecord,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (isRecording) Color.Red.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Icon(
+                            if (isRecording) Icons.Filled.Stop else Icons.Filled.FiberManualRecord,
+                            contentDescription = stringResource(if (isRecording) R.string.scrcpy_recording_stopped else R.string.scrcpy_recording_started),
+                            tint = if (isRecording) Color.White else Color.Red
+                        )
+                    }
+                }
+                if (videoSourceIsCamera) {
+                    IconButton(
+                        onClick = onToggleTorch,
                         colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
                     ) {
                         Icon(
-                            if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                            contentDescription = stringResource(R.string.cd_toggle_fullscreen),
+                            if (torchOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                            contentDescription = stringResource(R.string.cd_toggle_torch),
+                            tint = if (torchOn) Color.Yellow else Color.White
+                        )
+                    }
+                }
+                if (!videoSourceIsCamera) {
+                    IconButton(
+                        onClick = onRotateDevice,
+                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                    ) {
+                        Icon(
+                            Icons.Filled.ScreenRotation,
+                            contentDescription = stringResource(R.string.cd_rotate_device),
                             tint = Color.White
                         )
                     }
-                    IconButton(
-                        onClick = onStop,
-                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-                    ) {
-                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_stop_mirroring), tint = Color.White)
+                }
+                IconButton(
+                    onClick = onToggleFullScreen,
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                ) {
+                    Icon(
+                        if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                        contentDescription = stringResource(R.string.cd_toggle_fullscreen),
+                        tint = Color.White
+                    )
+                }
+                IconButton(
+                    onClick = onStop,
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_stop_mirroring), tint = Color.White)
+                }
+            }
+        }
+
+        val arrowButton = @Composable {
+            Box(
+                modifier = Modifier.pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        offsetX = (offsetX + dragAmount.x).coerceIn(
+                            paddingPx,
+                            maxOf(paddingPx, containerWidthPx - buttonSizePx - paddingPx)
+                        )
+                        offsetY = (offsetY + dragAmount.y).coerceIn(
+                            topInsetPx + paddingPx,
+                            maxOf(topInsetPx + paddingPx, containerHeightPx - buttonSizePx - paddingPx)
+                        )
                     }
+                }
+            ) {
+                IconButton(
+                    onClick = { controlsExpanded = !controlsExpanded },
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                ) {
+                    Icon(
+                        imageVector = arrowIcon,
+                        contentDescription = stringResource(
+                            if (controlsExpanded) R.string.cd_collapse_controls else R.string.cd_expand_controls
+                        ),
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+
+        val layoutOffsetModifier = Modifier.offset {
+            val effW = if (layoutWidth > 0) layoutWidth else buttonSizePx.roundToInt()
+            val effH = if (layoutHeight > 0) layoutHeight else buttonSizePx.roundToInt()
+
+            val x = when (side) {
+                ControlSide.RIGHT -> {
+                    val extraW = maxOf(0, effW - buttonSizePx.roundToInt())
+                    maxOf(paddingPx.roundToInt(), (offsetX - extraW).roundToInt())
+                }
+                ControlSide.LEFT -> {
+                    val maxX = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
+                    minOf(offsetX.roundToInt(), maxX)
+                }
+                ControlSide.TOP, ControlSide.BOTTOM -> {
+                    val maxX = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
+                    offsetX.roundToInt().coerceIn(paddingPx.roundToInt(), maxX)
                 }
             }
 
-            IconButton(
-                onClick = { controlsExpanded = !controlsExpanded },
-                colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-            ) {
-                Icon(
-                    imageVector = if (controlsExpanded) {
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight
-                    } else {
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft
-                    },
-                    contentDescription = stringResource(
-                        if (controlsExpanded) R.string.cd_collapse_controls else R.string.cd_expand_controls
-                    ),
-                    tint = Color.White
-                )
+            val y = when (side) {
+                ControlSide.BOTTOM -> {
+                    val extraH = maxOf(0, effH - buttonSizePx.roundToInt())
+                    maxOf((topInsetPx + paddingPx).roundToInt(), (offsetY - extraH).roundToInt())
+                }
+                ControlSide.TOP -> {
+                    val maxY = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
+                    minOf(offsetY.roundToInt(), maxY)
+                }
+                ControlSide.LEFT, ControlSide.RIGHT -> {
+                    val maxY = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
+                    offsetY.roundToInt().coerceIn((topInsetPx + paddingPx).roundToInt(), maxY)
+                }
+            }
+
+            IntOffset(x, y)
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .then(layoutOffsetModifier)
+                .onSizeChanged {
+                    layoutWidth = it.width
+                    layoutHeight = it.height
+                }
+        ) {
+            when (side) {
+                ControlSide.LEFT -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        arrowButton()
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+                            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start)
+                        ) {
+                            actionButtons()
+                        }
+                    }
+                }
+                ControlSide.RIGHT -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
+                            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End)
+                        ) {
+                            actionButtons()
+                        }
+                        arrowButton()
+                    }
+                }
+                ControlSide.TOP -> {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        arrowButton()
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+                            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top)
+                        ) {
+                            actionButtons()
+                        }
+                    }
+                }
+                ControlSide.BOTTOM -> {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+                            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom)
+                        ) {
+                            actionButtons()
+                        }
+                        arrowButton()
+                    }
+                }
             }
         }
 
