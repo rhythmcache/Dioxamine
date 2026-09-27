@@ -118,6 +118,7 @@
     <string name="btn_allow">Разрешить</string>
     <string name="btn_deny">Отклонить</string>
     <string name="plugin_perm_dialog_title">%1$s запрашивает разрешение</string>
+    <string name="plugin_perm_prompt_question">Разрешить %1$s: %2$s?</string>
     <string name="plugin_perm_shell">Выполнение shell-команд на подключенном устройстве</string>
     <string name="plugin_perm_push">Загрузка файлов на подключенное устройство</string>
     <string name="plugin_perm_pull">Скачивание файлов с подключенного устройства</string>

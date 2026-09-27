@@ -116,6 +116,7 @@
     <string name="btn_allow">اجازه دادن</string>
     <string name="btn_deny">رد کردن</string>
     <string name="plugin_perm_dialog_title">%1$s درخواست مجوز دارد</string>
+    <string name="plugin_perm_prompt_question">به %1$s اجازه داده شود تا %2$s؟</string>
     <string name="plugin_perm_shell">اجرای دستورات شل در دستگاه متصل</string>
     <string name="plugin_perm_push">آپلود فایل‌ها به دستگاه متصل</string>
     <string name="plugin_perm_pull">دانلود فایل‌ها از دستگاه متصل</string>

@@ -834,6 +834,8 @@ fun PluginsTab(
                         coroutineScope.launch {
                             val success = repo.uninstall(target.id)
                             if (success) {
+                                permStore.resetPlugin(target.id)
+                                permissionGate?.clearSession(target.id)
                                 Toast.makeText(
                                     context,
                                     context.getString(R.string.plugin_msg_uninstalled, target.name),

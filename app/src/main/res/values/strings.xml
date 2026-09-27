@@ -116,6 +116,7 @@
     <string name="btn_allow">Allow</string>
     <string name="btn_deny">Deny</string>
     <string name="plugin_perm_dialog_title">%1$s wants permission</string>
+    <string name="plugin_perm_prompt_question">Allow %1$s to %2$s?</string>
     <string name="plugin_perm_shell">Run shell commands on the connected device</string>
     <string name="plugin_perm_push">Upload files to the connected device</string>
     <string name="plugin_perm_pull">Download files from the connected device</string>
@@ -132,10 +133,10 @@
     <string name="plugin_menu_info">Info</string>
     <string name="plugin_menu_permissions">Permissions</string>
     <string name="plugin_menu_uninstall">Uninstall</string>
-    <string name="plugin_perm_btn_always_allow">Always Allow</string>
-    <string name="plugin_perm_btn_allow_session">Allow for This Session</string>
-    <string name="plugin_perm_btn_deny_session">Deny for This Session</string>
-    <string name="plugin_perm_btn_always_deny">Always Deny</string>
+    <string name="plugin_perm_btn_always_allow">Always allow</string>
+    <string name="plugin_perm_btn_allow_session">Allow for this session</string>
+    <string name="plugin_perm_btn_deny_session">Deny for this session</string>
+    <string name="plugin_perm_btn_always_deny">Always deny</string>
     <string name="plugin_perm_dialog_plugin_title">%1$s Permissions</string>
     <string name="plugin_perm_no_permissions">No permissions declared</string>
     <string name="plugin_perm_session_status_allowed">Allowed for current session</string>

@@ -116,6 +116,7 @@
     <string name="btn_allow">अनुमति दें</string>
     <string name="btn_deny">अस्वीकार करें</string>
     <string name="plugin_perm_dialog_title">%1$s अनुमति चाहता है</string>
+    <string name="plugin_perm_prompt_question">क्या %1$s को %2$s की अनुमति दें?</string>
     <string name="plugin_perm_shell">कनेक्टेड डिवाइस पर शेल कमांड चलाएं</string>
     <string name="plugin_perm_push">कनेक्टेड डिवाइस पर फाइलें अपलोड करें</string>
     <string name="plugin_perm_pull">कनेक्टेड डिवाइस से फाइलें डाउनलोड करें</string>
