@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -1619,35 +1620,32 @@ private fun ScrcpyVideoPlayer(
             with(density) { WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx() }
         } else 0f
 
-        var offsetX by remember { mutableFloatStateOf(-1f) }
-        var offsetY by remember { mutableFloatStateOf(-1f) }
+        val minX = paddingPx
+        val maxX = maxOf(minX, containerWidthPx - buttonSizePx - paddingPx)
+        val minY = topInsetPx + paddingPx
+        val maxY = maxOf(minY, containerHeightPx - buttonSizePx - paddingPx)
+
+        var normX by rememberSaveable { mutableFloatStateOf(1f) }
+        var normY by rememberSaveable { mutableFloatStateOf(0f) }
+
+        val offsetX = minX + normX * (maxX - minX)
+        val offsetY = minY + normY * (maxY - minY)
+
         var layoutWidth by remember { mutableIntStateOf(0) }
         var layoutHeight by remember { mutableIntStateOf(0) }
 
-        LaunchedEffect(containerWidthPx, containerHeightPx, topInsetPx) {
-            if (containerWidthPx > 0f && containerHeightPx > 0f) {
-                if (offsetX < 0f || offsetY < 0f) {
-                    offsetX = containerWidthPx - buttonSizePx - paddingPx
-                    offsetY = topInsetPx + paddingPx
-                } else {
-                    offsetX = offsetX.coerceIn(paddingPx, maxOf(paddingPx, containerWidthPx - buttonSizePx - paddingPx))
-                    offsetY = offsetY.coerceIn(topInsetPx + paddingPx, maxOf(topInsetPx + paddingPx, containerHeightPx - buttonSizePx - paddingPx))
-                }
-            }
-        }
-
-        val side = remember(offsetX, offsetY, containerWidthPx, containerHeightPx, topInsetPx) {
+        val side = remember(normX, normY, minX, maxX, minY, maxY, containerWidthPx, containerHeightPx) {
             if (containerWidthPx <= 0f || containerHeightPx <= 0f) {
                 ControlSide.RIGHT
             } else {
-                val distLeft = offsetX
-                val distRight = containerWidthPx - (offsetX + buttonSizePx)
-                val distTop = offsetY - topInsetPx
-                val distBottom = containerHeightPx - (offsetY + buttonSizePx)
-                val minDist = minOf(distLeft, distRight, distTop, distBottom)
+                val distLeft = offsetX - minX
+                val distRight = maxX - offsetX
+                val distTop = offsetY - minY
+                val distBottom = maxY - offsetY
+                val minDist = minOf(distRight, distLeft, distTop, distBottom)
                 when (minDist) {
-                    distLeft -> ControlSide.LEFT
                     distRight -> ControlSide.RIGHT
+                    distLeft -> ControlSide.LEFT
                     distTop -> ControlSide.TOP
                     else -> ControlSide.BOTTOM
                 }
@@ -1725,18 +1723,23 @@ private fun ScrcpyVideoPlayer(
 
         val arrowButton = @Composable {
             Box(
-                modifier = Modifier.pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        offsetX = (offsetX + dragAmount.x).coerceIn(
-                            paddingPx,
-                            maxOf(paddingPx, containerWidthPx - buttonSizePx - paddingPx)
-                        )
-                        offsetY = (offsetY + dragAmount.y).coerceIn(
-                            topInsetPx + paddingPx,
-                            maxOf(topInsetPx + paddingPx, containerHeightPx - buttonSizePx - paddingPx)
-                        )
-                    }
+                modifier = Modifier.pointerInput(containerWidthPx, containerHeightPx, topInsetPx) {
+                    detectDragGestures(
+                        onDragStart = {
+                            controlsExpanded = false
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val spanX = maxX - minX
+                            val spanY = maxY - minY
+                            if (spanX > 0f) {
+                                normX = (normX + dragAmount.x / spanX).coerceIn(0f, 1f)
+                            }
+                            if (spanY > 0f) {
+                                normY = (normY + dragAmount.y / spanY).coerceIn(0f, 1f)
+                            }
+                        }
+                    )
                 }
             ) {
                 IconButton(
@@ -1764,12 +1767,12 @@ private fun ScrcpyVideoPlayer(
                     maxOf(paddingPx.roundToInt(), (offsetX - extraW).roundToInt())
                 }
                 ControlSide.LEFT -> {
-                    val maxX = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
-                    minOf(offsetX.roundToInt(), maxX)
+                    val maxXInt = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
+                    minOf(offsetX.roundToInt(), maxXInt)
                 }
                 ControlSide.TOP, ControlSide.BOTTOM -> {
-                    val maxX = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
-                    offsetX.roundToInt().coerceIn(paddingPx.roundToInt(), maxX)
+                    val maxXInt = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
+                    offsetX.roundToInt().coerceIn(paddingPx.roundToInt(), maxXInt)
                 }
             }
 
@@ -1779,12 +1782,12 @@ private fun ScrcpyVideoPlayer(
                     maxOf((topInsetPx + paddingPx).roundToInt(), (offsetY - extraH).roundToInt())
                 }
                 ControlSide.TOP -> {
-                    val maxY = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
-                    minOf(offsetY.roundToInt(), maxY)
+                    val maxYInt = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
+                    minOf(offsetY.roundToInt(), maxYInt)
                 }
                 ControlSide.LEFT, ControlSide.RIGHT -> {
-                    val maxY = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
-                    offsetY.roundToInt().coerceIn((topInsetPx + paddingPx).roundToInt(), maxY)
+                    val maxYInt = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
+                    offsetY.roundToInt().coerceIn((topInsetPx + paddingPx).roundToInt(), maxYInt)
                 }
             }
 
