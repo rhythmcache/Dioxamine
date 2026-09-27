@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,11 +19,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SystemUpdate
@@ -616,7 +621,10 @@ fun PluginsTab(
                 }
 
                 PluginTopTab.BROWSE -> {
-                    PluginBrowsePlaceholder()
+                    PluginBrowseContent(
+                        repo = repo,
+                        installedPlugins = installedPlugins,
+                    )
                 }
             }
         }
@@ -954,47 +962,654 @@ private fun PluginSinglePermissionsDialog(
 }
 
 @Composable
-private fun PluginBrowsePlaceholder() {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Search,
-            contentDescription = null,
-            modifier = Modifier.size(56.dp),
-            tint = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.plugins_browse_placeholder_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.plugins_browse_placeholder_desc),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(16.dp))
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-        ) {
-            Text(
-                text = stringResource(R.string.plugins_browse_coming_soon),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+private fun PluginBrowseContent(
+    repo: PluginRepository,
+    installedPlugins: List<PluginManifest>,
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val repoManager = remember(context) { PluginOnlineRepositoryManager(context.applicationContext) }
+
+    var feedData by remember { mutableStateOf<CachedPluginFeed?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedDetailPlugin by remember { mutableStateOf<PluginIndexItem?>(null) }
+    val installingPluginIds = remember { mutableStateListOf<String>() }
+    var showRepositoriesDialog by remember { mutableStateOf(false) }
+
+    val refreshRepo: () -> Unit = {
+        coroutineScope.launch {
+            isRefreshing = true
+            val result = repoManager.fetchFromNetwork()
+            result.fold(
+                onSuccess = { feed ->
+                    feedData = feed
+                    errorMessage = null
+                    Toast.makeText(context, R.string.plugins_browse_refreshed, Toast.LENGTH_SHORT).show()
+                },
+                onFailure = { err ->
+                    val msg = err.message ?: context.getString(R.string.plugins_browse_empty)
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.plugins_browse_refresh_failed, msg),
+                        Toast.LENGTH_LONG,
+                    ).show()
+                },
             )
+            isRefreshing = false
         }
     }
+
+    LaunchedEffect(Unit) {
+        val cached = repoManager.loadCache()
+        if (cached != null) {
+            feedData = cached
+        } else {
+            isLoading = true
+            val result = repoManager.fetchFromNetwork()
+            result.fold(
+                onSuccess = { feed ->
+                    feedData = feed
+                    errorMessage = null
+                },
+                onFailure = { err ->
+                    errorMessage = err.message ?: context.getString(R.string.plugins_browse_empty)
+                },
+            )
+            isLoading = false
+        }
+    }
+
+    fun installOnlinePlugin(plugin: PluginIndexItem) {
+        coroutineScope.launch {
+            installingPluginIds.add(plugin.id)
+            val result = downloadAndInstallPlugin(context, repo, plugin)
+            installingPluginIds.remove(plugin.id)
+            val message = when (result) {
+                is PluginInstallResult.Installed -> context.getString(R.string.plugins_msg_installed, result.manifest.name)
+                is PluginInstallResult.Updated -> context.getString(R.string.plugins_msg_updated, result.new.name, result.new.version)
+                is PluginInstallResult.UpdateRejected -> context.getString(R.string.plugins_msg_rejected)
+                is PluginInstallResult.Error -> context.getString(R.string.plugins_msg_error, result.message)
+            }
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val relativeTime = remember(feedData) {
+                feedData?.let { formatRelativeTime(context, it.updated, it.fetchedAtMs) } ?: ""
+            }
+
+            if (relativeTime.isNotBlank()) {
+                Text(
+                    text = stringResource(R.string.plugins_browse_last_updated, relativeTime),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Spacer(Modifier.weight(1f))
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { showRepositoriesDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.Public,
+                        contentDescription = stringResource(R.string.settings_plugins_repos_title),
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                IconButton(
+                    onClick = { if (!isRefreshing && !isLoading) refreshRepo() },
+                    enabled = !isRefreshing && !isLoading,
+                ) {
+                    if (isRefreshing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = stringResource(R.string.plugins_browse_refresh),
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.plugins_browse_search_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { searchQuery = "" }) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+        )
+
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            errorMessage != null && (feedData == null || feedData!!.plugins.isEmpty()) -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CloudOff,
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = errorMessage ?: stringResource(R.string.plugins_browse_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { refreshRepo() }) {
+                        Text(stringResource(R.string.btn_retry))
+                    }
+                }
+            }
+            else -> {
+                val filteredPlugins = remember(feedData, searchQuery) {
+                    val q = searchQuery.trim().lowercase()
+                    val list = feedData?.plugins ?: emptyList()
+                    if (q.isBlank()) list
+                    else list.filter {
+                        it.name.lowercase().contains(q) ||
+                        it.description.lowercase().contains(q) ||
+                        it.author?.lowercase()?.contains(q) == true ||
+                        it.id.lowercase().contains(q)
+                    }
+                }
+
+                if (filteredPlugins.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plugins_browse_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        items(filteredPlugins, key = { it.id }) { item ->
+                            val installed = installedPlugins.find { it.id == item.id }
+                            val isInstalling = installingPluginIds.contains(item.id)
+
+                            PluginOnlineTile(
+                                plugin = item,
+                                installed = installed,
+                                isInstalling = isInstalling,
+                                onInstall = { installOnlinePlugin(item) },
+                                onClick = { selectedDetailPlugin = item },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    selectedDetailPlugin?.let { plugin ->
+        val installed = installedPlugins.find { it.id == plugin.id }
+        val isInstalling = installingPluginIds.contains(plugin.id)
+
+        PluginOnlineDetailDialog(
+            plugin = plugin,
+            installed = installed,
+            isInstalling = isInstalling,
+            onInstall = { installOnlinePlugin(plugin) },
+            onDismiss = { selectedDetailPlugin = null },
+        )
+    }
+
+    if (showRepositoriesDialog) {
+        PluginRepositoriesDialog(
+            repoManager = repoManager,
+            onDismiss = {
+                showRepositoriesDialog = false
+                val cached = repoManager.loadCache()
+                feedData = cached
+                if (cached == null) {
+                    refreshRepo()
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun PluginOnlineTile(
+    plugin: PluginIndexItem,
+    installed: PluginManifest?,
+    isInstalling: Boolean,
+    onInstall: () -> Unit,
+    onClick: () -> Unit,
+) {
+    val iconBitmap = remember(plugin.icon) { decodeBase64Icon(plugin.icon) }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        ),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (iconBitmap != null) {
+                Image(
+                    bitmap = iconBitmap,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp)),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Extension,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = plugin.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                val metaText = buildString {
+                    append("v${plugin.version}")
+                    if (!plugin.author.isNullOrBlank()) {
+                        append(" • ")
+                        append(plugin.author)
+                    }
+                }
+                Text(
+                    text = metaText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                if (plugin.description.isNotBlank()) {
+                    Text(
+                        text = plugin.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            when {
+                isInstalling -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                    )
+                }
+                installed != null && plugin.versionCode > installed.versionCode -> {
+                    Button(
+                        onClick = onInstall,
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.height(34.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plugins_browse_btn_update),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+                installed != null -> {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.plugins_browse_btn_installed),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                        )
+                    }
+                }
+                else -> {
+                    FilledTonalButton(
+                        onClick = onInstall,
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.height(34.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Download,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.plugins_browse_btn_install),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PluginOnlineDetailDialog(
+    plugin: PluginIndexItem,
+    installed: PluginManifest?,
+    isInstalling: Boolean,
+    onInstall: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val iconBitmap = remember(plugin.icon) { decodeBase64Icon(plugin.icon) }
+    val allPerms = remember(plugin.permissions) { plugin.permissions.allList() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (iconBitmap != null) {
+                    Image(
+                        bitmap = iconBitmap,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Extension,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(26.dp),
+                        )
+                    }
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = plugin.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(R.string.plugins_browse_details_version, plugin.version, plugin.versionCode),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (!plugin.author.isNullOrBlank()) {
+                        Text(
+                            text = stringResource(R.string.plugins_browse_details_by, plugin.author),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                val validHomepage = plugin.homepage?.trim()?.takeIf {
+                    it.startsWith("http://", ignoreCase = true) || it.startsWith("https://", ignoreCase = true)
+                }
+                val validRepo = plugin.repo?.trim()?.takeIf {
+                    it.startsWith("http://", ignoreCase = true) || it.startsWith("https://", ignoreCase = true)
+                }
+
+                if (validHomepage != null || validRepo != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        validHomepage?.let { url ->
+                            OutlinedButton(
+                                onClick = {
+                                    runCatching {
+                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                    }
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                modifier = Modifier.height(30.dp),
+                            ) {
+                                Text(stringResource(R.string.plugins_browse_details_homepage), style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        validRepo?.let { url ->
+                            OutlinedButton(
+                                onClick = {
+                                    runCatching {
+                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                    }
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                modifier = Modifier.height(30.dp),
+                            ) {
+                                Text(stringResource(R.string.plugins_browse_details_repo), style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                if (plugin.description.isNotBlank()) {
+                    Text(
+                        text = plugin.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.plugins_browse_details_permissions),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    if (allPerms.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.plugins_browse_details_no_permissions),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        allPerms.forEach { permStr ->
+                            val perm = PluginPermission.fromManifestString(permStr)
+                            val title = perm?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: permStr
+                            val desc = perm?.let { pluginPermissionDescription(it) }
+
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                    if (!desc.isNullOrBlank()) {
+                                        Text(
+                                            text = desc,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val changelogUrl = plugin.changelog?.trim()
+                if (!changelogUrl.isNullOrBlank() && (changelogUrl.startsWith("http://", ignoreCase = true) || changelogUrl.startsWith("https://", ignoreCase = true))) {
+                    TextButton(
+                        onClick = {
+                            runCatching {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(changelogUrl)))
+                            }
+                        },
+                    ) {
+                        Text(stringResource(R.string.plugin_btn_changelog))
+                    }
+                }
+
+                val buttonLabel = when {
+                    installed == null -> stringResource(R.string.plugins_browse_btn_install)
+                    plugin.versionCode > installed.versionCode -> stringResource(R.string.plugins_browse_btn_update)
+                    else -> stringResource(R.string.plugins_browse_btn_reinstall)
+                }
+
+                Button(
+                    onClick = onInstall,
+                    enabled = !isInstalling,
+                ) {
+                    if (isInstalling) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.plugins_browse_installing))
+                    } else {
+                        Text(buttonLabel)
+                    }
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_close))
+            }
+        },
+    )
 }
 
