@@ -172,6 +172,7 @@ class PluginRepository(
     suspend fun uninstall(pluginId: String): Boolean {
         val deleted = installer.uninstall(pluginId)
         if (deleted) {
+            PluginPermissionStore(context).resetPlugin(pluginId)
             refresh()
         }
         return deleted

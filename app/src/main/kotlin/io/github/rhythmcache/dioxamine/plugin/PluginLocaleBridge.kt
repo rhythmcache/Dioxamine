@@ -1,10 +1,10 @@
 package io.github.rhythmcache.dioxamine.plugin
 
 import android.content.Context
+import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.ConfigurationCompat
 import androidx.core.text.TextUtilsCompat
-import androidx.core.view.ViewCompat
 import io.github.rhythmcache.dioxamine.settings.supportedLanguages
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -42,7 +42,7 @@ fun getPluginLocaleInfo(context: Context): PluginLocaleInfo {
     } else {
         rawTag
     }
-    val isRtl = TextUtilsCompat.getLayoutDirectionFromLocale(locale) == ViewCompat.LAYOUT_DIRECTION_RTL
+    val isRtl = TextUtilsCompat.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
     // 1. Exact match on full language tag (e.g. "zh-CN", "ru", "en")
     // 2. Match on base language only if the supported option is regional-agnostic (e.g. "en" matches "en-US", but "zh-CN" won't falsely match "zh-TW")

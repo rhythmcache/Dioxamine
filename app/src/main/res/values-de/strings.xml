@@ -116,6 +116,7 @@
     <string name="btn_allow">Zulassen</string>
     <string name="btn_deny">Ablehnen</string>
     <string name="plugin_perm_dialog_title">%1$s möchte eine Berechtigung</string>
+    <string name="plugin_perm_prompt_question">%1$s erlauben, %2$s?</string>
     <string name="plugin_perm_shell">Shell-Befehle auf dem verbundenen Gerät ausführen</string>
     <string name="plugin_perm_push">Dateien auf das verbundene Gerät hochladen</string>
     <string name="plugin_perm_pull">Dateien vom verbundenen Gerät herunterladen</string>

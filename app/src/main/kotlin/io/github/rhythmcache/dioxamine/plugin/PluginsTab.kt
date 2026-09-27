@@ -364,10 +364,10 @@ fun PluginsTab(
 
                                 Spacer(Modifier.width(14.dp))
 
-                                // Center: Title + Version & Author + Description
+                                // Center: Title + Description + Version + Author
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.Center,
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
                                 ) {
                                     Text(
                                         text = manifest.name,
@@ -376,41 +376,31 @@ fun PluginsTab(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
-                                    Spacer(Modifier.height(4.dp))
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Surface(
-                                            shape = RoundedCornerShape(6.dp),
-                                            color = MaterialTheme.colorScheme.primaryContainer,
-                                        ) {
-                                            Text(
-                                                text = "v${manifest.version}",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                            )
-                                        }
-                                        if (!manifest.author.isNullOrBlank()) {
-                                            Text(
-                                                text = stringResource(R.string.plugin_info_author, manifest.author),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                            )
-                                        }
-                                    }
 
                                     if (manifest.description.isNotBlank()) {
-                                        Spacer(Modifier.height(6.dp))
                                         Text(
                                             text = manifest.description,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+
+                                    Text(
+                                        text = stringResource(R.string.plugin_info_version, manifest.version),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+
+                                    if (!manifest.author.isNullOrBlank()) {
+                                        Text(
+                                            text = stringResource(R.string.plugin_info_author, manifest.author),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                         )
                                     }
@@ -834,6 +824,8 @@ fun PluginsTab(
                         coroutineScope.launch {
                             val success = repo.uninstall(target.id)
                             if (success) {
+                                permStore.resetPlugin(target.id)
+                                permissionGate?.clearSession(target.id)
                                 Toast.makeText(
                                     context,
                                     context.getString(R.string.plugin_msg_uninstalled, target.name),
@@ -1301,27 +1293,30 @@ private fun PluginOnlineTile(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                val metaText = buildString {
-                    append("v${plugin.version}")
-                    if (!plugin.author.isNullOrBlank()) {
-                        append(" • ")
-                        append(plugin.author)
-                    }
-                }
-                Text(
-                    text = metaText,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
                 if (plugin.description.isNotBlank()) {
                     Text(
                         text = plugin.description,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.plugin_info_version, plugin.version),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                if (!plugin.author.isNullOrBlank()) {
+                    Text(
+                        text = stringResource(R.string.plugin_info_author, plugin.author),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -1576,6 +1571,7 @@ private fun PluginOnlineDetailDialog(
                                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(changelogUrl)))
                             }
                         },
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(stringResource(R.string.plugin_btn_changelog))
                     }
@@ -1590,6 +1586,7 @@ private fun PluginOnlineDetailDialog(
                 Button(
                     onClick = onInstall,
                     enabled = !isInstalling,
+                    shape = RoundedCornerShape(12.dp),
                 ) {
                     if (isInstalling) {
                         CircularProgressIndicator(
@@ -1606,7 +1603,10 @@ private fun PluginOnlineDetailDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(12.dp),
+            ) {
                 Text(stringResource(R.string.btn_close))
             }
         },

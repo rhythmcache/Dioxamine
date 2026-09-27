@@ -149,6 +149,7 @@ class PluginInstaller(private val context: Context) {
                     if (!moveDir(stagingDir, targetDir)) {
                         return@withContext PluginInstallResult.Error("Failed to move plugin files to destination")
                     }
+                    PluginPermissionStore(context).resetPlugin(manifest.id)
                     PluginInstallResult.Installed(manifest)
                 } else {
                     // Updating existing plugin
@@ -192,11 +193,15 @@ class PluginInstaller(private val context: Context) {
                 return@withContext false
             }
             val targetDir = File(File(context.filesDir, "plugins"), pluginId)
-            if (targetDir.exists() && targetDir.isDirectory) {
+            val deleted = if (targetDir.exists() && targetDir.isDirectory) {
                 targetDir.deleteRecursively()
             } else {
                 false
             }
+            if (deleted) {
+                PluginPermissionStore(context).resetPlugin(pluginId)
+            }
+            deleted
         }
 
     private fun moveDir(sourceDir: File, destDir: File): Boolean {

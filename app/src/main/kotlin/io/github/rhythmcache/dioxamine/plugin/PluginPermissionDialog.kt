@@ -2,18 +2,34 @@ package io.github.rhythmcache.dioxamine.plugin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.FlashOn
+import androidx.compose.material.icons.outlined.InstallMobile
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.SwapHoriz
+import androidx.compose.material.icons.outlined.SyncAlt
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import io.github.rhythmcache.dioxamine.R
 
 @Composable
@@ -29,108 +45,167 @@ fun pluginPermissionDescription(permission: PluginPermission): String =
         PluginPermission.FASTBOOT -> stringResource(R.string.plugin_perm_fastboot)
     }
 
+fun pluginPermissionIcon(permission: PluginPermission): ImageVector =
+    when (permission) {
+        PluginPermission.SHELL -> Icons.Outlined.Terminal
+        PluginPermission.PUSH -> Icons.Outlined.Upload
+        PluginPermission.PULL -> Icons.Outlined.Download
+        PluginPermission.INSTALL -> Icons.Outlined.InstallMobile
+        PluginPermission.FORWARD -> Icons.Outlined.SyncAlt
+        PluginPermission.REVERSE -> Icons.Outlined.SwapHoriz
+        PluginPermission.NETWORK -> Icons.Outlined.Language
+        PluginPermission.FASTBOOT -> Icons.Outlined.FlashOn
+    }
+
 @Composable
 fun PluginPermissionDialogHost(gate: PluginPermissionGate) {
     val pendingRequest by gate.pendingRequest.collectAsState()
 
     pendingRequest?.let { request ->
-        val permissionDescription = pluginPermissionDescription(request.permission)
-        val permissionName = request.permission.name.lowercase().replaceFirstChar { it.uppercase() }
+        val rawDesc = pluginPermissionDescription(request.permission)
+        val actionText = rawDesc.replaceFirstChar { it.lowercase() }
+        val fullQuestion = stringResource(R.string.plugin_perm_prompt_question, request.pluginName, actionText)
 
-        AlertDialog(
-            onDismissRequest = { request.onDecision(PermissionDecision.DENY_SESSION) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Security,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp),
-                )
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.plugin_perm_dialog_title, request.pluginName),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.padding(bottom = 4.dp),
-                    ) {
-                        Text(
-                            text = permissionName,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        )
+        val annotatedTitle = remember(fullQuestion, request.pluginName) {
+            val startIndex = fullQuestion.indexOf(request.pluginName)
+            buildAnnotatedString {
+                if (startIndex >= 0) {
+                    append(fullQuestion.substring(0, startIndex))
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(request.pluginName)
                     }
+                    append(fullQuestion.substring(startIndex + request.pluginName.length))
+                } else {
+                    append(fullQuestion)
+                }
+            }
+        }
 
-                    Text(
-                        text = permissionDescription,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Dialog(
+            onDismissRequest = { request.onDecision(PermissionDecision.DENY_SESSION) },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+            ),
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .widthIn(max = 340.dp),
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                tonalElevation = 6.dp,
+                shadowElevation = 8.dp,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(
+                        imageVector = pluginPermissionIcon(request.permission),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp),
                     )
 
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = { request.onDecision(PermissionDecision.ALWAYS_ALLOW) },
+                    Text(
+                        text = annotatedTitle,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.plugin_perm_btn_always_allow),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
+                    )
 
-                    FilledTonalButton(
-                        onClick = { request.onDecision(PermissionDecision.ALLOW_SESSION) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.plugin_perm_btn_allow_session),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    OutlinedButton(
-                        onClick = { request.onDecision(PermissionDecision.DENY_SESSION) },
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Text(
-                            text = stringResource(R.string.plugin_perm_btn_deny_session),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
+                        FilledTonalButton(
+                            onClick = { request.onDecision(PermissionDecision.ALWAYS_ALLOW) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.plugin_perm_btn_always_allow),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
 
-                    TextButton(
-                        onClick = { request.onDecision(PermissionDecision.ALWAYS_DENY) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error,
-                        ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.plugin_perm_btn_always_deny),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
+                        FilledTonalButton(
+                            onClick = { request.onDecision(PermissionDecision.ALLOW_SESSION) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.plugin_perm_btn_allow_session),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+
+                        FilledTonalButton(
+                            onClick = { request.onDecision(PermissionDecision.DENY_SESSION) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.plugin_perm_btn_deny_session),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+
+                        FilledTonalButton(
+                            onClick = { request.onDecision(PermissionDecision.ALWAYS_DENY) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.plugin_perm_btn_always_deny),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
                 }
-            },
-            confirmButton = {},
-        )
+            }
+        }
     }
 }
 

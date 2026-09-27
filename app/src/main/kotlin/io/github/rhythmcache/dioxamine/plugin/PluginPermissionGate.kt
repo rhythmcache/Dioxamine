@@ -92,8 +92,12 @@ class PluginPermissionStore(context: android.content.Context) {
     /** Reset all policies for a plugin back to ASK */
     fun resetPlugin(pluginId: String) {
         val editor = prefs.edit()
+        val prefix = "policy:${pluginId}:"
         PluginPermission.entries.forEach { perm ->
             editor.remove(policyKey(pluginId, perm))
+        }
+        prefs.all.keys.filter { it.startsWith(prefix) }.forEach { key ->
+            editor.remove(key)
         }
         editor.apply()
     }

@@ -116,6 +116,7 @@
     <string name="btn_allow">允许</string>
     <string name="btn_deny">拒绝</string>
     <string name="plugin_perm_dialog_title">%1$s 请求权限</string>
+    <string name="plugin_perm_prompt_question">允许 %1$s%2$s吗？</string>
     <string name="plugin_perm_shell">在已连接设备上运行 Shell 命令</string>
     <string name="plugin_perm_push">向已连接设备上传文件</string>
     <string name="plugin_perm_pull">从已连接设备下载文件</string>

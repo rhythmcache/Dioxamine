@@ -239,4 +239,83 @@ class PluginOnlineRepositoryTest {
         val community = merged.first { it.id == "org.untrusted.unique" }
         assertEquals(1, community.versionCode)
     }
+
+    @Test
+    fun testStreamedParsingFromInputStream() {
+        val sample = """
+        {
+          "schemaVersion": 1,
+          "updated": "2026-09-27T00:00:00Z",
+          "plugins": [
+            {
+              "id": "stream.test",
+              "name": "Stream Test",
+              "version": "1.0.0",
+              "versionCode": 1,
+              "download": "https://example.com/test.zip"
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val stream = java.io.ByteArrayInputStream(sample.toByteArray(Charsets.UTF_8))
+        val result = parsePluginIndex(stream)
+        assertTrue(result.isSuccess)
+        val index = result.getOrThrow()
+        assertEquals(1, index.plugins.size)
+        assertEquals("stream.test", index.plugins[0].id)
+    }
+
+    @Test
+    fun testDownloadIndexStreamToTempFileSuccess() {
+        val content = "{\"schemaVersion\": 1, \"plugins\": []}"
+        val stream = java.io.ByteArrayInputStream(content.toByteArray(Charsets.UTF_8))
+        val tempFile = java.io.File.createTempFile("test_idx_", ".json")
+        try {
+            val bytes = downloadIndexStreamToTempFile(stream, tempFile, maxBytes = 1024)
+            assertEquals(content.toByteArray(Charsets.UTF_8).size.toLong(), bytes)
+            assertEquals(content, tempFile.readText())
+        } finally {
+            tempFile.delete()
+        }
+    }
+
+    @Test
+    fun testDownloadIndexStreamToTempFileExceedsLimit() {
+        val largeData = ByteArray(2048) { 1 }
+        val stream = java.io.ByteArrayInputStream(largeData)
+        val tempFile = java.io.File.createTempFile("test_idx_oversize_", ".json")
+        try {
+            assertThrows(java.io.IOException::class.java) {
+                downloadIndexStreamToTempFile(stream, tempFile, maxBytes = 1000)
+            }
+        } finally {
+            tempFile.delete()
+        }
+    }
+
+    @Test
+    fun testParsePluginIndexStringAndStreamEquivalence() {
+        val json = """
+        {
+          "schemaVersion": 1,
+          "plugins": [
+            {
+              "id": "eq.test",
+              "name": "Equivalence Test",
+              "version": "1.0.0",
+              "versionCode": 5,
+              "download": "https://example.com/eq.zip"
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val stringResult = parsePluginIndex(json).getOrThrow()
+        val streamResult = parsePluginIndex(json.byteInputStream()).getOrThrow()
+
+        assertEquals(stringResult.plugins.size, streamResult.plugins.size)
+        assertEquals(stringResult.plugins[0].id, streamResult.plugins[0].id)
+        assertEquals(stringResult.plugins[0].versionCode, streamResult.plugins[0].versionCode)
+    }
 }
