@@ -10,18 +10,23 @@ import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
 import kotlinx.serialization.json.intOrNull
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -65,9 +70,10 @@ internal val onlineJsonParser = Json {
     coerceInputValues = true
 }
 
-fun parsePluginIndex(jsonString: String): Result<PluginIndex> {
+@OptIn(ExperimentalSerializationApi::class)
+fun parsePluginIndex(inputStream: InputStream): Result<PluginIndex> {
     return runCatching {
-        val root = onlineJsonParser.parseToJsonElement(jsonString)
+        val root = onlineJsonParser.decodeFromStream<JsonElement>(inputStream)
         if (root !is JsonObject) {
             throw IllegalArgumentException("Root element must be a JSON object")
         }
@@ -124,6 +130,10 @@ fun parsePluginIndex(jsonString: String): Result<PluginIndex> {
             plugins = pluginsList,
         )
     }
+}
+
+fun parsePluginIndex(jsonString: String): Result<PluginIndex> {
+    return jsonString.byteInputStream().use { parsePluginIndex(it) }
 }
 
 fun decodeBase64Icon(iconStr: String?): ImageBitmap? {
@@ -199,6 +209,7 @@ suspend fun downloadAndInstallPlugin(
 class PluginOnlineRepositoryManager(private val context: Context) {
     companion object {
         const val DEFAULT_REPO_URL = "https://raw.githubusercontent.com/Dioxamine-plugins-repo/index/main/index.json"
+        const val MAX_REPO_INDEX_SIZE_BYTES = 10 * 1024 * 1024L
         private const val PREFS_NAME = "plugin_repositories"
         private const val PREFS_KEY_URLS = "configured_urls"
         private const val CACHE_FILE_NAME = "plugin_feed_cache.json"
@@ -266,18 +277,28 @@ class PluginOnlineRepositoryManager(private val context: Context) {
         }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     fun loadCache(): CachedPluginFeed? {
         if (!cacheFile.exists() || !cacheFile.isFile) return null
         return runCatching {
-            val content = cacheFile.readText()
-            onlineJsonParser.decodeFromString<CachedPluginFeed>(content)
+            cacheFile.inputStream().buffered().use { input ->
+                onlineJsonParser.decodeFromStream<CachedPluginFeed>(input)
+            }
         }.getOrNull()
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     fun saveCache(feed: CachedPluginFeed) {
         runCatching {
-            val content = onlineJsonParser.encodeToString(feed)
-            cacheFile.writeText(content)
+            cacheFile.parentFile?.mkdirs()
+            val tempFile = File(cacheFile.parentFile, "${cacheFile.name}.tmp")
+            tempFile.outputStream().buffered().use { output ->
+                onlineJsonParser.encodeToStream(feed, output)
+            }
+            if (tempFile.exists()) {
+                if (cacheFile.exists()) cacheFile.delete()
+                tempFile.renameTo(cacheFile)
+            }
         }.onFailure { e ->
             AppLogger.w(TAG, "Failed to write plugin cache: ${e.message}")
         }
@@ -299,21 +320,49 @@ class PluginOnlineRepositoryManager(private val context: Context) {
                 val conn = PluginUpdateChecker.openConnectionWithRedirects(repoUrl)
                 try {
                     if (conn.responseCode in 200..299) {
-                        val body = conn.inputStream.bufferedReader().use { it.readText() }
-                        val parsed = parsePluginIndex(body)
-                        parsed.fold(
-                            onSuccess = { index ->
-                                anySuccess = true
-                                repoPluginsList.add(index.plugins)
-                                if (latestUpdated == null && index.updated != null) {
-                                    latestUpdated = index.updated
+                        val contentLength = conn.contentLengthLong
+                        if (contentLength > MAX_REPO_INDEX_SIZE_BYTES) {
+                            AppLogger.w(TAG, "Repository at $repoUrl rejected: Content-Length $contentLength exceeds 10MB limit")
+                            lastError = IOException("Repository index exceeds maximum allowed size of 10MB")
+                            continue
+                        }
+
+                        val tempFile = File.createTempFile("repo_index_", ".json", context.cacheDir)
+                        try {
+                            var totalBytes = 0L
+                            conn.inputStream.use { input ->
+                                tempFile.outputStream().buffered().use { output ->
+                                    val buffer = ByteArray(8192)
+                                    var bytes: Int
+                                    while (input.read(buffer).also { bytes = it } >= 0) {
+                                        totalBytes += bytes
+                                        if (totalBytes > MAX_REPO_INDEX_SIZE_BYTES) {
+                                            throw IOException("Repository index exceeds maximum allowed size of 10MB")
+                                        }
+                                        output.write(buffer, 0, bytes)
+                                    }
                                 }
-                            },
-                            onFailure = { err ->
-                                AppLogger.w(TAG, "Failed to parse repository at $repoUrl: ${err.message}")
-                                lastError = err
                             }
-                        )
+
+                            val parsed = tempFile.inputStream().buffered().use { parsePluginIndex(it) }
+                            parsed.fold(
+                                onSuccess = { index ->
+                                    anySuccess = true
+                                    repoPluginsList.add(index.plugins)
+                                    if (latestUpdated == null && index.updated != null) {
+                                        latestUpdated = index.updated
+                                    }
+                                },
+                                onFailure = { err ->
+                                    AppLogger.w(TAG, "Failed to parse repository at $repoUrl: ${err.message}")
+                                    lastError = err
+                                }
+                            )
+                        } finally {
+                            if (tempFile.exists()) {
+                                tempFile.delete()
+                            }
+                        }
                     } else {
                         AppLogger.w(TAG, "Repository HTTP ${conn.responseCode} at $repoUrl")
                         lastError = IOException("HTTP ${conn.responseCode}")

@@ -239,4 +239,30 @@ class PluginOnlineRepositoryTest {
         val community = merged.first { it.id == "org.untrusted.unique" }
         assertEquals(1, community.versionCode)
     }
+
+    @Test
+    fun testStreamedParsingFromInputStream() {
+        val sample = """
+        {
+          "schemaVersion": 1,
+          "updated": "2026-09-27T00:00:00Z",
+          "plugins": [
+            {
+              "id": "stream.test",
+              "name": "Stream Test",
+              "version": "1.0.0",
+              "versionCode": 1,
+              "download": "https://example.com/test.zip"
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val stream = java.io.ByteArrayInputStream(sample.toByteArray(Charsets.UTF_8))
+        val result = parsePluginIndex(stream)
+        assertTrue(result.isSuccess)
+        val index = result.getOrThrow()
+        assertEquals(1, index.plugins.size)
+        assertEquals("stream.test", index.plugins[0].id)
+    }
 }
