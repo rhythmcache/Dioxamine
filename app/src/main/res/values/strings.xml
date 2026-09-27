@@ -129,6 +129,8 @@
     <string name="plugin_open_browser_title">Open External Link</string>
     <string name="plugin_open_browser_msg">This plugin wants to open an external link:\n\n%1$s\n\nDo you want to continue?</string>
     <string name="plugin_open_browser_btn_open">Open</string>
+    <string name="plugin_temp_file_title">Temporary Storage Request</string>
+    <string name="plugin_temp_file_msg">This plugin wants to create a temporary file for streaming data during this session.\n\nDo you want to continue?</string>
     <string name="plugin_runner_not_found">Plugin not found</string>
     <string name="plugin_menu_info">Info</string>
     <string name="plugin_menu_permissions">Permissions</string>

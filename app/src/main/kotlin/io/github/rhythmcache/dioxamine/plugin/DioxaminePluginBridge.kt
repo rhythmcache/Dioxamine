@@ -80,6 +80,17 @@ class DioxaminePluginBridge(
     private val toastTimestamps = ArrayDeque<Long>()
     private val activeShellSessions = mutableMapOf<String, Pair<AdbInteractiveSession, Job>>()
 
+    val tempFileBridge =
+        TempFileBridge(
+            context = context,
+            pluginId = pluginId,
+            pluginName = pluginName,
+            dialogGate = dialogGate,
+            scope = scope,
+            onResolve = ::resolve,
+            onReject = ::reject,
+        )
+
     fun closeAllSessions() {
         val sessions =
             synchronized(activeShellSessions) {
@@ -91,6 +102,7 @@ class DioxaminePluginBridge(
             job.cancel()
             runCatching { session.close() }
         }
+        tempFileBridge.deleteAllForSession()
     }
 
 
@@ -1564,5 +1576,34 @@ class DioxaminePluginBridge(
                 reject(callbackId, e.message ?: e.toString())
             }
         }
+    }
+
+    // -----------------------------------------------------------------
+    // Temporary File APIs
+    // -----------------------------------------------------------------
+
+    @JavascriptInterface
+    fun requestTempFile(callbackId: String) {
+        tempFileBridge.requestTempFile(callbackId)
+    }
+
+    @JavascriptInterface
+    fun writeTempFileChunk(token: String, base64Chunk: String, callbackId: String) {
+        tempFileBridge.writeTempFileChunk(token, base64Chunk, callbackId)
+    }
+
+    @JavascriptInterface
+    fun readTempFileChunk(token: String, offset: Long, length: Int, callbackId: String) {
+        tempFileBridge.readTempFileChunk(token, offset, length, callbackId)
+    }
+
+    @JavascriptInterface
+    fun getTempFileSize(token: String, callbackId: String) {
+        tempFileBridge.getTempFileSize(token, callbackId)
+    }
+
+    @JavascriptInterface
+    fun deleteTempFile(token: String, callbackId: String) {
+        tempFileBridge.deleteTempFile(token, callbackId)
     }
 }
