@@ -4,6 +4,7 @@ import io.github.rhythmcache.adb.AdbStream
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.launch
@@ -12,11 +13,13 @@ import java.nio.ByteBuffer
 /**
  * Builds and sends scrcpy control-socket messages.
  * Wire formats verified against com.genymobile.scrcpy.control.ControlMessageReader.
- * Uses a single reader/writer bounded channel queue (size 128) to eliminate lock contention,
- * prevent memory leaks under socket stalls, and avoid coroutine churn.
+ * Uses a single reader/writer unbounded channel queue to eliminate lock contention
+ * and avoid the writer coroutine ever blocking or dropping guaranteed events.
+ * Runs on its own dedicated scope so it is never starved by contention with the
+ * video decode pipeline, and never dies if the parent session scope is cancelled.
  */
 class ScrcpyControl(
-    private val scope: CoroutineScope,
+    parentScope: CoroutineScope,
     private val stream: AdbStream,
     private val videoWidth: () -> Int,
     private val videoHeight: () -> Int
@@ -52,13 +55,21 @@ class ScrcpyControl(
         const val ACTION_MOVE = 2
 
         private const val PRESSURE_FULL: Short = 0xFFFF.toShort()
+
+        // scrcpy supports up to 10 concurrent pointers (matches Android's MAX_POINTERS)
+        const val MAX_POINTERS = 10
     }
 
-    // Bounded channel to prevent infinite memory growth under congestion
-    private val queue = Channel<ByteArray>(128)
+    // Dedicated scope: not tied to sessionJob/video decode lifecycle, so it's never
+    // starved by decoder work on Dispatchers.IO and never dies if the parent is cancelled.
+    private val writerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    // Unbounded queue: guaranteed events (DOWN/UP) must never block waiting for space,
+    // and under normal load this queue drains far faster than it fills.
+    private val queue = Channel<ByteArray>(Channel.UNLIMITED)
 
     init {
-        scope.launch(Dispatchers.IO) {
+        writerScope.launch {
             try {
                 for (packet in queue) {
                     if (stream.isClosed) break
@@ -71,14 +82,24 @@ class ScrcpyControl(
     }
 
     /**
-     * Closes the control message queue to cleanly release resources and exit the writer thread.
+     * Closes the control message queue and cancels the writer scope to cleanly
+     * release resources and exit the writer coroutine.
      */
     fun close() {
         queue.close()
+        writerScope.cancel()
     }
 
+    /**
+     * Sends a touch event for a specific finger.
+     *
+     * @param pointerId stable per-finger ID for the life of the gesture — on Android,
+     *   use MotionEvent.getPointerId(pointerIndex) directly. Do not invent your own
+     *   tracking scheme; scrcpy identifies which finger is which purely by this ID.
+     */
     fun sendTouchEvent(
         action: Int,
+        pointerId: Long,
         localX: Float,
         localY: Float,
         viewWidth: Int,
@@ -95,7 +116,7 @@ class ScrcpyControl(
         val buf = ByteBuffer.allocate(32)
         buf.put(TYPE_INJECT_TOUCH_EVENT.toByte())
         buf.put(action.toByte())
-        buf.putLong(0L) // pointerId
+        buf.putLong(pointerId)
         buf.putInt(normX)
         buf.putInt(normY)
         buf.putShort(targetWidth.toShort())
@@ -103,7 +124,7 @@ class ScrcpyControl(
         buf.putShort(PRESSURE_FULL)
         buf.putInt(0) // actionButton
         buf.putInt(0) // buttons
-        
+
         val bytes = buf.array()
         if (action == ACTION_MOVE) {
             // Drop this MOVE event if the queue is full to keep interaction responsive
@@ -225,32 +246,23 @@ class ScrcpyControl(
     }
 
     /**
-     * Sends critical events by launching a worker coroutine that suspends (waits)
-     * if the queue is full, ensuring guaranteed delivery.
+     * Sends critical events. With an unbounded queue this never actually blocks —
+     * trySend only fails if the channel is closed, in which case there's nothing
+     * useful to retry.
      */
     private fun sendGuaranteed(bytes: ByteArray) {
-        val result = queue.trySend(bytes)
-        if (result.isFailure) {
-            // Queue is temporarily full, launch a suspending worker to guarantee delivery
-            scope.launch(Dispatchers.IO) {
-                runCatching {
-                    queue.send(bytes)
-                }.onFailure {
-                    AppLogger.w(TAG, "ScrcpyControl: Failed to send guaranteed command.")
-                }
-            }
+        queue.trySend(bytes).onFailure {
+            AppLogger.w(TAG, "ScrcpyControl: Failed to send guaranteed command (channel closed).")
         }
     }
 
     /**
-     * Sends droppable coordinate move updates. If the channel queue is full,
-     * it drops the packet immediately to prevent lagging and keep interactions real-time.
+     * Sends droppable coordinate move updates. Kept as trySend for symmetry and
+     * logging; with an unbounded queue this will essentially never fail unless closed.
      */
     private fun sendDroppable(bytes: ByteArray) {
         queue.trySend(bytes).onFailure {
-            AppLogger.w(TAG, "ScrcpyControl: Dropping droppable move event (queue congested).")
+            AppLogger.w(TAG, "ScrcpyControl: Dropping droppable move event (channel closed).")
         }
     }
 }
-
-
