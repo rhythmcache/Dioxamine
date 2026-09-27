@@ -169,7 +169,7 @@ class ScrcpySession(
                 val currentControlStream = controlStream
                 if (config.controlEnabled && currentControlStream != null) {
                     control = ScrcpyControl(
-                        scope = this,
+                        parentScope = this,
                         stream = currentControlStream,
                         videoWidth = { videoWidth },
                         videoHeight = { videoHeight }
@@ -256,8 +256,8 @@ class ScrcpySession(
         videoDecoder?.setSurface(surface)
     }
 
-    fun sendTouchEvent(action: Int, x: Float, y: Float, vw: Int, vh: Int) {
-        control?.sendTouchEvent(action, x, y, vw, vh)
+    fun sendTouchEvent(action: Int, pointerId: Long, x: Float, y: Float, vw: Int, vh: Int) {
+    control?.sendTouchEvent(action, pointerId, x, y, vw, vh)
     }
 
     fun sendKeycode(action: Int, keycode: Int) {
