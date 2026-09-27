@@ -1,23 +1,24 @@
-name: Android CI
+name: CI Build
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: ['**']
+  workflow_dispatch:
 
 env:
   NDK_VERSION: "29.0.14206865"
 
 jobs:
   build:
-    name: Build & Test
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [debug, release]
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -35,34 +36,50 @@ jobs:
           "$SDKMANAGER" "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;${NDK_VERSION}"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
 
-      - name: Verify NDK
+      - name: Decode release keystore
+        if: matrix.variant == 'release'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
-          ls "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt"
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
 
-      - name: Make Gradle wrapper executable
+      - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --no-daemon
+      - name: Get short SHA
+        id: sha
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Build ${{ matrix.variant }} APK
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
+        run: |
+          set -euo pipefail
+          VARIANT="${{ matrix.variant }}"
+          TASK="assemble${VARIANT^}"
+          ./gradlew "$TASK" --no-daemon
 
-      - name: Upload APK
-        if: success()
+      - name: Rename APK with commit SHA
+        id: locate
+        env:
+          SHORT_SHA: ${{ steps.sha.outputs.short_sha }}
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          set -euo pipefail
+
+          SRC=$(find "app/build/outputs/apk/${VARIANT}" -name "*.apk" | head -n1)
+          DEST="app/build/outputs/apk/${VARIANT}/Dioxamine-${SHORT_SHA}-${VARIANT}.apk"
+
+          cp "$SRC" "$DEST"
+
+          echo "apk_path=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ${{ matrix.variant }} APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
-
-      - name: Upload generated assets
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-assets
-          path: |
-            app/src/main/assets/dxls/*
-            app/src/main/assets/diox-agent.jar
-            app/src/main/assets/scrcpy-server.jar
+          name: app-${{ matrix.variant }}-apk-${{ steps.sha.outputs.short_sha }}
+          path: ${{ steps.locate.outputs.apk_path }}
