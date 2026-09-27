@@ -311,9 +311,9 @@ fun ScrcpyScreen(
                             onKeyEvent = { action, keyCode ->
                                 activeSession?.sendKeycode(action, keyCode)
                             },
-                            onTouchEvent = { action, x, y, vw, vh ->
+                            onTouchEvent = { action, pointerId, x, y, vw, vh ->
                                 if (config.videoSource != "camera") {
-                                    activeSession?.sendTouchEvent(action, x, y, vw, vh)
+                                    activeSession?.sendTouchEvent(action, pointerId, x, y, vw, vh)
                                 }
                             },
                             onSurfaceCreated = { holder ->
@@ -1483,7 +1483,7 @@ private fun ScrcpyVideoPlayer(
     onNavHome: () -> Unit,
     onNavRecents: () -> Unit,
     onKeyEvent: (action: Int, keyCode: Int) -> Unit,
-    onTouchEvent: (action: Int, x: Float, y: Float, vw: Int, vh: Int) -> Unit,
+    onTouchEvent: (action: Int, pointerId: Long, x: Float, y: Float, vw: Int, vh: Int) -> Unit,
     onSurfaceCreated: (SurfaceHolder) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -1564,14 +1564,25 @@ private fun ScrcpyVideoPlayer(
                         if (bindVolumeKeys) {
                             view.requestFocus()
                         }
-                        val action = when (event.actionMasked) {
-                            MotionEvent.ACTION_DOWN -> 0
-                            MotionEvent.ACTION_UP -> 1
-                            MotionEvent.ACTION_MOVE -> 2
-                            else -> -1
-                        }
-                        if (action != -1) {
-                            onTouchEvent(action, event.x, event.y, view.width, view.height)
+                        when (event.actionMasked) {
+                            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                                val idx = event.actionIndex
+                                onTouchEvent(0, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), view.width, view.height)
+                            }
+                            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                                val idx = event.actionIndex
+                                onTouchEvent(1, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), view.width, view.height)
+                            }
+                            MotionEvent.ACTION_MOVE -> {
+                                for (i in 0 until event.pointerCount) {
+                                    onTouchEvent(2, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), view.width, view.height)
+                                }
+                            }
+                            MotionEvent.ACTION_CANCEL -> {
+                                for (i in 0 until event.pointerCount) {
+                                    onTouchEvent(1, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), view.width, view.height)
+                                }
+                            }
                         }
                         true
                     }
