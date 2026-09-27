@@ -1634,8 +1634,8 @@ private fun ScrcpyVideoPlayer(
         var layoutWidth by remember { mutableIntStateOf(0) }
         var layoutHeight by remember { mutableIntStateOf(0) }
 
-        val side = remember(normX, normY, minX, maxX, minY, maxY, containerWidthPx, containerHeightPx) {
-            if (containerWidthPx <= 0f || containerHeightPx <= 0f) {
+        val side = remember(offsetX, offsetY, minX, maxX, minY, maxY) {
+            if (maxX <= minX || maxY <= minY) {
                 ControlSide.RIGHT
             } else {
                 val distLeft = offsetX - minX
@@ -1721,22 +1721,23 @@ private fun ScrcpyVideoPlayer(
             }
         }
 
+        val currentSpanX by rememberUpdatedState(maxX - minX)
+        val currentSpanY by rememberUpdatedState(maxY - minY)
+
         val arrowButton = @Composable {
             Box(
-                modifier = Modifier.pointerInput(containerWidthPx, containerHeightPx, topInsetPx) {
+                modifier = Modifier.pointerInput(Unit) {
                     detectDragGestures(
                         onDragStart = {
                             controlsExpanded = false
                         },
                         onDrag = { change, dragAmount ->
                             change.consume()
-                            val spanX = maxX - minX
-                            val spanY = maxY - minY
-                            if (spanX > 0f) {
-                                normX = (normX + dragAmount.x / spanX).coerceIn(0f, 1f)
+                            if (currentSpanX > 0f) {
+                                normX = (normX + dragAmount.x / currentSpanX).coerceIn(0f, 1f)
                             }
-                            if (spanY > 0f) {
-                                normY = (normY + dragAmount.y / spanY).coerceIn(0f, 1f)
+                            if (currentSpanY > 0f) {
+                                normY = (normY + dragAmount.y / currentSpanY).coerceIn(0f, 1f)
                             }
                         }
                     )
