@@ -59,6 +59,7 @@ android {
         buildConfigField("String", "TERMINAL_PLUGIN_URL", "\"https://github.com/rhythmcache/Terminal\"")
         buildConfigField("String", "PLUGIN_DOCS_URL", "\"https://rhythmcache.github.io/Dioxamine/book/plugins/overview.html\"")
         buildConfigField("String", "TRANSLATION_URL", "\"https://github.com/rhythmcache/Dioxamine#translations\"")
+        buildConfigField("String", "OFFICIAL_PLUGIN_REPO_URL", "\"https://raw.githubusercontent.com/Dioxamine-plugins-repo/index/main/index.json\"")
     }
 
     packaging {

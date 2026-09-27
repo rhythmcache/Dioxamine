@@ -6,14 +6,13 @@ import android.os.Build
 import android.text.format.DateUtils
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -210,66 +209,12 @@ class PluginOnlineRepositoryManager(private val context: Context) {
     companion object {
         const val DEFAULT_REPO_URL = "https://raw.githubusercontent.com/Dioxamine-plugins-repo/index/main/index.json"
         const val MAX_REPO_INDEX_SIZE_BYTES = 10 * 1024 * 1024L
-        private const val PREFS_NAME = "plugin_repositories"
-        private const val PREFS_KEY_URLS = "configured_urls"
         private const val CACHE_FILE_NAME = "plugin_feed_cache.json"
         private const val TAG = "PluginOnlineRepo"
     }
 
-    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val officialRepoUrl: String = runCatching { BuildConfig.OFFICIAL_PLUGIN_REPO_URL }.getOrDefault(DEFAULT_REPO_URL)
     private val cacheFile = File(context.filesDir, CACHE_FILE_NAME)
-
-    fun getRepositories(): List<String> {
-        val raw = prefs.getString(PREFS_KEY_URLS, null)
-        if (raw.isNullOrBlank()) {
-            return listOf(DEFAULT_REPO_URL)
-        }
-        return runCatching {
-            onlineJsonParser.decodeFromString<List<String>>(raw)
-        }.getOrDefault(listOf(DEFAULT_REPO_URL)).ifEmpty {
-            listOf(DEFAULT_REPO_URL)
-        }
-    }
-
-    fun setRepositories(urls: List<String>) {
-        val cleaned = urls.map { it.trim() }.filter {
-            it.startsWith("http://", ignoreCase = true) || it.startsWith("https://", ignoreCase = true)
-        }.distinct()
-        val toSave = cleaned.ifEmpty { listOf(DEFAULT_REPO_URL) }
-        val serialized = onlineJsonParser.encodeToString(toSave)
-        prefs.edit().putString(PREFS_KEY_URLS, serialized).apply()
-        clearCache()
-    }
-
-    fun addRepository(url: String): Boolean {
-        val trimmed = url.trim()
-        if (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true)) {
-            return false
-        }
-        val current = getRepositories().toMutableList()
-        if (current.any { it.equals(trimmed, ignoreCase = true) }) {
-            return false
-        }
-        current.add(trimmed)
-        setRepositories(current)
-        return true
-    }
-
-    fun removeRepository(url: String): Boolean {
-        val current = getRepositories().toMutableList()
-        val removed = current.removeAll { it.equals(url.trim(), ignoreCase = true) }
-        if (removed) {
-            setRepositories(current)
-            return true
-        }
-        return false
-    }
-
-    fun resetToDefault(): List<String> {
-        val defaults = listOf(DEFAULT_REPO_URL)
-        setRepositories(defaults)
-        return defaults
-    }
 
     fun clearCache() {
         if (cacheFile.exists()) {
@@ -313,76 +258,53 @@ class PluginOnlineRepositoryManager(private val context: Context) {
     }
 
     suspend fun fetchFromNetwork(): Result<CachedPluginFeed> = withContext(Dispatchers.IO) {
-        val repos = getRepositories()
-        if (repos.isEmpty()) {
-            return@withContext Result.failure(IllegalStateException("No repository URLs configured"))
-        }
-
-        val repoPluginsList = mutableListOf<List<PluginIndexItem>>()
-        var latestUpdated: String? = null
-        var anySuccess = false
-        var lastError: Throwable? = null
-
-        for (repoUrl in repos) {
+        val repoUrl = officialRepoUrl
+        try {
+            val conn = PluginUpdateChecker.openConnectionWithRedirects(repoUrl)
             try {
-                val conn = PluginUpdateChecker.openConnectionWithRedirects(repoUrl)
-                try {
-                    if (conn.responseCode in 200..299) {
-                        // Fast-path pre-check if server advertises Content-Length; the streaming loop enforces the true cap
-                        val contentLength = conn.contentLengthLong
-                        if (contentLength > MAX_REPO_INDEX_SIZE_BYTES) {
-                            AppLogger.w(TAG, "Repository at $repoUrl rejected: Content-Length $contentLength exceeds 10MB limit")
-                            lastError = IOException("Repository index exceeds maximum allowed size of 10MB")
-                            continue
-                        }
-
-                        val tempFile = File.createTempFile("repo_index_", ".json", context.cacheDir)
-                        try {
-                            downloadIndexStreamToTempFile(conn.inputStream, tempFile, MAX_REPO_INDEX_SIZE_BYTES)
-
-                            val parsed = tempFile.inputStream().buffered().use { parsePluginIndex(it) }
-                            parsed.fold(
-                                onSuccess = { index ->
-                                    anySuccess = true
-                                    repoPluginsList.add(index.plugins)
-                                    if (latestUpdated == null && index.updated != null) {
-                                        latestUpdated = index.updated
-                                    }
-                                },
-                                onFailure = { err ->
-                                    AppLogger.w(TAG, "Failed to parse repository at $repoUrl: ${err.message}")
-                                    lastError = err
-                                }
-                            )
-                        } finally {
-                            if (tempFile.exists()) {
-                                tempFile.delete()
-                            }
-                        }
-                    } else {
-                        AppLogger.w(TAG, "Repository HTTP ${conn.responseCode} at $repoUrl")
-                        lastError = IOException("HTTP ${conn.responseCode}")
+                if (conn.responseCode in 200..299) {
+                    val contentLength = conn.contentLengthLong
+                    if (contentLength > MAX_REPO_INDEX_SIZE_BYTES) {
+                        AppLogger.w(TAG, "Repository at $repoUrl rejected: Content-Length $contentLength exceeds 10MB limit")
+                        return@withContext Result.failure(IOException("Repository index exceeds maximum allowed size of 10MB"))
                     }
-                } finally {
-                    conn.disconnect()
-                }
-            } catch (e: Exception) {
-                AppLogger.w(TAG, "Failed to connect to repository at $repoUrl: ${e.message}")
-                lastError = e
-            }
-        }
 
-        if (anySuccess) {
-            val deduplicated = deduplicatePlugins(repoPluginsList)
-            val feed = CachedPluginFeed(
-                fetchedAtMs = System.currentTimeMillis(),
-                updated = latestUpdated,
-                plugins = deduplicated,
-            )
-            saveCache(feed)
-            Result.success(feed)
-        } else {
-            Result.failure(lastError ?: IOException("Failed to fetch repository"))
+                    val tempFile = File.createTempFile("repo_index_", ".json", context.cacheDir)
+                    try {
+                        downloadIndexStreamToTempFile(conn.inputStream, tempFile, MAX_REPO_INDEX_SIZE_BYTES)
+
+                        val parsed = tempFile.inputStream().buffered().use { parsePluginIndex(it) }
+                        parsed.fold(
+                            onSuccess = { index ->
+                                val deduplicated = deduplicatePlugins(listOf(index.plugins))
+                                val feed = CachedPluginFeed(
+                                    fetchedAtMs = System.currentTimeMillis(),
+                                    updated = index.updated,
+                                    plugins = deduplicated,
+                                )
+                                saveCache(feed)
+                                Result.success(feed)
+                            },
+                            onFailure = { err ->
+                                AppLogger.w(TAG, "Failed to parse repository at $repoUrl: ${err.message}")
+                                Result.failure(err)
+                            }
+                        )
+                    } finally {
+                        if (tempFile.exists()) {
+                            tempFile.delete()
+                        }
+                    }
+                } else {
+                    AppLogger.w(TAG, "Repository HTTP ${conn.responseCode} at $repoUrl")
+                    Result.failure(IOException("HTTP ${conn.responseCode}"))
+                }
+            } finally {
+                conn.disconnect()
+            }
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "Failed to connect to repository at $repoUrl: ${e.message}")
+            Result.failure(e)
         }
     }
 }

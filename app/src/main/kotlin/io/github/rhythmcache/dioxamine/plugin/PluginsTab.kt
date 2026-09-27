@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
@@ -969,7 +968,6 @@ private fun PluginBrowseContent(
     var searchQuery by remember { mutableStateOf("") }
     var selectedDetailPlugin by remember { mutableStateOf<PluginIndexItem?>(null) }
     val installingPluginIds = remember { mutableStateListOf<String>() }
-    var showRepositoriesDialog by remember { mutableStateOf(false) }
 
     val refreshRepo: () -> Unit = {
         coroutineScope.launch {
@@ -1052,15 +1050,6 @@ private fun PluginBrowseContent(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { showRepositoriesDialog = true }) {
-                    Icon(
-                        imageVector = Icons.Filled.Public,
-                        contentDescription = stringResource(R.string.settings_plugins_repos_title),
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
                 IconButton(
                     onClick = { if (!isRefreshing && !isLoading) refreshRepo() },
                     enabled = !isRefreshing && !isLoading,
@@ -1210,20 +1199,6 @@ private fun PluginBrowseContent(
             isInstalling = isInstalling,
             onInstall = { installOnlinePlugin(plugin) },
             onDismiss = { selectedDetailPlugin = null },
-        )
-    }
-
-    if (showRepositoriesDialog) {
-        PluginRepositoriesDialog(
-            repoManager = repoManager,
-            onDismiss = {
-                showRepositoriesDialog = false
-                val cached = repoManager.loadCache()
-                feedData = cached
-                if (cached == null) {
-                    refreshRepo()
-                }
-            },
         )
     }
 }
