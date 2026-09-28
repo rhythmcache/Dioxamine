@@ -60,7 +60,6 @@ import androidx.compose.ui.zIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.CancellationException
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlin.math.roundToInt
@@ -191,7 +190,16 @@ fun ScrcpyScreen(
     var discoveredCameras by remember(activeId) {
         mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getCameras(it) } ?: emptyList())
     }
-    var isDiscoveringCameras by remember(activeId) { mutableStateOf(false) }
+    var cameraDiscoveryState by remember(activeId) {
+        mutableStateOf(
+            if (activeId != null && !ScrcpyDiscoveryCache.getCameras(activeId).isNullOrEmpty()) {
+                DiscoveryState.SUCCESS
+            } else {
+                DiscoveryState.IDLE
+            }
+        )
+    }
+    val isDiscoveringCameras = cameraDiscoveryState == DiscoveryState.LOADING
     var refreshCamerasTrigger by remember { mutableIntStateOf(0) }
 
     var discoveredApps by remember(activeId) {
@@ -234,10 +242,10 @@ fun ScrcpyScreen(
             val cached = ScrcpyDiscoveryCache.getCameras(currentActiveId)
             if (!cached.isNullOrEmpty()) {
                 discoveredCameras = cached
-                isDiscoveringCameras = false
+                cameraDiscoveryState = DiscoveryState.SUCCESS
                 return@LaunchedEffect
             }
-            isDiscoveringCameras = true
+            cameraDiscoveryState = DiscoveryState.LOADING
             try {
                 when (val result = ScrcpyDiscoveryCache.runQuery(currentClient, context, currentActiveId, "list_camera_sizes=true")) {
                     is DiscoveryQueryResult.Success -> {
@@ -245,23 +253,26 @@ fun ScrcpyScreen(
                         if (parsed.isNotEmpty()) {
                             ScrcpyDiscoveryCache.setCameras(currentActiveId, parsed)
                             discoveredCameras = parsed
+                            cameraDiscoveryState = DiscoveryState.SUCCESS
                         } else {
                             AppLogger.w("ScrcpyScreen", "Discovered 0 cameras. Output: ${result.output}")
+                            cameraDiscoveryState = DiscoveryState.EMPTY
                         }
                     }
                     is DiscoveryQueryResult.TimedOut -> {
                         AppLogger.w("ScrcpyScreen", "Camera discovery timed out after ${result.timeoutMs}ms")
+                        cameraDiscoveryState = DiscoveryState.TIMED_OUT
                     }
                     is DiscoveryQueryResult.Failed -> {
                         AppLogger.e("ScrcpyScreen", "Camera discovery failed: ${result.reason}", result.cause)
+                        cameraDiscoveryState = DiscoveryState.FAILED
                     }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 AppLogger.e("ScrcpyScreen", "Failed to discover cameras", e)
-            } finally {
-                isDiscoveringCameras = false
+                cameraDiscoveryState = DiscoveryState.FAILED
             }
         }
     }
@@ -272,7 +283,7 @@ fun ScrcpyScreen(
 
         if (supportsVirtual && config.videoSource == "virtual") {
             val cached = ScrcpyDiscoveryCache.getApps(currentActiveId)
-            if (refreshAppsTrigger == 0 && !cached.isNullOrEmpty()) {
+            if (!cached.isNullOrEmpty()) {
                 discoveredApps = cached
                 appDiscoveryState = DiscoveryState.SUCCESS
                 return@LaunchedEffect
@@ -305,10 +316,6 @@ fun ScrcpyScreen(
             } catch (e: Exception) {
                 AppLogger.e("ScrcpyScreen", "Failed to discover apps", e)
                 appDiscoveryState = DiscoveryState.FAILED
-            } finally {
-                if (appDiscoveryState == DiscoveryState.LOADING) {
-                    appDiscoveryState = DiscoveryState.IDLE
-                }
             }
         }
     }
@@ -634,12 +641,13 @@ fun ScrcpyScreen(
                                                 customBitrates = customBitrates,
                                                 customDpis = customDpis,
                                                 discoveredCameras = discoveredCameras,
-                                                isDiscoveringCameras = isDiscoveringCameras,
+                                                cameraDiscoveryState = cameraDiscoveryState,
                                                 discoveredApps = discoveredApps,
                                                 appDiscoveryState = appDiscoveryState,
                                                 onRefreshCameras = {
                                                     activeId?.let { ScrcpyDiscoveryCache.clearCameras(it) }
                                                     discoveredCameras = emptyList()
+                                                    cameraDiscoveryState = DiscoveryState.LOADING
                                                     refreshCamerasTrigger++
                                                 },
                                                 onRefreshApps = {
@@ -960,7 +968,7 @@ private fun CameraSettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
     discoveredCameras: List<CameraDevice>,
-    isDiscovering: Boolean,
+    discoveryState: DiscoveryState,
     onRefreshCameras: () -> Unit = {},
     onConfigChange: (ScrcpyConfig) -> Unit
 ) {
@@ -973,7 +981,7 @@ private fun CameraSettings(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(stringResource(R.string.section_camera), style = MaterialTheme.typography.labelMedium)
-        if (!isMirroring && !isDiscovering) {
+        if (!isMirroring && discoveryState != DiscoveryState.LOADING) {
             IconButton(
                 onClick = onRefreshCameras,
                 modifier = Modifier.size(24.dp)
@@ -989,13 +997,69 @@ private fun CameraSettings(
     }
     Spacer(Modifier.height(6.dp))
 
-    if (isDiscovering) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.camera_discovering), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    when (discoveryState) {
+        DiscoveryState.LOADING -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.camera_discovering), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(Modifier.height(6.dp))
         }
-        Spacer(Modifier.height(6.dp))
+        DiscoveryState.TIMED_OUT -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.camera_discovery_timed_out),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        DiscoveryState.FAILED -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.camera_discovery_failed),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        DiscoveryState.EMPTY -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.camera_no_cameras_found),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        DiscoveryState.IDLE, DiscoveryState.SUCCESS -> {
+            // No banner to display
+        }
     }
 
     if (discoveredCameras.isNotEmpty()) {
@@ -1334,6 +1398,7 @@ private fun AppPickerDialog(
     var searchQuery by remember { mutableStateOf("") }
     val trimmedQuery = searchQuery.trim()
     val isCustomPackage = trimmedQuery.isNotBlank() &&
+            ScrcpyAppParser.validPkgRegex.matches(trimmedQuery) &&
             apps.none { it.packageName.equals(trimmedQuery, ignoreCase = true) }
 
     val filteredApps = remember(searchQuery, apps) {
@@ -1610,7 +1675,7 @@ private fun VideoSettings(
     customBitrates: List<Int>,
     customDpis: List<Int>,
     discoveredCameras: List<CameraDevice>,
-    isDiscoveringCameras: Boolean,
+    cameraDiscoveryState: DiscoveryState,
     discoveredApps: List<ScrcpyApp>,
     appDiscoveryState: DiscoveryState,
     onRefreshCameras: () -> Unit = {},
@@ -1665,7 +1730,7 @@ private fun VideoSettings(
         config = config,
         isMirroring = isMirroring,
         discoveredCameras = discoveredCameras,
-        isDiscovering = isDiscoveringCameras,
+        discoveryState = cameraDiscoveryState,
         onRefreshCameras = onRefreshCameras,
         onConfigChange = onConfigChange
     )

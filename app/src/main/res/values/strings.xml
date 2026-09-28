@@ -247,6 +247,9 @@
     <string name="settings_scrcpy_allow_custom_title">Allow custom values in configurations</string>
     <string name="settings_scrcpy_allow_custom_subtitle">Enable adding custom max size, frame rate, and bitrate options</string>
     <string name="camera_discovering">Discovering camera capabilities...</string>
+    <string name="camera_discovery_timed_out">Discovery timed out. Tap refresh to retry.</string>
+    <string name="camera_discovery_failed">Couldn\'t load cameras. Tap refresh to retry.</string>
+    <string name="camera_no_cameras_found">No cameras found.</string>
     <string name="label_frame_rate">Frame Rate</string>
     <string name="label_bitrate">Bitrate</string>
     <string name="label_mbps_format">%1$d Mbps</string>

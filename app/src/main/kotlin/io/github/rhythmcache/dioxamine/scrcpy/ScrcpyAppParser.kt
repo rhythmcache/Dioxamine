@@ -10,7 +10,7 @@ object ScrcpyAppParser {
     private val singleLineRegex = Regex("""^\s*([*-])\s+(.+?)\s{2,}([a-zA-Z0-9_.]+)$""")
     private val multiLineHeaderRegex = Regex("""^\s*([*-])\s+(.+)$""")
     private val multiLinePkgRegex = Regex("""^\s{4,}([a-zA-Z0-9_.]+)$""")
-    private val validPkgRegex = Regex("""^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)*$""")
+    val validPkgRegex = Regex("""^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)*$""")
 
     fun parse(stdout: String): List<ScrcpyApp> {
         val list = mutableListOf<ScrcpyApp>()
