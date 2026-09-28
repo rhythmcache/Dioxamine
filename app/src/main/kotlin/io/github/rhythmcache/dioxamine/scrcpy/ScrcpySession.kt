@@ -179,6 +179,16 @@ class ScrcpySession(
                         AppLogger.i(TAG_CLIENT, "Sending SET_DISPLAY_POWER(off) via control channel")
                         control?.sendSetDisplayPower(false)
                     }
+
+                    if (config.videoSource == "virtual" && !config.newDisplayApp.isNullOrBlank()) {
+                        launch {
+                            delay(500)
+                            if (!stoppedByUser) {
+                                AppLogger.i(TAG_CLIENT, "Launching app on virtual display: ${config.newDisplayApp}")
+                                control?.sendStartApp(config.newDisplayApp)
+                            }
+                        }
+                    }
                 }
 
                 if (config.videoEnabled) {

@@ -192,6 +192,26 @@
     <string name="video_source_screen">Screen</string>
     <string name="video_source_camera">Camera</string>
     <string name="camera_source_subtitle_req">Requires Android 12+ (API 31). Device is API %1$d.</string>
+    <string name="video_source_virtual">Virtual Screen</string>
+    <string name="virtual_source_subtitle_req">Requires Android 10+ (API 29). Device is API %1$d.</string>
+    <string name="section_virtual_screen">Virtual Screen</string>
+    <string name="virtual_screen_discovering">Discovering apps...</string>
+    <string name="virtual_screen_dpi">Display Density (DPI)</string>
+    <string name="virtual_screen_dpi_format">%1$d DPI</string>
+    <string name="virtual_screen_dpi_auto">Auto</string>
+    <string name="virtual_screen_app">App to Launch</string>
+    <string name="virtual_screen_default_launcher">Default Launcher (None)</string>
+    <string name="virtual_screen_select_app">Select App to Launch</string>
+    <string name="virtual_screen_search_apps">Search or enter package name…</string>
+    <string name="virtual_screen_user_apps">User Apps</string>
+    <string name="virtual_screen_system_apps">System Apps</string>
+    <string name="virtual_screen_no_apps_found">No apps found</string>
+    <string name="virtual_screen_discovery_timed_out">Discovery timed out. Tap refresh to retry.</string>
+    <string name="virtual_screen_discovery_failed">Couldn\'t load apps. Tap refresh to retry.</string>
+    <string name="virtual_screen_use_custom_package">Launch custom package</string>
+    <string name="virtual_screen_empty_entry_hint">Type a package name above to launch it manually, or tap refresh to retry.</string>
+    <string name="dialog_add_dpi_title">Add Custom DPI</string>
+    <string name="dialog_add_dpi_msg">Enter display density in DPI (e.g. 280, 360, 560):</string>
 
     <string name="section_camera">Camera</string>
     <string name="camera_facing_back">Back</string>
@@ -227,6 +247,9 @@
     <string name="settings_scrcpy_allow_custom_title">Allow custom values in configurations</string>
     <string name="settings_scrcpy_allow_custom_subtitle">Enable adding custom max size, frame rate, and bitrate options</string>
     <string name="camera_discovering">Discovering camera capabilities...</string>
+    <string name="camera_discovery_timed_out">Discovery timed out. Tap refresh to retry.</string>
+    <string name="camera_discovery_failed">Couldn\'t load cameras. Tap refresh to retry.</string>
+    <string name="camera_no_cameras_found">No cameras found.</string>
     <string name="label_frame_rate">Frame Rate</string>
     <string name="label_bitrate">Bitrate</string>
     <string name="label_mbps_format">%1$d Mbps</string>

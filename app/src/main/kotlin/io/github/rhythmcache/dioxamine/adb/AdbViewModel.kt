@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import io.github.rhythmcache.dioxamine.adb.discovery.LocalAdbDetector
 import io.github.rhythmcache.dioxamine.adb.discovery.LocalAdbTarget
+import io.github.rhythmcache.dioxamine.scrcpy.ScrcpyDiscoveryCache
 import java.io.File
 
 class AdbViewModel(
@@ -416,6 +417,7 @@ class AdbViewModel(
                 onResult?.invoke(true, null)
             } catch (e: io.github.rhythmcache.adb.AdbException.NotPaired) {
                 devices.remove(id)
+                ScrcpyDiscoveryCache.clear(id)
                 val err = "Device not paired. Pair it first."
                 pairingError = err
                 onResult?.invoke(false, err)
@@ -454,6 +456,7 @@ class AdbViewModel(
                 try { conn.client?.close() } catch (_: Exception) {}
             }
             devices.remove(id)
+            ScrcpyDiscoveryCache.clear(id)
             nativeOutputs.clear()
             runningCommands.clear()
             flashState = FlashUiState.Idle
