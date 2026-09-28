@@ -192,13 +192,13 @@ fun ScrcpyScreen(
     var discoveredCameras by remember(activeId) {
         mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getCameras(it) } ?: emptyList())
     }
-    var isDiscoveringCameras by remember { mutableStateOf(false) }
+    var isDiscoveringCameras by remember(activeId) { mutableStateOf(false) }
     var refreshCamerasTrigger by remember { mutableIntStateOf(0) }
 
     var discoveredApps by remember(activeId) {
         mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getApps(it) } ?: emptyList())
     }
-    var isDiscoveringApps by remember { mutableStateOf(false) }
+    var isDiscoveringApps by remember(activeId) { mutableStateOf(false) }
     var refreshAppsTrigger by remember { mutableIntStateOf(0) }
 
     val apiLevel = activeConn?.apiLevel ?: 30
@@ -231,16 +231,23 @@ fun ScrcpyScreen(
             }
             isDiscoveringCameras = true
             try {
-                val output = ScrcpyDiscoveryCache.runQuery(currentClient, context, "list_camera_sizes=true")
-                if (output != null) {
-                    val parsed = ScrcpyCameraParser.parse(output)
-                    if (parsed.isNotEmpty()) {
-                        ScrcpyDiscoveryCache.setCameras(currentActiveId, parsed)
-                        withContext(Dispatchers.Main) {
-                            discoveredCameras = parsed
+                when (val result = ScrcpyDiscoveryCache.runQuery(currentClient, context, currentActiveId, "list_camera_sizes=true")) {
+                    is DiscoveryQueryResult.Success -> {
+                        val parsed = ScrcpyCameraParser.parse(result.output)
+                        if (parsed.isNotEmpty()) {
+                            ScrcpyDiscoveryCache.setCameras(currentActiveId, parsed)
+                            withContext(Dispatchers.Main) {
+                                discoveredCameras = parsed
+                            }
+                        } else {
+                            AppLogger.w("ScrcpyScreen", "Discovered 0 cameras. Output: ${result.output}")
                         }
-                    } else {
-                        AppLogger.w("ScrcpyScreen", "Discovered 0 cameras. Output: $output")
+                    }
+                    is DiscoveryQueryResult.TimedOut -> {
+                        AppLogger.w("ScrcpyScreen", "Camera discovery timed out after ${result.timeoutMs}ms")
+                    }
+                    is DiscoveryQueryResult.Failed -> {
+                        AppLogger.e("ScrcpyScreen", "Camera discovery failed: ${result.reason}", result.cause)
                     }
                 }
             } catch (e: CancellationException) {
@@ -270,16 +277,23 @@ fun ScrcpyScreen(
             }
             isDiscoveringApps = true
             try {
-                val output = ScrcpyDiscoveryCache.runQuery(currentClient, context, "list_apps=true")
-                if (output != null) {
-                    val parsed = ScrcpyAppParser.parse(output)
-                    if (parsed.isNotEmpty()) {
-                        ScrcpyDiscoveryCache.setApps(currentActiveId, parsed)
-                        withContext(Dispatchers.Main) {
-                            discoveredApps = parsed
+                when (val result = ScrcpyDiscoveryCache.runQuery(currentClient, context, currentActiveId, "list_apps=true")) {
+                    is DiscoveryQueryResult.Success -> {
+                        val parsed = ScrcpyAppParser.parse(result.output)
+                        if (parsed.isNotEmpty()) {
+                            ScrcpyDiscoveryCache.setApps(currentActiveId, parsed)
+                            withContext(Dispatchers.Main) {
+                                discoveredApps = parsed
+                            }
+                        } else {
+                            AppLogger.w("ScrcpyScreen", "Discovered 0 apps. Output: ${result.output}")
                         }
-                    } else {
-                        AppLogger.w("ScrcpyScreen", "Discovered 0 apps. Output: $output")
+                    }
+                    is DiscoveryQueryResult.TimedOut -> {
+                        AppLogger.w("ScrcpyScreen", "App discovery timed out after ${result.timeoutMs}ms")
+                    }
+                    is DiscoveryQueryResult.Failed -> {
+                        AppLogger.e("ScrcpyScreen", "App discovery failed: ${result.reason}", result.cause)
                     }
                 }
             } catch (e: CancellationException) {

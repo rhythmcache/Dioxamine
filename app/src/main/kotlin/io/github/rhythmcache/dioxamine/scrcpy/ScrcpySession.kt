@@ -183,8 +183,10 @@ class ScrcpySession(
                     if (config.videoSource == "virtual" && !config.newDisplayApp.isNullOrBlank()) {
                         launch {
                             delay(500)
-                            AppLogger.i(TAG_CLIENT, "Launching app on virtual display: ${config.newDisplayApp}")
-                            control?.sendStartApp(config.newDisplayApp)
+                            if (!stoppedByUser) {
+                                AppLogger.i(TAG_CLIENT, "Launching app on virtual display: ${config.newDisplayApp}")
+                                control?.sendStartApp(config.newDisplayApp)
+                            }
                         }
                     }
                 }

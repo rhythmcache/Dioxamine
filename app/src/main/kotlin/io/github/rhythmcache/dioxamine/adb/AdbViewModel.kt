@@ -652,9 +652,4 @@ class AdbViewModel(
             }
         }
     }
-
-    override fun onCleared() {
-        super.onCleared()
-        ScrcpyDiscoveryCache.clearAll()
-    }
 }

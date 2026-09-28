@@ -10,6 +10,7 @@ object ScrcpyAppParser {
     private val singleLineRegex = Regex("""^\s*([*-])\s+(.+?)\s{2,}([a-zA-Z0-9_.]+)$""")
     private val multiLineHeaderRegex = Regex("""^\s*([*-])\s+(.+)$""")
     private val multiLinePkgRegex = Regex("""^\s{4,}([a-zA-Z0-9_.]+)$""")
+    private val validPkgRegex = Regex("""^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)*$""")
 
     fun parse(stdout: String): List<ScrcpyApp> {
         val list = mutableListOf<ScrcpyApp>()
@@ -19,13 +20,16 @@ object ScrcpyAppParser {
         for (line in stdout.lineSequence()) {
             val singleMatch = singleLineRegex.matchEntire(line)
             if (singleMatch != null) {
-                list.add(
-                    ScrcpyApp(
-                        name = singleMatch.groupValues[2].trim(),
-                        packageName = singleMatch.groupValues[3].trim(),
-                        isSystem = singleMatch.groupValues[1] == "*"
+                val pkg = singleMatch.groupValues[3].trim()
+                if (validPkgRegex.matches(pkg)) {
+                    list.add(
+                        ScrcpyApp(
+                            name = singleMatch.groupValues[2].trim(),
+                            packageName = pkg,
+                            isSystem = singleMatch.groupValues[1] == "*"
+                        )
                     )
-                )
+                }
                 pendingName = null
                 continue
             }
@@ -45,7 +49,7 @@ object ScrcpyAppParser {
                 val pkgMatch = multiLinePkgRegex.matchEntire(line)
                 if (pkgMatch != null) {
                     val pkg = pkgMatch.groupValues[1].trim()
-                    if (pkg.isNotBlank()) {
+                    if (validPkgRegex.matches(pkg)) {
                         list.add(
                             ScrcpyApp(
                                 name = pendingName,
