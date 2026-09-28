@@ -417,6 +417,7 @@ class AdbViewModel(
                 onResult?.invoke(true, null)
             } catch (e: io.github.rhythmcache.adb.AdbException.NotPaired) {
                 devices.remove(id)
+                ScrcpyDiscoveryCache.clear(id)
                 val err = "Device not paired. Pair it first."
                 pairingError = err
                 onResult?.invoke(false, err)
@@ -650,5 +651,10 @@ class AdbViewModel(
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        ScrcpyDiscoveryCache.clearAll()
     }
 }

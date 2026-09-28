@@ -9,7 +9,7 @@ data class ScrcpyApp(
 object ScrcpyAppParser {
     private val singleLineRegex = Regex("""^\s*([*-])\s+(.+?)\s{2,}([a-zA-Z0-9_.]+)$""")
     private val multiLineHeaderRegex = Regex("""^\s*([*-])\s+(.+)$""")
-    private val multiLinePkgRegex = Regex("""^\s{10,}([a-zA-Z0-9_.]+)$""")
+    private val multiLinePkgRegex = Regex("""^\s{4,}([a-zA-Z0-9_.]+)$""")
 
     fun parse(stdout: String): List<ScrcpyApp> {
         val list = mutableListOf<ScrcpyApp>()
@@ -45,7 +45,7 @@ object ScrcpyAppParser {
                 val pkgMatch = multiLinePkgRegex.matchEntire(line)
                 if (pkgMatch != null) {
                     val pkg = pkgMatch.groupValues[1].trim()
-                    if (pkg.contains(".")) {
+                    if (pkg.isNotBlank()) {
                         list.add(
                             ScrcpyApp(
                                 name = pendingName,

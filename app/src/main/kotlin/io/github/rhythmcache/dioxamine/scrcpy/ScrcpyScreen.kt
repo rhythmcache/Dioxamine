@@ -226,53 +226,27 @@ fun ScrcpyScreen(
             val cached = ScrcpyDiscoveryCache.getCameras(currentActiveId)
             if (!cached.isNullOrEmpty()) {
                 discoveredCameras = cached
+                isDiscoveringCameras = false
                 return@LaunchedEffect
             }
-            if (isDiscoveringCameras) return@LaunchedEffect
             isDiscoveringCameras = true
             try {
-                withContext(Dispatchers.IO) {
-                    withTimeoutOrNull(25_000L) {
-                        try {
-                            context.assets.open("scrcpy-server.jar").use { input ->
-                                currentClient.sync.push(input, "${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar")
-                            }
-                            val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 4.1 log_level=info list_camera_sizes=true cleanup=false"
-                            val output = try {
-                                val shellRes = currentClient.shell(cmd)
-                                val combined = shellRes.stdoutText.ifBlank { shellRes.stderrText }
-                                combined
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (_: Exception) {
-                                val stream = currentClient.open("shell:$cmd")
-                                val buf = ByteArray(4096)
-                                val sb = StringBuilder()
-                                stream.use { s ->
-                                    while (true) {
-                                        val n = s.read(buf)
-                                        if (n == -1) break
-                                        sb.append(String(buf, 0, n, Charsets.UTF_8))
-                                    }
-                                    sb.toString()
-                                }
-                            }
-                            val parsed = ScrcpyCameraParser.parse(output)
-                            if (parsed.isNotEmpty()) {
-                                ScrcpyDiscoveryCache.setCameras(currentActiveId, parsed)
-                                withContext(Dispatchers.Main) {
-                                    discoveredCameras = parsed
-                                }
-                            } else {
-                                AppLogger.w("ScrcpyScreen", "Discovered 0 cameras. Output: $output")
-                            }
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            AppLogger.e("ScrcpyScreen", "Failed to discover cameras", e)
+                val output = ScrcpyDiscoveryCache.runQuery(currentClient, context, "list_camera_sizes=true")
+                if (output != null) {
+                    val parsed = ScrcpyCameraParser.parse(output)
+                    if (parsed.isNotEmpty()) {
+                        ScrcpyDiscoveryCache.setCameras(currentActiveId, parsed)
+                        withContext(Dispatchers.Main) {
+                            discoveredCameras = parsed
                         }
+                    } else {
+                        AppLogger.w("ScrcpyScreen", "Discovered 0 cameras. Output: $output")
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLogger.e("ScrcpyScreen", "Failed to discover cameras", e)
             } finally {
                 withContext(NonCancellable) {
                     withContext(Dispatchers.Main) {
@@ -291,53 +265,27 @@ fun ScrcpyScreen(
             val cached = ScrcpyDiscoveryCache.getApps(currentActiveId)
             if (!cached.isNullOrEmpty()) {
                 discoveredApps = cached
+                isDiscoveringApps = false
                 return@LaunchedEffect
             }
-            if (isDiscoveringApps) return@LaunchedEffect
             isDiscoveringApps = true
             try {
-                withContext(Dispatchers.IO) {
-                    withTimeoutOrNull(25_000L) {
-                        try {
-                            context.assets.open("scrcpy-server.jar").use { input ->
-                                currentClient.sync.push(input, "${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar")
-                            }
-                            val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 4.1 log_level=info list_apps=true cleanup=false"
-                            val output = try {
-                                val shellRes = currentClient.shell(cmd)
-                                val combined = shellRes.stdoutText.ifBlank { shellRes.stderrText }
-                                combined
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (_: Exception) {
-                                val stream = currentClient.open("shell:$cmd")
-                                val buf = ByteArray(4096)
-                                val sb = StringBuilder()
-                                stream.use { s ->
-                                    while (true) {
-                                        val n = s.read(buf)
-                                        if (n == -1) break
-                                        sb.append(String(buf, 0, n, Charsets.UTF_8))
-                                    }
-                                    sb.toString()
-                                }
-                            }
-                            val parsed = ScrcpyAppParser.parse(output)
-                            if (parsed.isNotEmpty()) {
-                                ScrcpyDiscoveryCache.setApps(currentActiveId, parsed)
-                                withContext(Dispatchers.Main) {
-                                    discoveredApps = parsed
-                                }
-                            } else {
-                                AppLogger.w("ScrcpyScreen", "Discovered 0 apps. Output: $output")
-                            }
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            AppLogger.e("ScrcpyScreen", "Failed to discover apps", e)
+                val output = ScrcpyDiscoveryCache.runQuery(currentClient, context, "list_apps=true")
+                if (output != null) {
+                    val parsed = ScrcpyAppParser.parse(output)
+                    if (parsed.isNotEmpty()) {
+                        ScrcpyDiscoveryCache.setApps(currentActiveId, parsed)
+                        withContext(Dispatchers.Main) {
+                            discoveredApps = parsed
                         }
+                    } else {
+                        AppLogger.w("ScrcpyScreen", "Discovered 0 apps. Output: $output")
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLogger.e("ScrcpyScreen", "Failed to discover apps", e)
             } finally {
                 withContext(NonCancellable) {
                     withContext(Dispatchers.Main) {
@@ -1420,46 +1368,11 @@ private fun AppPickerDialog(
                             )
                         }
                         items(userApps, key = { it.packageName }) { app ->
-                            val isSelected = currentPackage == app.packageName
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onSelect(app.packageName) },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = app.name,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = app.packageName,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                    if (isSelected) {
-                                        Icon(
-                                            Icons.Filled.Check,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
+                            AppPickerRow(
+                                app = app,
+                                isSelected = currentPackage == app.packageName,
+                                onClick = { onSelect(app.packageName) }
+                            )
                         }
                     }
 
@@ -1474,46 +1387,11 @@ private fun AppPickerDialog(
                             )
                         }
                         items(systemApps, key = { it.packageName }) { app ->
-                            val isSelected = currentPackage == app.packageName
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onSelect(app.packageName) },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = app.name,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = app.packageName,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                    if (isSelected) {
-                                        Icon(
-                                            Icons.Filled.Check,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
+                            AppPickerRow(
+                                app = app,
+                                isSelected = currentPackage == app.packageName,
+                                onClick = { onSelect(app.packageName) }
+                            )
                         }
                     }
                 }
@@ -1526,6 +1404,53 @@ private fun AppPickerDialog(
             }
         }
     )
+}
+
+@Composable
+private fun AppPickerRow(
+    app: ScrcpyApp,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = app.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = app.packageName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (isSelected) {
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
 }
 
 @Composable
