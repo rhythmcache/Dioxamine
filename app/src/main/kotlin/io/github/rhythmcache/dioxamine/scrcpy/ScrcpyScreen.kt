@@ -29,11 +29,14 @@ import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,12 +47,21 @@ import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 import io.github.rhythmcache.dioxamine.core.Constants
 import io.github.rhythmcache.adb.AdbDeviceMode
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 private enum class ScrcpyTab { CONFIGURATOR, LOGS, RECORDINGS }
 private enum class AddCustomDialogType { MAX_SIZE, FPS, BITRATE, AUDIO_BITRATE }
+private enum class ControlSide { LEFT, TOP, RIGHT, BOTTOM }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,6 +126,11 @@ fun ScrcpyScreen(
     var isMirroring by remember { mutableStateOf(false) }
     var isRecording by remember { mutableStateOf(false) }
     var isFullScreen by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = isFullScreen) {
+        isFullScreen = false
+    }
+
     var showFloatingNav by remember { mutableStateOf(false) }
     var selectedTab by remember(isDeviceConnected) {
         mutableStateOf(if (isDeviceConnected) ScrcpyTab.CONFIGURATOR else ScrcpyTab.RECORDINGS)
@@ -1462,6 +1479,7 @@ private fun FloatingVerticalNavBar(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun ScrcpyVideoPlayer(
     modifier: Modifier,
@@ -1560,32 +1578,6 @@ private fun ScrcpyVideoPlayer(
                             false
                         }
                     }
-                    setOnTouchListener { view, event ->
-                        if (bindVolumeKeys) {
-                            view.requestFocus()
-                        }
-                        when (event.actionMasked) {
-                            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-                                val idx = event.actionIndex
-                                onTouchEvent(0, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), view.width, view.height)
-                            }
-                            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                                val idx = event.actionIndex
-                                onTouchEvent(1, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), view.width, view.height)
-                            }
-                            MotionEvent.ACTION_MOVE -> {
-                                for (i in 0 until event.pointerCount) {
-                                    onTouchEvent(2, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), view.width, view.height)
-                                }
-                            }
-                            MotionEvent.ACTION_CANCEL -> {
-                                for (i in 0 until event.pointerCount) {
-                                    onTouchEvent(1, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), view.width, view.height)
-                                }
-                            }
-                        }
-                        true
-                    }
                     holder.addCallback(object : SurfaceHolder.Callback {
                         override fun surfaceCreated(holder: SurfaceHolder) {
                             onSurfaceCreated(holder)
@@ -1606,95 +1598,372 @@ private fun ScrcpyVideoPlayer(
             )
         }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .then(if (isFullScreen) Modifier.statusBarsPadding() else Modifier)
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            AnimatedVisibility(
-                visible = controlsExpanded,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally()
+        var playerWidth by remember { mutableIntStateOf(0) }
+        var playerHeight by remember { mutableIntStateOf(0) }
+
+        Box(
+            modifier = playerModifier
+                .onSizeChanged {
+                    playerWidth = it.width
+                    playerHeight = it.height
+                }
+                .pointerInteropFilter { event ->
+                    if (videoSourceIsCamera) return@pointerInteropFilter false
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                            val idx = event.actionIndex
+                            onTouchEvent(0, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), playerWidth, playerHeight)
+                        }
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                            val idx = event.actionIndex
+                            onTouchEvent(1, event.getPointerId(idx).toLong(), event.getX(idx), event.getY(idx), playerWidth, playerHeight)
+                        }
+                        MotionEvent.ACTION_MOVE -> {
+                            for (i in 0 until event.pointerCount) {
+                                onTouchEvent(2, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), playerWidth, playerHeight)
+                            }
+                        }
+                        MotionEvent.ACTION_CANCEL -> {
+                            for (i in 0 until event.pointerCount) {
+                                onTouchEvent(1, event.getPointerId(i).toLong(), event.getX(i), event.getY(i), playerWidth, playerHeight)
+                            }
+                        }
+                    }
+                    true
+                }
+        )
+
+        // Floating Draggable & Edge-Aware Sticky Controls
+        val density = LocalDensity.current
+        val buttonSizePx = with(density) { 48.dp.toPx() }
+        val paddingPx = with(density) { 12.dp.toPx() }
+        val containerWidthPx = with(density) { maxWidth.toPx() }
+        val containerHeightPx = with(density) { maxHeight.toPx() }
+        val topInsetPx = if (isFullScreen) {
+            with(density) { WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx() }
+        } else 0f
+
+        val minX = paddingPx
+        val maxX = maxOf(minX, containerWidthPx - buttonSizePx - paddingPx)
+        val minY = topInsetPx + paddingPx
+        val maxY = maxOf(minY, containerHeightPx - buttonSizePx - paddingPx)
+
+        var normX by rememberSaveable { mutableFloatStateOf(1f) }
+        var normY by rememberSaveable { mutableFloatStateOf(0f) }
+
+        val animNormX = remember { Animatable(normX) }
+        val animNormY = remember { Animatable(normY) }
+        val coroutineScope = rememberCoroutineScope()
+
+        LaunchedEffect(normX, normY) {
+            if (!animNormX.isRunning && animNormX.targetValue != normX) {
+                animNormX.snapTo(normX)
+            }
+            if (!animNormY.isRunning && animNormY.targetValue != normY) {
+                animNormY.snapTo(normY)
+            }
+        }
+
+        var layoutWidth by remember { mutableIntStateOf(0) }
+        var layoutHeight by remember { mutableIntStateOf(0) }
+
+        val side = remember(animNormX.value, animNormY.value) {
+            val curX = animNormX.value
+            val curY = animNormY.value
+            val distLeft = curX
+            val distRight = 1f - curX
+            val distTop = curY
+            val distBottom = 1f - curY
+            val minDist = minOf(distRight, distLeft, distTop, distBottom)
+            when (minDist) {
+                distRight -> ControlSide.RIGHT
+                distLeft -> ControlSide.LEFT
+                distTop -> ControlSide.TOP
+                else -> ControlSide.BOTTOM
+            }
+        }
+
+        val arrowIcon = when (side) {
+            ControlSide.TOP -> if (controlsExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+            ControlSide.BOTTOM -> if (controlsExpanded) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp
+            ControlSide.LEFT -> if (controlsExpanded) Icons.AutoMirrored.Filled.KeyboardArrowLeft else Icons.AutoMirrored.Filled.KeyboardArrowRight
+            ControlSide.RIGHT -> if (controlsExpanded) Icons.AutoMirrored.Filled.KeyboardArrowRight else Icons.AutoMirrored.Filled.KeyboardArrowLeft
+        }
+
+        val actionButtons = @Composable {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (canRecord) {
-                        IconButton(
-                            onClick = onToggleRecord,
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = if (isRecording) Color.Red.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
-                            )
-                        ) {
-                            Icon(
-                                if (isRecording) Icons.Filled.Stop else Icons.Filled.FiberManualRecord,
-                                contentDescription = stringResource(if (isRecording) R.string.scrcpy_recording_stopped else R.string.scrcpy_recording_started),
-                                tint = if (isRecording) Color.White else Color.Red
-                            )
-                        }
-                    }
-                    if (videoSourceIsCamera) {
-                        IconButton(
-                            onClick = onToggleTorch,
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-                        ) {
-                            Icon(
-                                if (torchOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
-                                contentDescription = stringResource(R.string.cd_toggle_torch),
-                                tint = if (torchOn) Color.Yellow else Color.White
-                            )
-                        }
-                    }
-                    if (!videoSourceIsCamera) {
-                        IconButton(
-                            onClick = onRotateDevice,
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-                        ) {
-                            Icon(
-                                Icons.Filled.ScreenRotation,
-                                contentDescription = stringResource(R.string.cd_rotate_device),
-                                tint = Color.White
-                            )
-                        }
-                    }
+                if (canRecord) {
                     IconButton(
-                        onClick = onToggleFullScreen,
+                        onClick = onToggleRecord,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (isRecording) Color.Red.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Icon(
+                            if (isRecording) Icons.Filled.Stop else Icons.Filled.FiberManualRecord,
+                            contentDescription = stringResource(if (isRecording) R.string.scrcpy_recording_stopped else R.string.scrcpy_recording_started),
+                            tint = if (isRecording) Color.White else Color.Red
+                        )
+                    }
+                }
+                if (videoSourceIsCamera) {
+                    IconButton(
+                        onClick = onToggleTorch,
                         colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
                     ) {
                         Icon(
-                            if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                            contentDescription = stringResource(R.string.cd_toggle_fullscreen),
+                            if (torchOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                            contentDescription = stringResource(R.string.cd_toggle_torch),
+                            tint = if (torchOn) Color.Yellow else Color.White
+                        )
+                    }
+                }
+                if (!videoSourceIsCamera) {
+                    IconButton(
+                        onClick = onRotateDevice,
+                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                    ) {
+                        Icon(
+                            Icons.Filled.ScreenRotation,
+                            contentDescription = stringResource(R.string.cd_rotate_device),
                             tint = Color.White
                         )
                     }
-                    IconButton(
-                        onClick = onStop,
-                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-                    ) {
-                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_stop_mirroring), tint = Color.White)
-                    }
+                }
+                IconButton(
+                    onClick = onToggleFullScreen,
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                ) {
+                    Icon(
+                        if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                        contentDescription = stringResource(R.string.cd_toggle_fullscreen),
+                        tint = Color.White
+                    )
+                }
+                IconButton(
+                    onClick = onStop,
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cd_stop_mirroring), tint = Color.White)
+                }
+            }
+        }
+
+        val currentSpanX by rememberUpdatedState(maxX - minX)
+        val currentSpanY by rememberUpdatedState(maxY - minY)
+
+        fun snapToNearestEdge() {
+            val curX = animNormX.value
+            val curY = animNormY.value
+
+            val distLeft = curX
+            val distRight = 1f - curX
+            val distTop = curY
+            val distBottom = 1f - curY
+
+            val minDist = minOf(distLeft, distRight, distTop, distBottom)
+
+            val targetX: Float
+            val targetY: Float
+
+            when (minDist) {
+                distLeft -> {
+                    targetX = 0f
+                    targetY = curY
+                }
+                distRight -> {
+                    targetX = 1f
+                    targetY = curY
+                }
+                distTop -> {
+                    targetX = curX
+                    targetY = 0f
+                }
+                else -> {
+                    targetX = curX
+                    targetY = 1f
                 }
             }
 
-            IconButton(
-                onClick = { controlsExpanded = !controlsExpanded },
-                colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
-            ) {
-                Icon(
-                    imageVector = if (controlsExpanded) {
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight
-                    } else {
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft
-                    },
-                    contentDescription = stringResource(
-                        if (controlsExpanded) R.string.cd_collapse_controls else R.string.cd_expand_controls
-                    ),
-                    tint = Color.White
+            normX = targetX
+            normY = targetY
+
+            coroutineScope.launch {
+                animNormX.animateTo(
+                    targetValue = targetX,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
                 )
+            }
+            coroutineScope.launch {
+                animNormY.animateTo(
+                    targetValue = targetY,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+        }
+
+        val arrowButton = @Composable {
+            Box(
+                modifier = Modifier.pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = {
+                            controlsExpanded = false
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            if (currentSpanX > 0f) {
+                                val nextX = (animNormX.value + dragAmount.x / currentSpanX).coerceIn(0f, 1f)
+                                coroutineScope.launch { animNormX.snapTo(nextX) }
+                            }
+                            if (currentSpanY > 0f) {
+                                val nextY = (animNormY.value + dragAmount.y / currentSpanY).coerceIn(0f, 1f)
+                                coroutineScope.launch { animNormY.snapTo(nextY) }
+                            }
+                        },
+                        onDragEnd = {
+                            snapToNearestEdge()
+                        },
+                        onDragCancel = {
+                            snapToNearestEdge()
+                        }
+                    )
+                }
+            ) {
+                IconButton(
+                    onClick = { controlsExpanded = !controlsExpanded },
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                ) {
+                    Icon(
+                        imageVector = arrowIcon,
+                        contentDescription = stringResource(
+                            if (controlsExpanded) R.string.cd_collapse_controls else R.string.cd_expand_controls
+                        ),
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+
+        val layoutOffsetModifier = Modifier.offset {
+            val effW = if (layoutWidth > 0) layoutWidth else buttonSizePx.roundToInt()
+            val effH = if (layoutHeight > 0) layoutHeight else buttonSizePx.roundToInt()
+
+            val curOffsetX = minX + animNormX.value * (maxX - minX)
+            val curOffsetY = minY + animNormY.value * (maxY - minY)
+
+            val x = when (side) {
+                ControlSide.RIGHT -> {
+                    val extraW = maxOf(0, effW - buttonSizePx.roundToInt())
+                    maxOf(paddingPx.roundToInt(), (curOffsetX - extraW).roundToInt())
+                }
+                ControlSide.LEFT -> {
+                    val maxXInt = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
+                    minOf(curOffsetX.roundToInt(), maxXInt)
+                }
+                ControlSide.TOP, ControlSide.BOTTOM -> {
+                    val maxXInt = maxOf(paddingPx.roundToInt(), (containerWidthPx - effW - paddingPx).roundToInt())
+                    curOffsetX.roundToInt().coerceIn(paddingPx.roundToInt(), maxXInt)
+                }
+            }
+
+            val y = when (side) {
+                ControlSide.BOTTOM -> {
+                    val extraH = maxOf(0, effH - buttonSizePx.roundToInt())
+                    maxOf((topInsetPx + paddingPx).roundToInt(), (curOffsetY - extraH).roundToInt())
+                }
+                ControlSide.TOP -> {
+                    val maxYInt = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
+                    minOf(curOffsetY.roundToInt(), maxYInt)
+                }
+                ControlSide.LEFT, ControlSide.RIGHT -> {
+                    val maxYInt = maxOf((topInsetPx + paddingPx).roundToInt(), (containerHeightPx - effH - paddingPx).roundToInt())
+                    curOffsetY.roundToInt().coerceIn((topInsetPx + paddingPx).roundToInt(), maxYInt)
+                }
+            }
+
+            IntOffset(x, y)
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .then(layoutOffsetModifier)
+                .zIndex(10f)
+                .onSizeChanged {
+                    layoutWidth = it.width
+                    layoutHeight = it.height
+                }
+        ) {
+            when (side) {
+                ControlSide.LEFT -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        arrowButton()
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+                            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start)
+                        ) {
+                            actionButtons()
+                        }
+                    }
+                }
+                ControlSide.RIGHT -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
+                            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End)
+                        ) {
+                            actionButtons()
+                        }
+                        arrowButton()
+                    }
+                }
+                ControlSide.TOP -> {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        arrowButton()
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+                            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top)
+                        ) {
+                            actionButtons()
+                        }
+                    }
+                }
+                ControlSide.BOTTOM -> {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AnimatedVisibility(
+                            visible = controlsExpanded,
+                            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+                            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom)
+                        ) {
+                            actionButtons()
+                        }
+                        arrowButton()
+                    }
+                }
             }
         }
 
