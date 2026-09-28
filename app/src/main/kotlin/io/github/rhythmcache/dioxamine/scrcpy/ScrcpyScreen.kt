@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
-import io.github.rhythmcache.dioxamine.core.Constants
 import io.github.rhythmcache.adb.AdbDeviceMode
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
@@ -57,9 +56,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.zIndex
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlin.math.roundToInt
@@ -199,7 +196,6 @@ fun ScrcpyScreen(
             }
         )
     }
-    val isDiscoveringCameras = cameraDiscoveryState == DiscoveryState.LOADING
     var refreshCamerasTrigger by remember { mutableIntStateOf(0) }
 
     var discoveredApps by remember(activeId) {
@@ -214,7 +210,6 @@ fun ScrcpyScreen(
             }
         )
     }
-    val isDiscoveringApps = appDiscoveryState == DiscoveryState.LOADING
     var refreshAppsTrigger by remember { mutableIntStateOf(0) }
 
     val apiLevel = activeConn?.apiLevel ?: 30
@@ -269,6 +264,9 @@ fun ScrcpyScreen(
                     }
                 }
             } catch (e: CancellationException) {
+                if (cameraDiscoveryState == DiscoveryState.LOADING) {
+                    cameraDiscoveryState = DiscoveryState.IDLE
+                }
                 throw e
             } catch (e: Exception) {
                 AppLogger.e("ScrcpyScreen", "Failed to discover cameras", e)
@@ -312,6 +310,9 @@ fun ScrcpyScreen(
                     }
                 }
             } catch (e: CancellationException) {
+                if (appDiscoveryState == DiscoveryState.LOADING) {
+                    appDiscoveryState = DiscoveryState.IDLE
+                }
                 throw e
             } catch (e: Exception) {
                 AppLogger.e("ScrcpyScreen", "Failed to discover apps", e)
