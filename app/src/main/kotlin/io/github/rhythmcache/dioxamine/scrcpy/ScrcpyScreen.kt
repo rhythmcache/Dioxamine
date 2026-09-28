@@ -68,6 +68,7 @@ import kotlin.math.roundToInt
 private enum class ScrcpyTab { CONFIGURATOR, LOGS, RECORDINGS }
 private enum class AddCustomDialogType { MAX_SIZE, FPS, BITRATE, AUDIO_BITRATE, DPI }
 private enum class ControlSide { LEFT, TOP, RIGHT, BOTTOM }
+private enum class DiscoveryState { IDLE, LOADING, SUCCESS, EMPTY, TIMED_OUT, FAILED }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -196,7 +197,16 @@ fun ScrcpyScreen(
     var discoveredApps by remember(activeId) {
         mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getApps(it) } ?: emptyList())
     }
-    var isDiscoveringApps by remember(activeId) { mutableStateOf(false) }
+    var appDiscoveryState by remember(activeId) {
+        mutableStateOf(
+            if (activeId != null && !ScrcpyDiscoveryCache.getApps(activeId).isNullOrEmpty()) {
+                DiscoveryState.SUCCESS
+            } else {
+                DiscoveryState.IDLE
+            }
+        )
+    }
+    val isDiscoveringApps = appDiscoveryState == DiscoveryState.LOADING
     var refreshAppsTrigger by remember { mutableIntStateOf(0) }
 
     val apiLevel = activeConn?.apiLevel ?: 30
@@ -251,9 +261,7 @@ fun ScrcpyScreen(
             } catch (e: Exception) {
                 AppLogger.e("ScrcpyScreen", "Failed to discover cameras", e)
             } finally {
-                withContext(NonCancellable) {
-                    isDiscoveringCameras = false
-                }
+                isDiscoveringCameras = false
             }
         }
     }
@@ -264,12 +272,12 @@ fun ScrcpyScreen(
 
         if (supportsVirtual && config.videoSource == "virtual") {
             val cached = ScrcpyDiscoveryCache.getApps(currentActiveId)
-            if (!cached.isNullOrEmpty()) {
+            if (refreshAppsTrigger == 0 && !cached.isNullOrEmpty()) {
                 discoveredApps = cached
-                isDiscoveringApps = false
+                appDiscoveryState = DiscoveryState.SUCCESS
                 return@LaunchedEffect
             }
-            isDiscoveringApps = true
+            appDiscoveryState = DiscoveryState.LOADING
             try {
                 when (val result = ScrcpyDiscoveryCache.runQuery(currentClient, context, currentActiveId, "list_apps=true")) {
                     is DiscoveryQueryResult.Success -> {
@@ -277,24 +285,29 @@ fun ScrcpyScreen(
                         if (parsed.isNotEmpty()) {
                             ScrcpyDiscoveryCache.setApps(currentActiveId, parsed)
                             discoveredApps = parsed
+                            appDiscoveryState = DiscoveryState.SUCCESS
                         } else {
                             AppLogger.w("ScrcpyScreen", "Discovered 0 apps. Output: ${result.output}")
+                            appDiscoveryState = DiscoveryState.EMPTY
                         }
                     }
                     is DiscoveryQueryResult.TimedOut -> {
                         AppLogger.w("ScrcpyScreen", "App discovery timed out after ${result.timeoutMs}ms")
+                        appDiscoveryState = DiscoveryState.TIMED_OUT
                     }
                     is DiscoveryQueryResult.Failed -> {
                         AppLogger.e("ScrcpyScreen", "App discovery failed: ${result.reason}", result.cause)
+                        appDiscoveryState = DiscoveryState.FAILED
                     }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 AppLogger.e("ScrcpyScreen", "Failed to discover apps", e)
+                appDiscoveryState = DiscoveryState.FAILED
             } finally {
-                withContext(NonCancellable) {
-                    isDiscoveringApps = false
+                if (appDiscoveryState == DiscoveryState.LOADING) {
+                    appDiscoveryState = DiscoveryState.IDLE
                 }
             }
         }
@@ -623,7 +636,7 @@ fun ScrcpyScreen(
                                                 discoveredCameras = discoveredCameras,
                                                 isDiscoveringCameras = isDiscoveringCameras,
                                                 discoveredApps = discoveredApps,
-                                                isDiscoveringApps = isDiscoveringApps,
+                                                appDiscoveryState = appDiscoveryState,
                                                 onRefreshCameras = {
                                                     activeId?.let { ScrcpyDiscoveryCache.clearCameras(it) }
                                                     discoveredCameras = emptyList()
@@ -632,6 +645,7 @@ fun ScrcpyScreen(
                                                 onRefreshApps = {
                                                     activeId?.let { ScrcpyDiscoveryCache.clearApps(it) }
                                                     discoveredApps = emptyList()
+                                                    appDiscoveryState = DiscoveryState.LOADING
                                                     refreshAppsTrigger++
                                                 },
                                                 onConfigChange = { config = it },
@@ -1088,7 +1102,7 @@ private fun VirtualScreenSettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
     discoveredApps: List<ScrcpyApp>,
-    isDiscovering: Boolean,
+    discoveryState: DiscoveryState,
     onRefreshApps: () -> Unit = {},
     allowCustomValues: Boolean,
     customDpis: List<Int>,
@@ -1104,7 +1118,7 @@ private fun VirtualScreenSettings(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(stringResource(R.string.section_virtual_screen), style = MaterialTheme.typography.labelMedium)
-        if (!isMirroring && !isDiscovering) {
+        if (!isMirroring && discoveryState != DiscoveryState.LOADING) {
             IconButton(
                 onClick = onRefreshApps,
                 modifier = Modifier.size(24.dp)
@@ -1120,33 +1134,73 @@ private fun VirtualScreenSettings(
     }
     Spacer(Modifier.height(6.dp))
 
-    if (isDiscovering) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-            Spacer(Modifier.width(8.dp))
-            Text(
-                stringResource(R.string.virtual_screen_discovering),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    when (discoveryState) {
+        DiscoveryState.LOADING -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.virtual_screen_discovering),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
         }
-        Spacer(Modifier.height(6.dp))
-    } else if (discoveredApps.isEmpty()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Filled.Info,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                stringResource(R.string.virtual_screen_discovery_failed),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        DiscoveryState.TIMED_OUT -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.virtual_screen_discovery_timed_out),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
         }
-        Spacer(Modifier.height(6.dp))
+        DiscoveryState.FAILED -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.virtual_screen_discovery_failed),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        DiscoveryState.EMPTY -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    stringResource(R.string.virtual_screen_no_apps_found),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        DiscoveryState.IDLE, DiscoveryState.SUCCESS -> {
+            // No banner to display
+        }
     }
 
     Text(stringResource(R.string.virtual_screen_dpi), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1278,6 +1332,10 @@ private fun AppPickerDialog(
     onSelect: (String?) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    val trimmedQuery = searchQuery.trim()
+    val isCustomPackage = trimmedQuery.isNotBlank() &&
+            apps.none { it.packageName.equals(trimmedQuery, ignoreCase = true) }
+
     val filteredApps = remember(searchQuery, apps) {
         if (searchQuery.isBlank()) {
             apps
@@ -1360,7 +1418,57 @@ private fun AppPickerDialog(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     }
 
-                    if (apps.isEmpty()) {
+                    if (isCustomPackage) {
+                        item {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onSelect(trimmedQuery) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (currentPackage == trimmedQuery) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Filled.PlayArrow,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(R.string.virtual_screen_use_custom_package),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = trimmedQuery,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    if (currentPackage == trimmedQuery) {
+                                        Icon(
+                                            Icons.Filled.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        }
+                    }
+
+                    if (apps.isEmpty() && searchQuery.isBlank()) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -1369,13 +1477,13 @@ private fun AppPickerDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    stringResource(R.string.virtual_screen_discovery_failed),
+                                    stringResource(R.string.virtual_screen_empty_entry_hint),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-                    } else if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
+                    } else if (filteredApps.isEmpty() && !isCustomPackage && searchQuery.isNotBlank()) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -1504,7 +1612,7 @@ private fun VideoSettings(
     discoveredCameras: List<CameraDevice>,
     isDiscoveringCameras: Boolean,
     discoveredApps: List<ScrcpyApp>,
-    isDiscoveringApps: Boolean,
+    appDiscoveryState: DiscoveryState,
     onRefreshCameras: () -> Unit = {},
     onRefreshApps: () -> Unit = {},
     onConfigChange: (ScrcpyConfig) -> Unit,
@@ -1566,7 +1674,7 @@ private fun VideoSettings(
         config = config,
         isMirroring = isMirroring,
         discoveredApps = discoveredApps,
-        isDiscovering = isDiscoveringApps,
+        discoveryState = appDiscoveryState,
         onRefreshApps = onRefreshApps,
         allowCustomValues = allowCustomValues,
         customDpis = customDpis,

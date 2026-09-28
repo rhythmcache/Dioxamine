@@ -202,11 +202,14 @@
     <string name="virtual_screen_app">App to Launch</string>
     <string name="virtual_screen_default_launcher">Default Launcher (None)</string>
     <string name="virtual_screen_select_app">Select App to Launch</string>
-    <string name="virtual_screen_search_apps">Search apps…</string>
+    <string name="virtual_screen_search_apps">Search or enter package name…</string>
     <string name="virtual_screen_user_apps">User Apps</string>
     <string name="virtual_screen_system_apps">System Apps</string>
     <string name="virtual_screen_no_apps_found">No apps found</string>
+    <string name="virtual_screen_discovery_timed_out">Discovery timed out. Tap refresh to retry.</string>
     <string name="virtual_screen_discovery_failed">Couldn\'t load apps. Tap refresh to retry.</string>
+    <string name="virtual_screen_use_custom_package">Launch custom package</string>
+    <string name="virtual_screen_empty_entry_hint">Type a package name above to launch it manually, or tap refresh to retry.</string>
     <string name="dialog_add_dpi_title">Add Custom DPI</string>
     <string name="dialog_add_dpi_msg">Enter display density in DPI (e.g. 280, 360, 560):</string>
 
