@@ -648,13 +648,17 @@ fun ScrcpyScreen(
                                                 onRefreshCameras = {
                                                     activeId?.let { ScrcpyDiscoveryCache.clearCameras(it) }
                                                     discoveredCameras = emptyList()
-                                                    cameraDiscoveryState = DiscoveryState.LOADING
+                                                    if (supportsCamera && config.videoSource == "camera") {
+                                                        cameraDiscoveryState = DiscoveryState.LOADING
+                                                    }
                                                     refreshCamerasTrigger++
                                                 },
                                                 onRefreshApps = {
                                                     activeId?.let { ScrcpyDiscoveryCache.clearApps(it) }
                                                     discoveredApps = emptyList()
-                                                    appDiscoveryState = DiscoveryState.LOADING
+                                                    if (supportsVirtual && config.videoSource == "virtual") {
+                                                        appDiscoveryState = DiscoveryState.LOADING
+                                                    }
                                                     refreshAppsTrigger++
                                                 },
                                                 onConfigChange = { config = it },
