@@ -206,6 +206,7 @@
     <string name="virtual_screen_user_apps">User Apps</string>
     <string name="virtual_screen_system_apps">System Apps</string>
     <string name="virtual_screen_no_apps_found">No apps found</string>
+    <string name="virtual_screen_discovery_failed">Couldn\'t load apps. Tap refresh to retry.</string>
     <string name="dialog_add_dpi_title">Add Custom DPI</string>
     <string name="dialog_add_dpi_msg">Enter display density in DPI (e.g. 280, 360, 560):</string>
 

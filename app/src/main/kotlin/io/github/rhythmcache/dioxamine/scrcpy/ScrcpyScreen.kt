@@ -45,7 +45,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
@@ -62,7 +61,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.CancellationException
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlin.math.roundToInt
@@ -236,9 +234,7 @@ fun ScrcpyScreen(
                         val parsed = ScrcpyCameraParser.parse(result.output)
                         if (parsed.isNotEmpty()) {
                             ScrcpyDiscoveryCache.setCameras(currentActiveId, parsed)
-                            withContext(Dispatchers.Main) {
-                                discoveredCameras = parsed
-                            }
+                            discoveredCameras = parsed
                         } else {
                             AppLogger.w("ScrcpyScreen", "Discovered 0 cameras. Output: ${result.output}")
                         }
@@ -256,9 +252,7 @@ fun ScrcpyScreen(
                 AppLogger.e("ScrcpyScreen", "Failed to discover cameras", e)
             } finally {
                 withContext(NonCancellable) {
-                    withContext(Dispatchers.Main) {
-                        isDiscoveringCameras = false
-                    }
+                    isDiscoveringCameras = false
                 }
             }
         }
@@ -282,9 +276,7 @@ fun ScrcpyScreen(
                         val parsed = ScrcpyAppParser.parse(result.output)
                         if (parsed.isNotEmpty()) {
                             ScrcpyDiscoveryCache.setApps(currentActiveId, parsed)
-                            withContext(Dispatchers.Main) {
-                                discoveredApps = parsed
-                            }
+                            discoveredApps = parsed
                         } else {
                             AppLogger.w("ScrcpyScreen", "Discovered 0 apps. Output: ${result.output}")
                         }
@@ -302,9 +294,7 @@ fun ScrcpyScreen(
                 AppLogger.e("ScrcpyScreen", "Failed to discover apps", e)
             } finally {
                 withContext(NonCancellable) {
-                    withContext(Dispatchers.Main) {
-                        isDiscoveringApps = false
-                    }
+                    isDiscoveringApps = false
                 }
             }
         }
@@ -1141,6 +1131,22 @@ private fun VirtualScreenSettings(
             )
         }
         Spacer(Modifier.height(6.dp))
+    } else if (discoveredApps.isEmpty()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Filled.Info,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                stringResource(R.string.virtual_screen_discovery_failed),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.height(6.dp))
     }
 
     Text(stringResource(R.string.virtual_screen_dpi), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1354,7 +1360,22 @@ private fun AppPickerDialog(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     }
 
-                    if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
+                    if (apps.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    stringResource(R.string.virtual_screen_discovery_failed),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
                         item {
                             Box(
                                 modifier = Modifier

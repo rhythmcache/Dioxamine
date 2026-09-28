@@ -55,13 +55,15 @@ object ScrcpyDiscoveryCache {
     fun clear(deviceId: String) {
         appCache.remove(deviceId)
         cameraCache.remove(deviceId)
-        deviceMutexes.remove(deviceId)
+        // Device mutexes are intentionally retained across disconnects.
+        // If a query is in-flight when a device disconnects/reconnects, removing the mutex
+        // would cause computeIfAbsent to create a fresh Mutex, allowing concurrent server push races.
     }
 
     fun clearAll() {
         appCache.clear()
         cameraCache.clear()
-        deviceMutexes.clear()
+        // Device mutexes are retained for the same reason.
     }
 
     /**
@@ -99,26 +101,8 @@ object ScrcpyDiscoveryCache {
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    AppLogger.w(TAG, "client.shell() threw exception, falling back to open(shell:)", e)
-                    try {
-                        val stream = client.open("shell:$cmd")
-                        val buf = ByteArray(4096)
-                        val sb = StringBuilder()
-                        val output = stream.use { s ->
-                            while (true) {
-                                val n = s.read(buf)
-                                if (n == -1) break
-                                sb.append(String(buf, 0, n, Charsets.UTF_8))
-                            }
-                            sb.toString()
-                        }
-                        DiscoveryQueryResult.Success(output)
-                    } catch (e2: CancellationException) {
-                        throw e2
-                    } catch (e2: Exception) {
-                        AppLogger.e(TAG, "Fallback open(shell:) also failed for $queryArg", e2)
-                        DiscoveryQueryResult.Failed("Command execution failed: ${e2.message}", e2)
-                    }
+                    AppLogger.e(TAG, "client.shell() failed for query: $queryArg", e)
+                    DiscoveryQueryResult.Failed("Command execution failed: ${e.message}", e)
                 }
             }
         }

@@ -17,7 +17,10 @@ object ScrcpyAppParser {
         var pendingName: String? = null
         var pendingIsSystem = false
 
-        for (line in stdout.lineSequence()) {
+        for (rawLine in stdout.lineSequence()) {
+            val line = rawLine.trimEnd('\r', ' ')
+            if (line.isEmpty()) continue
+
             val singleMatch = singleLineRegex.matchEntire(line)
             if (singleMatch != null) {
                 val pkg = singleMatch.groupValues[3].trim()
