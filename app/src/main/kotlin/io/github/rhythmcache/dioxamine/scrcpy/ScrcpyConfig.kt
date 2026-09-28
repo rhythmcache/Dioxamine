@@ -15,8 +15,8 @@ data class ScrcpyConfig(
     val bindVolumeKeys: Boolean = false,
     val controlEnabled: Boolean = true, // Enabled for touch control
 
-    // --- Video source: display (default) or camera ---
-    val videoSource: String = "display", // "display" or "camera"
+    // --- Video source: display (default), camera, or virtual ---
+    val videoSource: String = "display", // "display", "camera", or "virtual"
     val cameraId: String? = null,
     val cameraFacing: String? = null,     // front, back, external
     val cameraSize: String? = null,       // e.g. "1920x1080"
@@ -24,6 +24,8 @@ data class ScrcpyConfig(
     val cameraHighSpeed: Boolean = false,
     val cameraAr: String? = null,         // "16:9", "1.6", or "sensor"
     val cameraTorch: Boolean = false,     // torch on at startup
+    val newDisplayDpi: Int? = null,       // null or 0 = auto/default, 160, 240, etc.
+    val newDisplayApp: String? = null,    // package name to launch on start (null = none/launcher)
 
     val videoCodec: String = "h264",      // h264, h265, av1, vp8, vp9
     val audioCodec: String = "opus",      // opus, aac, flac, raw
@@ -59,6 +61,12 @@ data class ScrcpyConfig(
             }
             if (cameraHighSpeed && cameraSize == null) {
                 errors.add("High speed camera mode requires a specific capture resolution size (e.g. 720p).")
+            }
+        }
+
+        if (videoEnabled && videoSource == "virtual") {
+            if (apiLevel < 29) {
+                errors.add("Virtual screen mirroring requires at least Android 10 (API 29). Target device is API $apiLevel.")
             }
         }
 
@@ -108,6 +116,11 @@ data class ScrcpyConfig(
                 cameraFps?.let { parts.add("camera_fps=$it") }
                 if (cameraHighSpeed) parts.add("camera_high_speed=true")
                 if (cameraTorch) parts.add("camera_torch=true")
+            } else if (videoSource == "virtual") {
+                val dpiPart = if (newDisplayDpi != null && newDisplayDpi > 0) "/$newDisplayDpi" else ""
+                parts.add("new_display=$dpiPart")
+                if (maxSize > 0) parts.add("max_size=$maxSize")
+                parts.add("vd_destroy_content=true")
             } else {
                 if (maxSize > 0) parts.add("max_size=$maxSize")
             }
@@ -156,6 +169,8 @@ data class ScrcpyConfig(
         json.put("cameraHighSpeed", cameraHighSpeed)
         cameraAr?.let { json.put("cameraAr", it) }
         json.put("cameraTorch", cameraTorch)
+        newDisplayDpi?.let { json.put("newDisplayDpi", it) }
+        newDisplayApp?.let { json.put("newDisplayApp", it) }
         json.put("videoCodec", videoCodec)
         json.put("audioCodec", audioCodec)
         json.put("audioBitRateKbps", audioBitRateKbps)
@@ -187,6 +202,8 @@ data class ScrcpyConfig(
                     cameraHighSpeed = json.optBoolean("cameraHighSpeed", false),
                     cameraAr = json.optString("cameraAr").takeIf { it.isNotEmpty() && it != "null" },
                     cameraTorch = json.optBoolean("cameraTorch", false),
+                    newDisplayDpi = if (json.has("newDisplayDpi") && !json.isNull("newDisplayDpi")) json.optInt("newDisplayDpi") else null,
+                    newDisplayApp = json.optString("newDisplayApp").takeIf { it.isNotEmpty() && it != "null" },
                     videoCodec = json.optString("videoCodec", "h264"),
                     audioCodec = json.optString("audioCodec", "opus"),
                     audioBitRateKbps = json.optInt("audioBitRateKbps", 128),

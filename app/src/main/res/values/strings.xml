@@ -192,6 +192,22 @@
     <string name="video_source_screen">Screen</string>
     <string name="video_source_camera">Camera</string>
     <string name="camera_source_subtitle_req">Requires Android 12+ (API 31). Device is API %1$d.</string>
+    <string name="video_source_virtual">Virtual Screen</string>
+    <string name="virtual_source_subtitle_req">Requires Android 10+ (API 29). Device is API %1$d.</string>
+    <string name="section_virtual_screen">Virtual Screen</string>
+    <string name="virtual_screen_discovering">Discovering apps...</string>
+    <string name="virtual_screen_dpi">Display Density (DPI)</string>
+    <string name="virtual_screen_dpi_format">%1$d DPI</string>
+    <string name="virtual_screen_dpi_auto">Auto</string>
+    <string name="virtual_screen_app">App to Launch</string>
+    <string name="virtual_screen_default_launcher">Default Launcher (None)</string>
+    <string name="virtual_screen_select_app">Select App to Launch</string>
+    <string name="virtual_screen_search_apps">Search apps…</string>
+    <string name="virtual_screen_user_apps">User Apps</string>
+    <string name="virtual_screen_system_apps">System Apps</string>
+    <string name="virtual_screen_no_apps_found">No apps found</string>
+    <string name="dialog_add_dpi_title">Add Custom DPI</string>
+    <string name="dialog_add_dpi_msg">Enter display density in DPI (e.g. 280, 360, 560):</string>
 
     <string name="section_camera">Camera</string>
     <string name="camera_facing_back">Back</string>

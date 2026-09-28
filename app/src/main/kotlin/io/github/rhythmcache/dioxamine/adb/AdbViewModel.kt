@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import io.github.rhythmcache.dioxamine.adb.discovery.LocalAdbDetector
 import io.github.rhythmcache.dioxamine.adb.discovery.LocalAdbTarget
+import io.github.rhythmcache.dioxamine.scrcpy.ScrcpyDiscoveryCache
 import java.io.File
 
 class AdbViewModel(
@@ -454,6 +455,7 @@ class AdbViewModel(
                 try { conn.client?.close() } catch (_: Exception) {}
             }
             devices.remove(id)
+            ScrcpyDiscoveryCache.clear(id)
             nativeOutputs.clear()
             runningCommands.clear()
             flashState = FlashUiState.Idle

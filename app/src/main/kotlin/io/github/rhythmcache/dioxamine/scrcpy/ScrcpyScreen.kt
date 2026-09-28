@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -40,8 +42,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
@@ -57,10 +61,14 @@ import androidx.compose.ui.zIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.CancellationException
+import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlin.math.roundToInt
 
 private enum class ScrcpyTab { CONFIGURATOR, LOGS, RECORDINGS }
-private enum class AddCustomDialogType { MAX_SIZE, FPS, BITRATE, AUDIO_BITRATE }
+private enum class AddCustomDialogType { MAX_SIZE, FPS, BITRATE, AUDIO_BITRATE, DPI }
 private enum class ControlSide { LEFT, TOP, RIGHT, BOTTOM }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,6 +107,12 @@ fun ScrcpyScreen(
     var customAudioBitrates by remember {
         mutableStateOf(
             prefs.getStringSet("scrcpy_custom_audio_bitrates", emptySet())
+                ?.mapNotNull { it.toIntOrNull() }?.sorted() ?: emptyList()
+        )
+    }
+    var customDpis by remember {
+        mutableStateOf(
+            prefs.getStringSet("scrcpy_custom_dpis", emptySet())
                 ?.mapNotNull { it.toIntOrNull() }?.sorted() ?: emptyList()
         )
     }
@@ -155,12 +169,14 @@ fun ScrcpyScreen(
             val defaultFps = listOf(15, 30, 60)
             val defaultBitrates = listOf(2, 4, 8)
             val defaultAudioBitrates = listOf(64, 128, 192, 256, 320)
+            val defaultDpis = listOf(null, 160, 240, 320, 420, 480)
 
             var newConfig = config
             if (config.maxSize !in defaultMaxSizes) newConfig = newConfig.copy(maxSize = 1080)
             if (config.maxFps !in defaultFps) newConfig = newConfig.copy(maxFps = 60)
             if (config.bitRateMbps !in defaultBitrates) newConfig = newConfig.copy(bitRateMbps = 8)
             if (config.audioBitRateKbps !in defaultAudioBitrates) newConfig = newConfig.copy(audioBitRateKbps = 128)
+            if (config.newDisplayDpi !in defaultDpis) newConfig = newConfig.copy(newDisplayDpi = null)
             config = newConfig
         }
     }
@@ -173,12 +189,22 @@ fun ScrcpyScreen(
 
     var activeSession by remember { mutableStateOf<ScrcpySession?>(null) }
 
-    var discoveredCameras by remember { mutableStateOf<List<CameraDevice>>(emptyList()) }
+    var discoveredCameras by remember(activeId) {
+        mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getCameras(it) } ?: emptyList())
+    }
     var isDiscoveringCameras by remember { mutableStateOf(false) }
+    var refreshCamerasTrigger by remember { mutableIntStateOf(0) }
+
+    var discoveredApps by remember(activeId) {
+        mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getApps(it) } ?: emptyList())
+    }
+    var isDiscoveringApps by remember { mutableStateOf(false) }
+    var refreshAppsTrigger by remember { mutableIntStateOf(0) }
 
     val apiLevel = activeConn?.apiLevel ?: 30
     val supportsAudio = apiLevel >= 30
     val supportsCamera = apiLevel >= 31
+    val supportsVirtual = apiLevel >= 29
 
     LaunchedEffect(supportsCamera) {
         if (!supportsCamera && config.videoSource == "camera") {
@@ -186,32 +212,136 @@ fun ScrcpyScreen(
         }
     }
 
-    LaunchedEffect(activeId, config.videoSource) {
-        if (supportsCamera && config.videoSource == "camera" && client != null && discoveredCameras.isEmpty() && !isDiscoveringCameras) {
+    LaunchedEffect(supportsVirtual) {
+        if (!supportsVirtual && config.videoSource == "virtual") {
+            config = config.copy(videoSource = "display")
+        }
+    }
+
+    LaunchedEffect(activeId, config.videoSource, refreshCamerasTrigger) {
+        val currentActiveId = activeId ?: return@LaunchedEffect
+        val currentClient = client ?: return@LaunchedEffect
+
+        if (supportsCamera && config.videoSource == "camera") {
+            val cached = ScrcpyDiscoveryCache.getCameras(currentActiveId)
+            if (!cached.isNullOrEmpty()) {
+                discoveredCameras = cached
+                return@LaunchedEffect
+            }
+            if (isDiscoveringCameras) return@LaunchedEffect
             isDiscoveringCameras = true
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    context.assets.open("scrcpy-server.jar").use { input ->
-                        client.sync.push(input, "${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar")
+            try {
+                withContext(Dispatchers.IO) {
+                    withTimeoutOrNull(25_000L) {
+                        try {
+                            context.assets.open("scrcpy-server.jar").use { input ->
+                                currentClient.sync.push(input, "${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar")
+                            }
+                            val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 4.1 log_level=info list_camera_sizes=true cleanup=false"
+                            val output = try {
+                                val shellRes = currentClient.shell(cmd)
+                                val combined = shellRes.stdoutText.ifBlank { shellRes.stderrText }
+                                combined
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                val stream = currentClient.open("shell:$cmd")
+                                val buf = ByteArray(4096)
+                                val sb = StringBuilder()
+                                stream.use { s ->
+                                    while (true) {
+                                        val n = s.read(buf)
+                                        if (n == -1) break
+                                        sb.append(String(buf, 0, n, Charsets.UTF_8))
+                                    }
+                                    sb.toString()
+                                }
+                            }
+                            val parsed = ScrcpyCameraParser.parse(output)
+                            if (parsed.isNotEmpty()) {
+                                ScrcpyDiscoveryCache.setCameras(currentActiveId, parsed)
+                                withContext(Dispatchers.Main) {
+                                    discoveredCameras = parsed
+                                }
+                            } else {
+                                AppLogger.w("ScrcpyScreen", "Discovered 0 cameras. Output: $output")
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            AppLogger.e("ScrcpyScreen", "Failed to discover cameras", e)
+                        }
                     }
-                    val stream = client.open("shell:CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 4.1 log_level=info list_camera_sizes=true")
-                    val buf = ByteArray(4096)
-                    val sb = StringBuilder()
-                    while (true) {
-                        val n = stream.read(buf)
-                        if (n == -1) break
-                        sb.append(String(buf, 0, n, Charsets.UTF_8))
-                    }
-                    stream.close()
-                    ScrcpyCameraParser.parse(sb.toString())
-                }.onSuccess { parsed ->
+                }
+            } finally {
+                withContext(NonCancellable) {
                     withContext(Dispatchers.Main) {
-                        discoveredCameras = parsed
                         isDiscoveringCameras = false
                     }
-                }.onFailure {
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(activeId, config.videoSource, refreshAppsTrigger) {
+        val currentActiveId = activeId ?: return@LaunchedEffect
+        val currentClient = client ?: return@LaunchedEffect
+
+        if (supportsVirtual && config.videoSource == "virtual") {
+            val cached = ScrcpyDiscoveryCache.getApps(currentActiveId)
+            if (!cached.isNullOrEmpty()) {
+                discoveredApps = cached
+                return@LaunchedEffect
+            }
+            if (isDiscoveringApps) return@LaunchedEffect
+            isDiscoveringApps = true
+            try {
+                withContext(Dispatchers.IO) {
+                    withTimeoutOrNull(25_000L) {
+                        try {
+                            context.assets.open("scrcpy-server.jar").use { input ->
+                                currentClient.sync.push(input, "${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar")
+                            }
+                            val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 4.1 log_level=info list_apps=true cleanup=false"
+                            val output = try {
+                                val shellRes = currentClient.shell(cmd)
+                                val combined = shellRes.stdoutText.ifBlank { shellRes.stderrText }
+                                combined
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                val stream = currentClient.open("shell:$cmd")
+                                val buf = ByteArray(4096)
+                                val sb = StringBuilder()
+                                stream.use { s ->
+                                    while (true) {
+                                        val n = s.read(buf)
+                                        if (n == -1) break
+                                        sb.append(String(buf, 0, n, Charsets.UTF_8))
+                                    }
+                                    sb.toString()
+                                }
+                            }
+                            val parsed = ScrcpyAppParser.parse(output)
+                            if (parsed.isNotEmpty()) {
+                                ScrcpyDiscoveryCache.setApps(currentActiveId, parsed)
+                                withContext(Dispatchers.Main) {
+                                    discoveredApps = parsed
+                                }
+                            } else {
+                                AppLogger.w("ScrcpyScreen", "Discovered 0 apps. Output: $output")
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            AppLogger.e("ScrcpyScreen", "Failed to discover apps", e)
+                        }
+                    }
+                }
+            } finally {
+                withContext(NonCancellable) {
                     withContext(Dispatchers.Main) {
-                        isDiscoveringCameras = false
+                        isDiscoveringApps = false
                     }
                 }
             }
@@ -531,13 +661,27 @@ fun ScrcpyScreen(
                                                 isMirroring = isMirroring,
                                                 supportsAudio = supportsAudio,
                                                 supportsCamera = supportsCamera,
+                                                supportsVirtual = supportsVirtual,
                                                 apiLevel = apiLevel,
                                                 allowCustomValues = allowCustomValues,
                                                 customMaxSizes = customMaxSizes,
                                                 customFps = customFps,
                                                 customBitrates = customBitrates,
+                                                customDpis = customDpis,
                                                 discoveredCameras = discoveredCameras,
                                                 isDiscoveringCameras = isDiscoveringCameras,
+                                                discoveredApps = discoveredApps,
+                                                isDiscoveringApps = isDiscoveringApps,
+                                                onRefreshCameras = {
+                                                    activeId?.let { ScrcpyDiscoveryCache.clearCameras(it) }
+                                                    discoveredCameras = emptyList()
+                                                    refreshCamerasTrigger++
+                                                },
+                                                onRefreshApps = {
+                                                    activeId?.let { ScrcpyDiscoveryCache.clearApps(it) }
+                                                    discoveredApps = emptyList()
+                                                    refreshAppsTrigger++
+                                                },
                                                 onConfigChange = { config = it },
                                                 onOpenAddDialog = { type ->
                                                     activeAddDialog = type
@@ -697,12 +841,14 @@ fun ScrcpyScreen(
             AddCustomDialogType.FPS -> stringResource(R.string.dialog_add_fps_title)
             AddCustomDialogType.BITRATE -> stringResource(R.string.dialog_add_bitrate_title)
             AddCustomDialogType.AUDIO_BITRATE -> stringResource(R.string.dialog_add_audio_bitrate_title)
+            AddCustomDialogType.DPI -> stringResource(R.string.dialog_add_dpi_title)
         }
         val msgText = when (dialogType) {
             AddCustomDialogType.MAX_SIZE -> stringResource(R.string.dialog_add_max_size_msg)
             AddCustomDialogType.FPS -> stringResource(R.string.dialog_add_fps_msg)
             AddCustomDialogType.BITRATE -> stringResource(R.string.dialog_add_bitrate_msg)
             AddCustomDialogType.AUDIO_BITRATE -> stringResource(R.string.dialog_add_audio_bitrate_msg)
+            AddCustomDialogType.DPI -> stringResource(R.string.dialog_add_dpi_msg)
         }
         val invalidNumMsg = stringResource(R.string.err_invalid_positive_number)
 
@@ -762,6 +908,12 @@ fun ScrcpyScreen(
                                     prefs.edit().putStringSet("scrcpy_custom_audio_bitrates", newList.map { it.toString() }.toSet()).apply()
                                     config = config.copy(audioBitRateKbps = num)
                                 }
+                                AddCustomDialogType.DPI -> {
+                                    val newList = (customDpis + num).distinct().sorted()
+                                    customDpis = newList
+                                    prefs.edit().putStringSet("scrcpy_custom_dpis", newList.map { it.toString() }.toSet()).apply()
+                                    config = config.copy(newDisplayDpi = num)
+                                }
                             }
                             activeAddDialog = null
                         }
@@ -784,21 +936,28 @@ private fun VideoSourceSettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
     supportsCamera: Boolean,
+    supportsVirtual: Boolean,
     apiLevel: Int,
     onConfigChange: (ScrcpyConfig) -> Unit
 ) {
     Text(stringResource(R.string.section_video_source), style = MaterialTheme.typography.labelMedium)
     Spacer(Modifier.height(4.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         listOf(
             stringResource(R.string.video_source_screen) to "display",
-            stringResource(R.string.video_source_camera) to "camera"
+            stringResource(R.string.video_source_camera) to "camera",
+            stringResource(R.string.video_source_virtual) to "virtual"
         ).forEach { (label, value) ->
             val isCamera = value == "camera"
+            val isVirtual = value == "virtual"
+            val isSupported = (!isCamera || supportsCamera) && (!isVirtual || supportsVirtual)
             FilterChip(
                 selected = config.videoSource == value,
                 onClick = {
-                    if (!isCamera || supportsCamera) {
+                    if (isSupported) {
                         onConfigChange(
                             config.copy(
                                 videoSource = value,
@@ -807,7 +966,7 @@ private fun VideoSourceSettings(
                         )
                     }
                 },
-                enabled = !isMirroring && (!isCamera || supportsCamera),
+                enabled = !isMirroring && isSupported,
                 label = { Text(label, style = MaterialTheme.typography.labelSmall) }
             )
         }
@@ -820,6 +979,14 @@ private fun VideoSourceSettings(
             color = MaterialTheme.colorScheme.error
         )
     }
+    if (!supportsVirtual) {
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = stringResource(R.string.virtual_source_subtitle_req, apiLevel),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
 }
 
 @Composable
@@ -828,12 +995,32 @@ private fun CameraSettings(
     isMirroring: Boolean,
     discoveredCameras: List<CameraDevice>,
     isDiscovering: Boolean,
+    onRefreshCameras: () -> Unit = {},
     onConfigChange: (ScrcpyConfig) -> Unit
 ) {
     if (config.videoSource != "camera") return
 
     Spacer(Modifier.height(8.dp))
-    Text(stringResource(R.string.section_camera), style = MaterialTheme.typography.labelMedium)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.section_camera), style = MaterialTheme.typography.labelMedium)
+        if (!isMirroring && !isDiscovering) {
+            IconButton(
+                onClick = onRefreshCameras,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.btn_refresh),
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
     Spacer(Modifier.height(6.dp))
 
     if (isDiscovering) {
@@ -945,18 +1132,421 @@ private fun CameraSettings(
 }
 
 @Composable
+private fun VirtualScreenSettings(
+    config: ScrcpyConfig,
+    isMirroring: Boolean,
+    discoveredApps: List<ScrcpyApp>,
+    isDiscovering: Boolean,
+    onRefreshApps: () -> Unit = {},
+    allowCustomValues: Boolean,
+    customDpis: List<Int>,
+    onConfigChange: (ScrcpyConfig) -> Unit,
+    onOpenAddDialog: (AddCustomDialogType) -> Unit
+) {
+    if (config.videoSource != "virtual") return
+
+    Spacer(Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.section_virtual_screen), style = MaterialTheme.typography.labelMedium)
+        if (!isMirroring && !isDiscovering) {
+            IconButton(
+                onClick = onRefreshApps,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.btn_refresh),
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+    Spacer(Modifier.height(6.dp))
+
+    if (isDiscovering) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                stringResource(R.string.virtual_screen_discovering),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+    }
+
+    Text(stringResource(R.string.virtual_screen_dpi), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Spacer(Modifier.height(4.dp))
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        FilterChip(
+            selected = config.newDisplayDpi == null,
+            onClick = { onConfigChange(config.copy(newDisplayDpi = null)) },
+            enabled = !isMirroring,
+            label = { Text(stringResource(R.string.virtual_screen_dpi_auto), style = MaterialTheme.typography.labelSmall) }
+        )
+        val defaultDpis = listOf(160, 240, 320, 420, 480)
+        defaultDpis.forEach { dpi ->
+            FilterChip(
+                selected = config.newDisplayDpi == dpi,
+                onClick = { onConfigChange(config.copy(newDisplayDpi = dpi)) },
+                enabled = !isMirroring,
+                label = { Text(stringResource(R.string.virtual_screen_dpi_format, dpi), style = MaterialTheme.typography.labelSmall) }
+            )
+        }
+        if (allowCustomValues) {
+            customDpis.forEach { dpi ->
+                FilterChip(
+                    selected = config.newDisplayDpi == dpi,
+                    onClick = { onConfigChange(config.copy(newDisplayDpi = dpi)) },
+                    enabled = !isMirroring,
+                    label = { Text(stringResource(R.string.virtual_screen_dpi_format, dpi), style = MaterialTheme.typography.labelSmall) }
+                )
+            }
+            FilterChip(
+                selected = false,
+                onClick = { onOpenAddDialog(AddCustomDialogType.DPI) },
+                enabled = !isMirroring,
+                label = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(2.dp))
+                        Text(stringResource(R.string.label_add_chip), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            )
+        }
+    }
+
+    Spacer(Modifier.height(8.dp))
+    Text(stringResource(R.string.virtual_screen_app), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Spacer(Modifier.height(4.dp))
+
+    var showAppPicker by remember { mutableStateOf(false) }
+
+    val selectedApp = discoveredApps.find { it.packageName == config.newDisplayApp }
+    val displayAppName = when {
+        config.newDisplayApp == null -> stringResource(R.string.virtual_screen_default_launcher)
+        selectedApp != null -> selectedApp.name
+        else -> config.newDisplayApp ?: stringResource(R.string.virtual_screen_default_launcher)
+    }
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !isMirroring) { showAppPicker = true }
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    Icons.Filled.Android,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = displayAppName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (config.newDisplayApp != null) {
+                        Text(
+                            text = config.newDisplayApp!!,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+            Icon(
+                Icons.Filled.ArrowDropDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+
+    if (showAppPicker) {
+        AppPickerDialog(
+            currentPackage = config.newDisplayApp,
+            apps = discoveredApps,
+            onDismiss = { showAppPicker = false },
+            onSelect = { appPackage ->
+                onConfigChange(config.copy(newDisplayApp = appPackage))
+                showAppPicker = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun AppPickerDialog(
+    currentPackage: String?,
+    apps: List<ScrcpyApp>,
+    onDismiss: () -> Unit,
+    onSelect: (String?) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredApps = remember(searchQuery, apps) {
+        if (searchQuery.isBlank()) {
+            apps
+        } else {
+            val q = searchQuery.trim().lowercase()
+            apps.filter {
+                it.name.lowercase().contains(q) || it.packageName.lowercase().contains(q)
+            }
+        }
+    }
+
+    val userApps = remember(filteredApps) { filteredApps.filter { !it.isSystem } }
+    val systemApps = remember(filteredApps) { filteredApps.filter { it.isSystem } }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(stringResource(R.string.virtual_screen_select_app), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text(stringResource(R.string.virtual_screen_search_apps)) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
+                    item {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(null) },
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (currentPackage == null) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.virtual_screen_default_launcher),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                if (currentPackage == null) {
+                                    Icon(
+                                        Icons.Filled.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    }
+
+                    if (filteredApps.isEmpty() && searchQuery.isNotBlank()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    stringResource(R.string.virtual_screen_no_apps_found),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    if (userApps.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.virtual_screen_user_apps),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)
+                            )
+                        }
+                        items(userApps, key = { it.packageName }) { app ->
+                            val isSelected = currentPackage == app.packageName
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onSelect(app.packageName) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = app.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = app.packageName,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    if (isSelected) {
+                                        Icon(
+                                            Icons.Filled.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (systemApps.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.virtual_screen_system_apps),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)
+                            )
+                        }
+                        items(systemApps, key = { it.packageName }) { app ->
+                            val isSelected = currentPackage == app.packageName
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onSelect(app.packageName) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = app.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = app.packageName,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    if (isSelected) {
+                                        Icon(
+                                            Icons.Filled.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_cancel))
+            }
+        }
+    )
+}
+
+@Composable
 private fun VideoSettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
     supportsAudio: Boolean,
     supportsCamera: Boolean,
+    supportsVirtual: Boolean,
     apiLevel: Int,
     allowCustomValues: Boolean,
     customMaxSizes: List<Int>,
     customFps: List<Int>,
     customBitrates: List<Int>,
+    customDpis: List<Int>,
     discoveredCameras: List<CameraDevice>,
     isDiscoveringCameras: Boolean,
+    discoveredApps: List<ScrcpyApp>,
+    isDiscoveringApps: Boolean,
+    onRefreshCameras: () -> Unit = {},
+    onRefreshApps: () -> Unit = {},
     onConfigChange: (ScrcpyConfig) -> Unit,
     onOpenAddDialog: (AddCustomDialogType) -> Unit
 ) {
@@ -998,6 +1588,7 @@ private fun VideoSettings(
         config = config,
         isMirroring = isMirroring,
         supportsCamera = supportsCamera,
+        supportsVirtual = supportsVirtual,
         apiLevel = apiLevel,
         onConfigChange = onConfigChange
     )
@@ -1007,7 +1598,20 @@ private fun VideoSettings(
         isMirroring = isMirroring,
         discoveredCameras = discoveredCameras,
         isDiscovering = isDiscoveringCameras,
+        onRefreshCameras = onRefreshCameras,
         onConfigChange = onConfigChange
+    )
+
+    VirtualScreenSettings(
+        config = config,
+        isMirroring = isMirroring,
+        discoveredApps = discoveredApps,
+        isDiscovering = isDiscoveringApps,
+        onRefreshApps = onRefreshApps,
+        allowCustomValues = allowCustomValues,
+        customDpis = customDpis,
+        onConfigChange = onConfigChange,
+        onOpenAddDialog = onOpenAddDialog
     )
 
     if (config.videoSource != "camera") {
