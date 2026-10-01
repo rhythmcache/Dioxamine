@@ -23,13 +23,23 @@ A `Promise` resolving to an `ActiveDeviceStatus` object (`{ connected: true }`) 
 
 ```typescript
 interface ActiveDeviceStatus {
-    connected: boolean;  // Always true when an active device is connected
+    connected: boolean;          // Always true when an active device is connected
+    id?: string;                 // Device connection ID (e.g. "192.168.1.100:5555" or USB serial)
+    label?: string;              // Display name or model
+    model?: string;              // Device model name (e.g. "Pixel 7 Pro", "SM-S918B")
+    androidVersion?: string;     // Android OS version (e.g. "14", "13")
+    apiLevel?: number;           // Android SDK API level (e.g. 34, 33)
+    uniqueId?: string;           // Permanent hardware serial or android_id for persistent device identification
+    isRoot?: boolean;            // Whether ADB shell execution runs as root (uid=0)
+    transport?: "USB" | "TCP";   // Connection transport type
+    mode?: string;               // ADB device mode ("DEVICE", "RECOVERY", "SIDELOAD", "RESCUE", etc.)
+    supportsShellV2?: boolean;   // Whether the device supports the shell v2 protocol
 }
 ```
 
 ### Retrieving Device Details
 
-If your plugin needs specific device identifiers or properties (such as device model, Android release version, or serial number), query them using `dioxamine.adb.shellExec()`:
+`dioxamine.adb.getActiveDevice()` directly returns cached device metadata without requiring `shell` permissions or executing `getprop`:
 
 ```javascript
 async function getDeviceInfo() {
@@ -39,16 +49,14 @@ async function getDeviceInfo() {
         return null;
     }
 
-    const [modelRes, versionRes, serialRes] = await Promise.all([
-        dioxamine.adb.shellExec("getprop ro.product.model"),
-        dioxamine.adb.shellExec("getprop ro.build.version.release"),
-        dioxamine.adb.shellExec("getprop ro.serialno")
-    ]);
-
     return {
-        model: modelRes.stdout.trim() || "Unknown",
-        androidVersion: versionRes.stdout.trim() || "Unknown",
-        serial: serialRes.stdout.trim() || "Unknown"
+        id: device.id,
+        model: device.model || "Unknown",
+        androidVersion: device.androidVersion || "Unknown",
+        apiLevel: device.apiLevel,
+        uniqueId: device.uniqueId,
+        isRoot: device.isRoot,
+        transport: device.transport
     };
 }
 ```
