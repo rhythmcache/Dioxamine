@@ -481,6 +481,40 @@
         openUrl: function(url) {
             return this.openBrowser(url);
         },
+        vibrate: function(durationMs) {
+            if (window.DioxamineNative && typeof window.DioxamineNative.vibrate === 'function') {
+                window.DioxamineNative.vibrate(typeof durationMs === 'number' ? durationMs : 50);
+            }
+        },
+        haptics: {
+            impact: function(style) {
+                var type = style === 'heavy' ? 'heavy_click' : (style === 'light' ? 'tick' : 'click');
+                if (window.DioxamineNative && typeof window.DioxamineNative.performHaptic === 'function') {
+                    window.DioxamineNative.performHaptic(type);
+                }
+            },
+            notification: function(type) {
+                if (window.DioxamineNative && typeof window.DioxamineNative.performHaptic === 'function') {
+                    if (type === 'error') {
+                        window.DioxamineNative.performHaptic('double_click');
+                    } else if (type === 'warning') {
+                        window.DioxamineNative.performHaptic('heavy_click');
+                    } else {
+                        window.DioxamineNative.performHaptic('click');
+                    }
+                }
+            },
+            selection: function() {
+                if (window.DioxamineNative && typeof window.DioxamineNative.performHaptic === 'function') {
+                    window.DioxamineNative.performHaptic('tick');
+                }
+            },
+            cancel: function() {
+                if (window.DioxamineNative && typeof window.DioxamineNative.cancelVibration === 'function') {
+                    window.DioxamineNative.cancelVibration();
+                }
+            }
+        },
         log: {
             v: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('V', tag, String(msg)); },
             d: function(tag, msg) { if (window.DioxamineNative && window.DioxamineNative.logMessage) window.DioxamineNative.logMessage('D', tag, String(msg)); },

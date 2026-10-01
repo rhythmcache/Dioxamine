@@ -3,8 +3,12 @@ package io.github.rhythmcache.dioxamine.plugin
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
@@ -899,6 +903,58 @@ class DioxaminePluginBridge(
     @JavascriptInterface
     fun getVersionAsync(callbackId: String) {
         getAppVersionAsync(callbackId)
+    }
+
+    private val vibrator: Vibrator by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+
+    @JavascriptInterface
+    fun vibrate(durationMs: Long) {
+        if (!vibrator.hasVibrator()) return
+        val clamped = durationMs.coerceIn(1L, 3000L)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(clamped, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(clamped)
+        }
+    }
+
+    @JavascriptInterface
+    fun performHaptic(type: String) {
+        if (!vibrator.hasVibrator()) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val effectId = when (type.lowercase()) {
+                "click" -> VibrationEffect.EFFECT_CLICK
+                "heavy_click", "heavy" -> VibrationEffect.EFFECT_HEAVY_CLICK
+                "double_click" -> VibrationEffect.EFFECT_DOUBLE_CLICK
+                "tick" -> VibrationEffect.EFFECT_TICK
+                else -> VibrationEffect.EFFECT_CLICK
+            }
+            vibrator.vibrate(VibrationEffect.createPredefined(effectId))
+        } else {
+            val duration = when (type.lowercase()) {
+                "tick" -> 10L
+                "heavy_click", "heavy" -> 50L
+                else -> 25L
+            }
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(duration)
+        }
+    }
+
+    @JavascriptInterface
+    fun cancelVibration() {
+        if (vibrator.hasVibrator()) {
+            vibrator.cancel()
+        }
     }
 
     @JavascriptInterface

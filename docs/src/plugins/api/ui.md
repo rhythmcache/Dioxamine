@@ -360,3 +360,63 @@ if (appInfo.versionCode >= 10004) {
 // Or using the property shorthand
 document.getElementById('version-tag').textContent = `Dioxamine v${dioxamine.appVersion.versionName}`;
 ```
+
+---
+
+## Vibration and Haptic Feedback
+
+Plugins can trigger native tactile feedback for clicks, toggles, errors, success events, or custom durations.
+
+### `dioxamine.vibrate()`
+
+Triggers physical device vibration for a specified duration in milliseconds.
+
+```javascript
+dioxamine.vibrate(durationMs?: number): void
+```
+
+- `durationMs` (`number`, optional): Vibration length in milliseconds (clamped between 1ms and 3000ms). Default: `50`.
+
+```javascript
+// Quick 100ms vibration
+dioxamine.vibrate(100);
+```
+
+### `dioxamine.haptics`
+
+Rich haptic effects matching modern Android system interaction patterns.
+
+#### `dioxamine.haptics.selection()`
+Triggers a subtle tick feedback, suitable for sliders, picker adjustments, and small clicks.
+
+```javascript
+dioxamine.haptics.selection();
+```
+
+#### `dioxamine.haptics.impact(style)`
+Triggers physical impact feedback.
+- `style`: `'light'` | `'medium'` | `'heavy'`.
+
+```javascript
+dioxamine.haptics.impact('light');
+dioxamine.haptics.impact('heavy');
+```
+
+#### `dioxamine.haptics.notification(type)`
+Triggers pattern feedback for user notification outcomes.
+- `type`: `'success'` | `'warning'` | `'error'`.
+
+```javascript
+// Double-click error feedback
+dioxamine.haptics.notification('error');
+
+// Success feedback
+dioxamine.haptics.notification('success');
+```
+
+#### `dioxamine.haptics.cancel()`
+Cancels any ongoing vibration immediately.
+
+```javascript
+dioxamine.haptics.cancel();
+```
