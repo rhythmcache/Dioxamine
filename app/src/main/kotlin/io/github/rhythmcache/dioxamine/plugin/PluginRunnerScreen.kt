@@ -110,6 +110,7 @@ fun PluginRunnerScreen(
                 pluginName = manifest.name,
                 declaredPermissions = declaredPermissions,
                 getActiveClient = { vm.activeClient() },
+                getActiveDevice = { vm.activeDeviceId?.let { vm.devices[it] } },
                 getActiveFastbootClient = { fastbootVm?.activeClient() },
                 getActiveFastbootDevice = {
                     fastbootVm?.connectedDeviceId?.let { id -> fastbootVm.devices[id] }

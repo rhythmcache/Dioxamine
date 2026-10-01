@@ -13,6 +13,7 @@ import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.adb.AdbClient
 import io.github.rhythmcache.adb.AdbInteractiveSession
 import io.github.rhythmcache.dioxamine.core.AppLogger
+import io.github.rhythmcache.dioxamine.core.DeviceConnection
 import io.github.rhythmcache.adb.AdbStream
 import io.github.rhythmcache.dioxamine.fastboot.FastbootDevice
 import io.github.rhythmcache.fastboot.FastbootClient
@@ -57,6 +58,7 @@ class DioxaminePluginBridge(
     private val pluginName: String,
     private val declaredPermissions: List<PluginPermission>,
     private val getActiveClient: () -> AdbClient?,
+    private val getActiveDevice: () -> DeviceConnection? = { null },
     private val getActiveFastbootClient: () -> FastbootClient? = { null },
     private val getActiveFastbootDevice: () -> FastbootDevice? = { null },
     private val permissionGate: PluginPermissionGate,
@@ -129,10 +131,28 @@ class DioxaminePluginBridge(
         scope.launch(Dispatchers.IO) {
             try {
                 val client = getActiveClient()
+                val device = getActiveDevice()
                 if (client == null) {
                     resolve(callbackId, JsonNull)
                 } else {
-                    resolve(callbackId, buildJsonObject { put("connected", true) })
+                    resolve(
+                        callbackId,
+                        buildJsonObject {
+                            put("connected", true)
+                            if (device != null) {
+                                put("id", device.id)
+                                put("label", device.label)
+                                device.model?.let { put("model", it) }
+                                device.androidVersion?.let { put("androidVersion", it) }
+                                device.apiLevel?.let { put("apiLevel", it) }
+                                device.uniqueId?.let { put("uniqueId", it) }
+                                put("isRoot", device.isRoot)
+                                put("transport", device.transport.name)
+                                put("mode", device.mode.name)
+                                put("supportsShellV2", device.supportsShellV2)
+                            }
+                        },
+                    )
                 }
             } catch (e: Exception) {
                 reject(callbackId, e.message ?: e.toString())
