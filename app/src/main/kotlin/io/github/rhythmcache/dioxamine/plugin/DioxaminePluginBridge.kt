@@ -3,8 +3,12 @@ package io.github.rhythmcache.dioxamine.plugin
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
@@ -13,6 +17,7 @@ import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.adb.AdbClient
 import io.github.rhythmcache.adb.AdbInteractiveSession
 import io.github.rhythmcache.dioxamine.core.AppLogger
+import io.github.rhythmcache.dioxamine.core.DeviceConnection
 import io.github.rhythmcache.adb.AdbStream
 import io.github.rhythmcache.dioxamine.fastboot.FastbootDevice
 import io.github.rhythmcache.fastboot.FastbootClient
@@ -57,6 +62,7 @@ class DioxaminePluginBridge(
     private val pluginName: String,
     private val declaredPermissions: List<PluginPermission>,
     private val getActiveClient: () -> AdbClient?,
+    private val getActiveDevice: () -> DeviceConnection? = { null },
     private val getActiveFastbootClient: () -> FastbootClient? = { null },
     private val getActiveFastbootDevice: () -> FastbootDevice? = { null },
     private val permissionGate: PluginPermissionGate,
@@ -129,10 +135,28 @@ class DioxaminePluginBridge(
         scope.launch(Dispatchers.IO) {
             try {
                 val client = getActiveClient()
+                val device = getActiveDevice()
                 if (client == null) {
                     resolve(callbackId, JsonNull)
                 } else {
-                    resolve(callbackId, buildJsonObject { put("connected", true) })
+                    resolve(
+                        callbackId,
+                        buildJsonObject {
+                            put("connected", true)
+                            if (device != null) {
+                                put("id", device.id)
+                                put("label", device.label)
+                                device.model?.let { put("model", it) }
+                                device.androidVersion?.let { put("androidVersion", it) }
+                                device.apiLevel?.let { put("apiLevel", it) }
+                                device.uniqueId?.let { put("uniqueId", it) }
+                                put("isRoot", device.isRoot)
+                                put("transport", device.transport.name)
+                                put("mode", device.mode.name)
+                                put("supportsShellV2", device.supportsShellV2)
+                            }
+                        },
+                    )
                 }
             } catch (e: Exception) {
                 reject(callbackId, e.message ?: e.toString())
@@ -879,6 +903,58 @@ class DioxaminePluginBridge(
     @JavascriptInterface
     fun getVersionAsync(callbackId: String) {
         getAppVersionAsync(callbackId)
+    }
+
+    private val vibrator: Vibrator by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+
+    @JavascriptInterface
+    fun vibrate(durationMs: Long) {
+        if (!vibrator.hasVibrator()) return
+        val clamped = durationMs.coerceIn(1L, 3000L)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(clamped, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(clamped)
+        }
+    }
+
+    @JavascriptInterface
+    fun performHaptic(type: String) {
+        if (!vibrator.hasVibrator()) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val effectId = when (type.lowercase()) {
+                "click" -> VibrationEffect.EFFECT_CLICK
+                "heavy_click", "heavy" -> VibrationEffect.EFFECT_HEAVY_CLICK
+                "double_click" -> VibrationEffect.EFFECT_DOUBLE_CLICK
+                "tick" -> VibrationEffect.EFFECT_TICK
+                else -> VibrationEffect.EFFECT_CLICK
+            }
+            vibrator.vibrate(VibrationEffect.createPredefined(effectId))
+        } else {
+            val duration = when (type.lowercase()) {
+                "tick" -> 10L
+                "heavy_click", "heavy" -> 50L
+                else -> 25L
+            }
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(duration)
+        }
+    }
+
+    @JavascriptInterface
+    fun cancelVibration() {
+        if (vibrator.hasVibrator()) {
+            vibrator.cancel()
+        }
     }
 
     @JavascriptInterface
