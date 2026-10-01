@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../../searchindex-7d40b290.js";
+            window.path_to_searchindex_js = "../../searchindex-61cb9288.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-97d3260d.js"></script>
@@ -196,11 +196,21 @@
 <p>A <code>Promise</code> resolving to an <code>ActiveDeviceStatus</code> object (<code>{ connected: true }</code>) if an active device is connected, or <code>null</code> if no device is connected.</p>
 <h3 id="activedevicestatus-object-structure"><a class="header" href="#activedevicestatus-object-structure"><code>ActiveDeviceStatus</code> Object Structure</a></h3>
 <pre><code class="language-typescript">interface ActiveDeviceStatus {
-    connected: boolean;  // Always true when an active device is connected
+    connected: boolean;          // Always true when an active device is connected
+    id?: string;                 // Device connection ID (e.g. "192.168.1.100:5555" or USB serial)
+    label?: string;              // Display name or model
+    model?: string;              // Device model name (e.g. "Pixel 7 Pro", "SM-S918B")
+    androidVersion?: string;     // Android OS version (e.g. "14", "13")
+    apiLevel?: number;           // Android SDK API level (e.g. 34, 33)
+    uniqueId?: string;           // Permanent hardware serial or android_id for persistent device identification
+    isRoot?: boolean;            // Whether ADB shell execution runs as root (uid=0)
+    transport?: "USB" | "TCP";   // Connection transport type
+    mode?: string;               // ADB device mode ("DEVICE", "RECOVERY", "SIDELOAD", "RESCUE", etc.)
+    supportsShellV2?: boolean;   // Whether the device supports the shell v2 protocol
 }
 </code></pre>
 <h3 id="retrieving-device-details"><a class="header" href="#retrieving-device-details">Retrieving Device Details</a></h3>
-<p>If your plugin needs specific device identifiers or properties (such as device model, Android release version, or serial number), query them using <code>dioxamine.adb.shellExec()</code>:</p>
+<p><code>dioxamine.adb.getActiveDevice()</code> directly returns cached device metadata without requiring <code>shell</code> permissions or executing <code>getprop</code>:</p>
 <pre><code class="language-javascript">async function getDeviceInfo() {
     const device = await dioxamine.adb.getActiveDevice();
     if (!device) {
@@ -208,16 +218,14 @@
         return null;
     }
 
-    const [modelRes, versionRes, serialRes] = await Promise.all([
-        dioxamine.adb.shellExec("getprop ro.product.model"),
-        dioxamine.adb.shellExec("getprop ro.build.version.release"),
-        dioxamine.adb.shellExec("getprop ro.serialno")
-    ]);
-
     return {
-        model: modelRes.stdout.trim() || "Unknown",
-        androidVersion: versionRes.stdout.trim() || "Unknown",
-        serial: serialRes.stdout.trim() || "Unknown"
+        id: device.id,
+        model: device.model || "Unknown",
+        androidVersion: device.androidVersion || "Unknown",
+        apiLevel: device.apiLevel,
+        uniqueId: device.uniqueId,
+        isRoot: device.isRoot,
+        transport: device.transport
     };
 }
 </code></pre>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../../searchindex-7d40b290.js";
+            window.path_to_searchindex_js = "../../searchindex-61cb9288.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-97d3260d.js"></script>
@@ -447,6 +447,48 @@ if (appInfo.versionCode &gt;= 10004) {
 
 // Or using the property shorthand
 document.getElementById('version-tag').textContent = `Dioxamine v${dioxamine.appVersion.versionName}`;
+</code></pre>
+<hr>
+<h2 id="vibration-and-haptic-feedback"><a class="header" href="#vibration-and-haptic-feedback">Vibration and Haptic Feedback</a></h2>
+<p>Plugins can trigger native tactile feedback for clicks, toggles, errors, success events, or custom durations.</p>
+<h3 id="dioxaminevibrate"><a class="header" href="#dioxaminevibrate"><code>dioxamine.vibrate()</code></a></h3>
+<p>Triggers physical device vibration for a specified duration in milliseconds.</p>
+<pre><code class="language-javascript">dioxamine.vibrate(durationMs?: number): void
+</code></pre>
+<ul>
+<li><code>durationMs</code> (<code>number</code>, optional): Vibration length in milliseconds (clamped between 1ms and 3000ms). Default: <code>50</code>.</li>
+</ul>
+<pre><code class="language-javascript">// Quick 100ms vibration
+dioxamine.vibrate(100);
+</code></pre>
+<h3 id="dioxaminehaptics"><a class="header" href="#dioxaminehaptics"><code>dioxamine.haptics</code></a></h3>
+<p>Rich haptic effects matching modern Android system interaction patterns.</p>
+<h4 id="dioxaminehapticsselection"><a class="header" href="#dioxaminehapticsselection"><code>dioxamine.haptics.selection()</code></a></h4>
+<p>Triggers a subtle tick feedback, suitable for sliders, picker adjustments, and small clicks.</p>
+<pre><code class="language-javascript">dioxamine.haptics.selection();
+</code></pre>
+<h4 id="dioxaminehapticsimpactstyle"><a class="header" href="#dioxaminehapticsimpactstyle"><code>dioxamine.haptics.impact(style)</code></a></h4>
+<p>Triggers physical impact feedback.</p>
+<ul>
+<li><code>style</code>: <code>'light'</code> | <code>'medium'</code> | <code>'heavy'</code>.</li>
+</ul>
+<pre><code class="language-javascript">dioxamine.haptics.impact('light');
+dioxamine.haptics.impact('heavy');
+</code></pre>
+<h4 id="dioxaminehapticsnotificationtype"><a class="header" href="#dioxaminehapticsnotificationtype"><code>dioxamine.haptics.notification(type)</code></a></h4>
+<p>Triggers pattern feedback for user notification outcomes.</p>
+<ul>
+<li><code>type</code>: <code>'success'</code> | <code>'warning'</code> | <code>'error'</code>.</li>
+</ul>
+<pre><code class="language-javascript">// Double-click error feedback
+dioxamine.haptics.notification('error');
+
+// Success feedback
+dioxamine.haptics.notification('success');
+</code></pre>
+<h4 id="dioxaminehapticscancel"><a class="header" href="#dioxaminehapticscancel"><code>dioxamine.haptics.cancel()</code></a></h4>
+<p>Cancels any ongoing vibration immediately.</p>
+<pre><code class="language-javascript">dioxamine.haptics.cancel();
 </code></pre>
 
                     </main>

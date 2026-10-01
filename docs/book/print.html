@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-7d40b290.js";
+            window.path_to_searchindex_js = "searchindex-61cb9288.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-97d3260d.js"></script>
@@ -2239,7 +2239,7 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <li><strong><a href="#interactive-shell-sessions-openinteractiveshell">ADB Interactive Shell Sessions</a></strong>: Open persistent bi-directional PTY streams via <code>dioxamine.adb.openInteractiveShell()</code>.</li>
 <li><strong><a href="#file-operations-and-storage-api">File Operations and Temporary Storage</a></strong>: Pull/push files via <code>dioxamine.adb.pull()</code> / <code>dioxamine.adb.push()</code>, open system file pickers via <code>dioxamine.requestFilePicker()</code>, and stream payloads to disk using session-scoped temporary files via <code>dioxamine.tempFile.create()</code>.</li>
 <li><strong><a href="#port-forwarding-and-reverse-api">ADB Port Forwarding and Reverse</a></strong>: Manage TCP socket forwarding via <code>dioxamine.adb.forwardAdd()</code> / <code>reverseAdd()</code>.</li>
-<li><strong><a href="#ui-controls-dialogs-and-fullscreen">UI Controls, Dialogs, Buttons and Fullscreen</a></strong>: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, intercept Back and Volume buttons, inspect host app version, and open external links in the host device browser.</li>
+<li><strong><a href="#ui-controls-dialogs-and-fullscreen">UI Controls, Dialogs, Buttons, Vibration and Fullscreen</a></strong>: Show native Material toasts, blocking dialogs, toggle edge-to-edge full-screen mode, intercept Back and Volume buttons, trigger native vibration and haptic feedback (<code>vibrate</code>, <code>haptics</code>), inspect host app version, and open external links in the host device browser.</li>
 <li><strong><a href="#native-logging-and-debugging">Native Logging and Debugging</a></strong>: Forward logs and console output directly to Android Logcat.</li>
 <li><strong><a href="#dynamic-theming-and-material-3">Dynamic Theming and Material 3</a></strong>: Integrate with Dioxamine’s dynamic color schemes and listen for theme changes.</li>
 <li><strong><a href="#app-language-and-localization">App Language and Localization</a></strong>: Detect Dioxamine’s active app language, text direction (RTL/LTR), and build multi-language plugins.</li>
@@ -2263,11 +2263,21 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
 <p>A <code>Promise</code> resolving to an <code>ActiveDeviceStatus</code> object (<code>{ connected: true }</code>) if an active device is connected, or <code>null</code> if no device is connected.</p>
 <h3 id="activedevicestatus-object-structure"><a class="header" href="#activedevicestatus-object-structure"><code>ActiveDeviceStatus</code> Object Structure</a></h3>
 <pre><code class="language-typescript">interface ActiveDeviceStatus {
-    connected: boolean;  // Always true when an active device is connected
+    connected: boolean;          // Always true when an active device is connected
+    id?: string;                 // Device connection ID (e.g. "192.168.1.100:5555" or USB serial)
+    label?: string;              // Display name or model
+    model?: string;              // Device model name (e.g. "Pixel 7 Pro", "SM-S918B")
+    androidVersion?: string;     // Android OS version (e.g. "14", "13")
+    apiLevel?: number;           // Android SDK API level (e.g. 34, 33)
+    uniqueId?: string;           // Permanent hardware serial or android_id for persistent device identification
+    isRoot?: boolean;            // Whether ADB shell execution runs as root (uid=0)
+    transport?: "USB" | "TCP";   // Connection transport type
+    mode?: string;               // ADB device mode ("DEVICE", "RECOVERY", "SIDELOAD", "RESCUE", etc.)
+    supportsShellV2?: boolean;   // Whether the device supports the shell v2 protocol
 }
 </code></pre>
 <h3 id="retrieving-device-details"><a class="header" href="#retrieving-device-details">Retrieving Device Details</a></h3>
-<p>If your plugin needs specific device identifiers or properties (such as device model, Android release version, or serial number), query them using <code>dioxamine.adb.shellExec()</code>:</p>
+<p><code>dioxamine.adb.getActiveDevice()</code> directly returns cached device metadata without requiring <code>shell</code> permissions or executing <code>getprop</code>:</p>
 <pre><code class="language-javascript">async function getDeviceInfo() {
     const device = await dioxamine.adb.getActiveDevice();
     if (!device) {
@@ -2275,16 +2285,14 @@ if (window.dioxamine &amp;&amp; window.__dioxamine_bridge_ready) {
         return null;
     }
 
-    const [modelRes, versionRes, serialRes] = await Promise.all([
-        dioxamine.adb.shellExec("getprop ro.product.model"),
-        dioxamine.adb.shellExec("getprop ro.build.version.release"),
-        dioxamine.adb.shellExec("getprop ro.serialno")
-    ]);
-
     return {
-        model: modelRes.stdout.trim() || "Unknown",
-        androidVersion: versionRes.stdout.trim() || "Unknown",
-        serial: serialRes.stdout.trim() || "Unknown"
+        id: device.id,
+        model: device.model || "Unknown",
+        androidVersion: device.androidVersion || "Unknown",
+        apiLevel: device.apiLevel,
+        uniqueId: device.uniqueId,
+        isRoot: device.isRoot,
+        transport: device.transport
     };
 }
 </code></pre>
@@ -2900,6 +2908,48 @@ if (appInfo.versionCode &gt;= 10004) {
 
 // Or using the property shorthand
 document.getElementById('version-tag').textContent = `Dioxamine v${dioxamine.appVersion.versionName}`;
+</code></pre>
+<hr>
+<h2 id="vibration-and-haptic-feedback"><a class="header" href="#vibration-and-haptic-feedback">Vibration and Haptic Feedback</a></h2>
+<p>Plugins can trigger native tactile feedback for clicks, toggles, errors, success events, or custom durations.</p>
+<h3 id="dioxaminevibrate"><a class="header" href="#dioxaminevibrate"><code>dioxamine.vibrate()</code></a></h3>
+<p>Triggers physical device vibration for a specified duration in milliseconds.</p>
+<pre><code class="language-javascript">dioxamine.vibrate(durationMs?: number): void
+</code></pre>
+<ul>
+<li><code>durationMs</code> (<code>number</code>, optional): Vibration length in milliseconds (clamped between 1ms and 3000ms). Default: <code>50</code>.</li>
+</ul>
+<pre><code class="language-javascript">// Quick 100ms vibration
+dioxamine.vibrate(100);
+</code></pre>
+<h3 id="dioxaminehaptics"><a class="header" href="#dioxaminehaptics"><code>dioxamine.haptics</code></a></h3>
+<p>Rich haptic effects matching modern Android system interaction patterns.</p>
+<h4 id="dioxaminehapticsselection"><a class="header" href="#dioxaminehapticsselection"><code>dioxamine.haptics.selection()</code></a></h4>
+<p>Triggers a subtle tick feedback, suitable for sliders, picker adjustments, and small clicks.</p>
+<pre><code class="language-javascript">dioxamine.haptics.selection();
+</code></pre>
+<h4 id="dioxaminehapticsimpactstyle"><a class="header" href="#dioxaminehapticsimpactstyle"><code>dioxamine.haptics.impact(style)</code></a></h4>
+<p>Triggers physical impact feedback.</p>
+<ul>
+<li><code>style</code>: <code>'light'</code> | <code>'medium'</code> | <code>'heavy'</code>.</li>
+</ul>
+<pre><code class="language-javascript">dioxamine.haptics.impact('light');
+dioxamine.haptics.impact('heavy');
+</code></pre>
+<h4 id="dioxaminehapticsnotificationtype"><a class="header" href="#dioxaminehapticsnotificationtype"><code>dioxamine.haptics.notification(type)</code></a></h4>
+<p>Triggers pattern feedback for user notification outcomes.</p>
+<ul>
+<li><code>type</code>: <code>'success'</code> | <code>'warning'</code> | <code>'error'</code>.</li>
+</ul>
+<pre><code class="language-javascript">// Double-click error feedback
+dioxamine.haptics.notification('error');
+
+// Success feedback
+dioxamine.haptics.notification('success');
+</code></pre>
+<h4 id="dioxaminehapticscancel"><a class="header" href="#dioxaminehapticscancel"><code>dioxamine.haptics.cancel()</code></a></h4>
+<p>Cancels any ongoing vibration immediately.</p>
+<pre><code class="language-javascript">dioxamine.haptics.cancel();
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="native-logging-and-debugging"><a class="header" href="#native-logging-and-debugging">Native Logging and Debugging</a></h1>
