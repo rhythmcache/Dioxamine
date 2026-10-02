@@ -1027,7 +1027,62 @@ private fun PluginBrowseContent(
         }
     }
 
+    val linkColor = MaterialTheme.colorScheme.primary
+    val submissionPrompt = stringResource(R.string.plugins_submission_prompt)
+    val submissionLink = stringResource(R.string.plugins_submission_link)
+
+    val submissionAnnotatedText = remember(submissionPrompt, submissionLink, linkColor) {
+        buildAnnotatedString {
+            append(submissionPrompt)
+            if (!submissionPrompt.endsWith(" ")) {
+                append(" ")
+            }
+            withLink(
+                LinkAnnotation.Url(
+                    url = BuildConfig.PLUGIN_SUBMISSION_URL,
+                    styles = TextLinkStyles(
+                        style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.SemiBold,
+                        ),
+                    ),
+                ),
+            ) {
+                append(submissionLink)
+            }
+            append(".")
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = submissionAnnotatedText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()

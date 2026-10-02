@@ -69,6 +69,8 @@
     <string name="plugins_description">"प्लगइन्स आपको अपने या अन्य डेवलपर्स द्वारा बनाए गए कस्टम प्लगइन्स इंस्टॉल करने की सुविधा देते हैं।"</string>
     <string name="plugins_docs_prompt">"प्लगइन दस्तावेज़ के लिए, देखें: "</string>
     <string name="plugins_docs_link">"प्लगइन दस्तावेज़"</string>
+    <string name="plugins_submission_prompt">"अपने स्वयं के प्लगइन्स सबमिट करने के लिए, देखें: "</string>
+    <string name="plugins_submission_link">"प्लगइन सबमिशन गाइड"</string>
     <string name="plugins_coming_soon">अपने प्लगइन्स लिखना - जल्द आ रहा है।</string>
     <string name="plugins_no_plugins">कोई प्लगइन इंस्टॉल नहीं है</string>
     <string name="plugins_cd_install">प्लगइन इंस्टॉल करें</string>
