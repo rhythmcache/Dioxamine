@@ -1,0 +1,17 @@
+- Scrcpy: added full multi-touch gesture support with multi-pointer tracking (pinch-to-zoom, multi-finger gestures)
+- Scrcpy: added virtual display creation with customizable resolution and DPI presets
+- Scrcpy: draggable floating overlay controls with edge-adaptive snapping and sticky handle
+- Scrcpy: upgraded control message queue to an unbounded channel for stutter-free, guaranteed event dispatch
+- Scrcpy: hardened discovery pipeline with per-device synchronization, state machine, and robust error handling
+- Plugins: in-app official plugin registry with live browsing, search, and one-tap installation
+- Plugins: in-app plugin update checker (updateJson) with one-tap updates and changelog viewing
+- Plugins: added native tactile haptic feedback & vibration API (dioxamine.haptics, dioxamine.vibrate)
+- Plugins: enriched getActiveDevice API with Shell v2 status, API level, unique hardware ID, and root detection
+- Plugins: added session-scoped chunked temporary file streaming API (dioxamine.tempFile) for large data transfers
+- Plugins: added hardware Back and Volume button interception APIs with 3-tap emergency escape hatch
+- Plugins: added host app language, localization, and dynamic RTL attributes bridge API (dioxamine.getLanguage)
+- Plugins: redesigned Plugins UI with modern tab bar, rounded-square selector, and enriched details dialog
+- Plugins: added granular plugin permission manager in App Settings
+- Added complete German and Persian translations; updated Hindi, Russian, and Simplified Chinese localizations
+- Modernized project homepage and documentation manual with new APIs and architecture
+- General performance improvements, security hardening, and bug fixes

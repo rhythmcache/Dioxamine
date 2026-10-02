@@ -1,0 +1,10 @@
+﻿- First stable release of Dioxamine (v0.0.2-stable)
+- Added Custom Plugin Engine to install and run modular web-based plugins (.zip)
+- Added Plugin Permission Gate and settings to manage plugin permissions
+- Added Audio-only streaming mode in Scrcpy
+- Added built-in action shortcuts (Home, Back, Recents, Power, Volume) to the Touchpad remote control
+- Added interactive PTY support and improved terminal stability for ADB shell
+- Reorganized Scrcpy video settings with source and camera controls placed under Enable Video
+- Added proper back and exit navigation handling across screens and plugin views
+- Added in-app documentation links and guidance for ADB Shell and Plugins
+- General UI refinements and bug fixes

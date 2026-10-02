@@ -1,0 +1,11 @@
+- Added Scrcpy Session Recording to record screen mirroring video and audio directly to MP4
+- Added dedicated Recordings manager to preview, export (SAF), and delete recorded clips
+- Added Process Manager tool in ADB to monitor CPU/memory usage and manage running processes
+- Added Multi-device handling in Fastboot with interactive device chips and seamless session switching
+- Added Keep Alive background service with WakeLock to maintain connections when minimized
+- Added dynamic status notification displaying real-time connected ADB and Fastboot device counts
+- Added Hindi and Simplified Chinese localization with in-app language picker
+- Added Miscellaneous ADB tools card (battery metrics, density, timeout, display controls)
+- Added direct Documentation links in Settings > About
+- Camera mirroring is now properly gated on Android versions below 12
+- UI improvements, string fixes, and general performance enhancements

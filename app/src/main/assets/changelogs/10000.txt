@@ -1,0 +1,5 @@
+Initial 0.0.1-alpha release of Dioxamine:
+• USB OTG and Wireless ADB device connectivity with auto mDNS discovery & QR pairing
+• Comprehensive ADB device management (file manager, package manager, interactive shell, reboot options)
+• Low-latency Scrcpy screen mirroring, touch remote control, audio streaming & display tuning
+• Fastboot image flashing, bootloader locking/unlocking & Fastboot terminal

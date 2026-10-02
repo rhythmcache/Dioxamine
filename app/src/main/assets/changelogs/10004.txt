@@ -1,0 +1,11 @@
+- Added live streaming Logcat tile with real-time log reading, debounced search, and multi-level filtering
+- Scrcpy: collapsible floating overlay controls, auto-fit aspect ratio, survive screen rotation, and direct device rotate control
+- Scrcpy: added VP8/VP9 codec options and per-device settings persistence
+- Plugins: added Fastboot API support (flash, boot, reboot, variables, stage data) and Fastboot permission gating
+- Plugins: added native HTTP client (dioxamine.http.fetch) and openBrowser API with secure user confirmation dialog
+- Plugins: namespaced ADB APIs under dioxamine.adb and grouped permissions by subkeys (adb, fastboot, common)
+- Added address history and real-time autocomplete suggestions for TCP and Wireless Debugging
+- Added in-app GitHub Release Update Checker in Settings > About
+- Export ADB keys in standard PEM format
+- Added Russian translation and updated Hindi and Simplified Chinese strings
+- General UI refinements, performance improvements, and bug fixes

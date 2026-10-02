@@ -155,11 +155,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${VERSION_CODE}.txt"
+          if [ -f "assets/changelogs/${VERSION_CODE}.txt" ]; then
+            CHANGELOG_FILE="assets/changelogs/${VERSION_CODE}.txt"
+          elif [ -f "app/src/main/assets/changelogs/${VERSION_CODE}.txt" ]; then
+            CHANGELOG_FILE="app/src/main/assets/changelogs/${VERSION_CODE}.txt"
+          else
+            CHANGELOG_FILE=""
+          fi
 
           {
             echo "body<<CHANGELOG_EOF"
-            if [ -f "$CHANGELOG_FILE" ]; then
+            if [ -n "$CHANGELOG_FILE" ] && [ -f "$CHANGELOG_FILE" ]; then
               cat "$CHANGELOG_FILE"
             fi
             echo "CHANGELOG_EOF"
