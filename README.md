@@ -37,6 +37,7 @@ It focuses on:
 > Device compatibility notice: Scrcpy video streaming depends on the capabilities of both the host and slave device. Screen mirroring was tested successfully on the developer's device but may not work on every Android device. Devices without compatible hardware video decoding, or unsupported decoder configurations, may fail to start streaming or produce decoding errors. If mirroring fails, try changing the codec, resolution, FPS, or other streaming settings.
 
 - [Real-time display mirroring](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html) with full multi-touch and hardware key control
+- Virtual Screen Mirroring (Android 12+)
 - [Audio forwarding](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/settings-tuning.html) (Android 11+)
 - [Camera streaming](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/camera-streaming.html) (Android 12+ — front and rear cameras, flashlight/torch toggle, high-FPS modes)
 - [Mirroring with target screen off](https://rhythmcache.github.io/Dioxamine/book/user-guide/scrcpy-mirroring/screen-mirroring.html) to save battery and reduce heat
@@ -65,9 +66,14 @@ It focuses on:
 ### Custom plugin engine
 
 - Run custom modular tools built with HTML5, CSS, and JavaScript inside a sandboxed WebView
-- Direct JavaScript Bridge API for shell commands, file push/pull, port forwarding, and Material 3 theming
-- Install third-party `.zip` plugins or build your own
-- See the [Terminal Plugin](https://github.com/rhythmcache/Terminal) or the [Plugin Development Guide](https://rhythmcache.github.io/Dioxamine/book/plugins/overview.html)
+- Direct JavaScript Bridge API for ADB shell commands, Fastboot (flash, boot, reboot, variables), file push/pull, port forwarding, native HTTP client, and Material 3 theming
+- Fine-grained, user-gated permission system .. plugins declare exactly what they need (`adb.shell`, `fastboot`, etc.) and users approve per-permission, with always-allow/always-deny/session options
+- Install third-party `.zip` plugins or build your own in minutes using just HTML/CSS/JS — no Android or Kotlin knowledge required
+- Browse and install community plugins directly from the in-app plugin registry, with automatic update checks
+- See the [Terminal Plugin](https://github.com/rhythmcache/Terminal) as a working example, or the [Plugin Development Guide](https://rhythmcache.github.io/Dioxamine/book/plugins/overview.html) to get started
+
+**Want your plugin listed in the app?** Submit it to the [plugin registry](https://github.com/Dioxamine-plugins-repo/plugin-submission) . once approved, it shows up for every user under Browse, with automatic update support.
+
 
 ## Prerequisites
 
