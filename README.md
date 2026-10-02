@@ -72,7 +72,7 @@ It focuses on:
 - Browse and install community plugins directly from the in-app plugin registry, with automatic update checks
 - See the [Terminal Plugin](https://github.com/rhythmcache/Terminal) as a working example, or the [Plugin Development Guide](https://rhythmcache.github.io/Dioxamine/book/plugins/overview.html) to get started
 
-**Want your plugin listed in the app?** Submit it to the [plugin registry](https://github.com/Dioxamine-plugins-repo/submission) . once approved, it shows up for every user under Browse, with automatic update support.
+**Want your plugin listed in the app?** Submit it to the [plugin registry](https://github.com/Dioxamine-plugins-repo/plugin-submission) . once approved, it shows up for every user under Browse, with automatic update support.
 
 
 ## Prerequisites
