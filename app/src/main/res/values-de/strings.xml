@@ -69,6 +69,8 @@
     <string name="plugins_description">"Plugins ermöglichen die Installation eigener Plugins oder solcher von anderen Entwicklern."</string>
     <string name="plugins_docs_prompt">"Die Dokumentation zu Plugins findest du in der "</string>
     <string name="plugins_docs_link">"Plugin-Dokumentation"</string>
+    <string name="plugins_submission_prompt">"Um eigene Plugins einzureichen, siehe den "</string>
+    <string name="plugins_submission_link">"Plugin-Einreichungsleitfaden"</string>
     <string name="plugins_coming_soon">Eigene Plugins erstellen – bald verfügbar.</string>
     <string name="plugins_no_plugins">Keine Plugins installiert</string>
     <string name="plugins_cd_install">Plugin installieren</string>

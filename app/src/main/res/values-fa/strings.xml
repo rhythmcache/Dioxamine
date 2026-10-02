@@ -69,6 +69,8 @@
     <string name="plugins_description">"پلاگین‌ها به شما امکان می‌دهند افزونه‌های سفارشی نوشته‌شده توسط خودتان یا سایر توسعه‌دهندگان را نصب کنید."</string>
     <string name="plugins_docs_prompt">"برای مستندات پلاگین، به "</string>
     <string name="plugins_docs_link">"مستندات پلاگین"</string>
+    <string name="plugins_submission_prompt">"برای ارسال پلاگین‌های خود، به "</string>
+    <string name="plugins_submission_link">"راهنمای ارسال پلاگین"</string>
     <string name="plugins_coming_soon">نوشتن پلاگین‌های اختصاصی - به‌زودی.</string>
     <string name="plugins_no_plugins">هیچ پلاگینی نصب نشده است</string>
     <string name="plugins_cd_install">نصب پلاگین</string>
