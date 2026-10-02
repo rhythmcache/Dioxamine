@@ -456,7 +456,7 @@
     <string name="pkg_manager_empty">هیچ بسته‌ای یافت نشد</string>
 
     <!-- ADB Logcat Strings -->
-    <string name="adb_logcat_tile_title">Logcat</string>
+    <string name="adb_logcat_tile_title">لاگ‌کت</string>
     <string name="adb_logcat_tile_desc">مشاهده لحظه‌ای لاگ‌های سیستم با فیلتر، جستجو و عبارات منظم (Regex)</string>
     <string name="logcat_search_hint">جستجوی لاگ‌ها یا regex…</string>
     <string name="logcat_filter_tag_hint">تگ (Tag)</string>
@@ -471,8 +471,8 @@
     <string name="logcat_logs_copied">%1$d لاگ در کلیپ‌بورد کپی شد</string>
     <string name="logcat_empty_waiting">در انتظار لاگ‌های دستگاه…</string>
     <string name="logcat_empty_filtered">هیچ لاگی با فیلترهای کنونی مطابقت ندارد</string>
-    <string name="logcat_device_buffer_cleared">بافر logcat دستگاه پاک شد</string>
-    <string name="logcat_clear_dialog_msg">آیا بافر محلی روی صفحه پاک شود یا بافر داخلی logcat دستگاه نیز تخلیه گردد؟</string>
+    <string name="logcat_device_buffer_cleared">بافر لاگ‌کت دستگاه پاک شد</string>
+    <string name="logcat_clear_dialog_msg">آیا بافر محلی روی صفحه پاک شود یا بافر داخلی لاگ‌کت دستگاه نیز تخلیه گردد؟</string>
     <string name="logcat_clear_screen">پاک‌سازی صفحه</string>
     <string name="logcat_clear_device_buffer">پاک‌سازی بافر دستگاه</string>
     <string name="logcat_btn_toggle_filters">تغییر وضعیت جستجو و فیلترها</string>

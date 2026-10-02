@@ -474,7 +474,7 @@
     <string name="logcat_empty_waiting">Ожидание логов устройства…</string>
     <string name="logcat_empty_filtered">Нет логов, соответствующих фильтрам</string>
     <string name="logcat_device_buffer_cleared">Буфер логов устройства очищен</string>
-    <string name="logcat_clear_dialog_msg">Очистить локальный буфер на экране или также очистить внутренний буфер logcat на устройстве?</string>
+    <string name="logcat_clear_dialog_msg">Очистить локальный буфер на экране или также очистить внутренний буфер Logcat на устройстве?</string>
     <string name="logcat_clear_screen">Очистить экран</string>
     <string name="logcat_clear_device_buffer">Очистить буфер устройства</string>
     <string name="logcat_btn_toggle_filters">Показать или скрыть поиск и фильтры</string>
