@@ -510,7 +510,8 @@
       </p>
 
       <div class="hero-buttons">
-        <a href="./book/user-guide/getting-started.html" class="btn-solid">Explore User Guide</a>
+        <a href="https://github.com/rhythmcache/Dioxamine/releases/latest" target="_blank" rel="noopener" class="btn-solid">Download APK</a>
+        <a href="./book/user-guide/getting-started.html" class="btn-outline">Explore User Guide</a>
         <a href="./book/plugins/overview.html" class="btn-outline">Plugin Developer Guide</a>
       </div>
     </section>
@@ -546,22 +547,29 @@
       <!-- Row 1: Connection -->
       <div class="module-row">
         <div class="module-meta">
-          <h3>Connectivity</h3>
+          <h3>Connectivity & Transport</h3>
           <p>Flexible transport negotiation over wired cables or local wireless networks.</p>
         </div>
         <div class="module-body">
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>USB OTG Host:</strong> Direct hardware cable connection with automatic device authorization.
+              <strong>USB OTG Host:</strong> Direct hardware cable connection with automatic device authorization and permission negotiation.
               <a href="./book/user-guide/connecting-devices.html" class="point-link">Connection guide</a>
             </div>
           </div>
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Wireless ADB:</strong> mDNS auto-discovery, Android 11+ QR pairing, 6-digit PIN codes, and TCP/IP port 5555.
+              <strong>Wireless ADB:</strong> mDNS auto-discovery, Android 11+ QR pairing, 6-digit PIN codes, and persistent TCP/IP port 5555.
               <a href="./book/user-guide/oem-setup.html" class="point-link">OEM setup</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Multi-Device Scope:</strong> Seamless multi-device management with top-chip device switching across all ADB, Fastboot, and plugin sessions.
+              <a href="./book/user-guide/connecting-devices.html" class="point-link">Multi-device</a>
             </div>
           </div>
         </div>
@@ -577,21 +585,35 @@
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>File & Package Management:</strong> Browse storage, push and download files, install standalone APKs and split bundles (.apks, .xapk), and disable bloatware.
+              <strong>File & Storage Management:</strong> Full internal/external storage explorer with push, pull, recursive directory management, and Storage Access Framework (SAF) integration.
+              <a href="./book/user-guide/adb-tools/file-manager.html" class="point-link">File manager</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Package Manager & Split APKs:</strong> Install standalone APKs and split bundles (.apks, .xapk, .apkm), export APKs, uninstall, and disable bloatware.
               <a href="./book/user-guide/adb-tools/package-manager.html" class="point-link">Package manager</a>
             </div>
           </div>
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Hardware Input & Controls:</strong> Trackpad with multi-touch gestures, full PC keyboard with modifier latches, and Android TV D-pad remote.
+              <strong>Hardware Input & Controls:</strong> Trackpad with multi-touch gestures (pinch, scroll, tap), full PC keyboard with sticky Ctrl/Alt/Esc/Tab modifier latches, and Android TV D-pad remote.
               <a href="./book/user-guide/adb-tools/touchpad-keyboard.html" class="point-link">Touchpad guide</a>
             </div>
           </div>
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Maintenance:</strong> Interactive ANSI terminal shell, instant screencap capture, OTA sideloading, and power reboot targets.
+              <strong>Process Manager & Telemetry:</strong> Real-time CPU and memory metrics, running process inspector with one-tap termination, live streaming Logcat, and hardware battery specs.
+              <a href="./book/user-guide/adb-tools/process-manager.html" class="point-link">Process manager</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Terminal & Maintenance:</strong> Interactive ANSI PTY terminal shell, instant screencap capture, OTA sideloading, rescue mode, and power reboot targets.
               <a href="./book/user-guide/adb-tools/terminal-shell.html" class="point-link">Terminal shell</a>
             </div>
           </div>
@@ -608,22 +630,29 @@
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Display Mirroring:</strong> H.264, H.265, and AV1 video encoding up to 60 FPS with touch forwarding and screen-off power saving.
+              <strong>Display Mirroring:</strong> H.264, H.265 (HEVC), and AV1 video encoding up to 120 FPS with touch forwarding, mouse simulation, and screen-off power saving.
               <a href="./book/user-guide/scrcpy-mirroring/screen-mirroring.html" class="point-link">Mirroring details</a>
             </div>
           </div>
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Audio Forwarding:</strong> Opus/AAC streaming on Android 11+ and audio duplication (Don't Mute) on Android 13+.
+              <strong>Audio Forwarding:</strong> Opus/AAC streaming on Android 11+ and non-muting audio duplication on Android 13+.
               <a href="./book/user-guide/scrcpy-mirroring/settings-tuning.html" class="point-link">Audio settings</a>
             </div>
           </div>
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Camera Streaming:</strong> Direct sensor streaming from front, back, or external lenses at up to 120+ FPS with remote torch control.
+              <strong>Camera Streaming:</strong> Direct hardware sensor streaming from front, back, or external lenses at high framerates with remote torch control and zoom.
               <a href="./book/user-guide/scrcpy-mirroring/camera-streaming.html" class="point-link">Camera mode</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Session Recording:</strong> Direct MP4 recording of mirroring or camera streams directly to device storage with in-app playback viewer and export.
+              <a href="./book/user-guide/scrcpy-mirroring/session-recording.html" class="point-link">Recording guide</a>
             </div>
           </div>
         </div>
@@ -639,7 +668,7 @@
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Partition Flashing:</strong> Flash boot, recovery, init_boot, and system images with real-time transfer progress.
+              <strong>Partition Flashing:</strong> Flash boot, recovery, init_boot, vendor_boot, system, and super images with real-time transfer progress.
               <a href="./book/user-guide/fastboot/flashing-images.html" class="point-link">Flashing guide</a>
             </div>
           </div>
@@ -650,6 +679,13 @@
               <a href="./book/user-guide/fastboot/boot-image.html" class="point-link">Live booting</a>
             </div>
           </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Variables & Command Shell:</strong> Inspect full hardware device variables (getvar all), partition erase, slot switching (set_active a/b), and custom raw command execution.
+              <a href="./book/user-guide/fastboot/variables.html" class="point-link">Variables inspector</a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -657,14 +693,49 @@
       <div class="module-row">
         <div class="module-meta">
           <h3>Web Plugin Runtime</h3>
-          <p>Modular HTML5, CSS, and JavaScript extensions.</p>
+          <p>Modular HTML5, CSS, and JavaScript extensions with rich native bridge.</p>
         </div>
         <div class="module-body">
           <div class="feature-point">
             <span class="bullet-dash">&gt;</span>
             <div class="point-text">
-              <strong>Native Bridge API:</strong> Asynchronous JavaScript bridge with full access to ADB execution, shell sessions, file transfers, and device info.
+              <strong>Native Bridge API:</strong> Asynchronous JavaScript runtime (window.dioxamine) connecting web applications directly to native ADB and Fastboot drivers without a computer.
               <a href="./book/plugins/api-reference.html" class="point-link">Bridge reference</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Interactive Shell Streams (PTY):</strong> Bi-directional live terminal streaming via dioxamine.adb.openInteractiveShell() with dynamic window resizing and full xterm.js integration.
+              <a href="./book/plugins/api/interactive-shell.html" class="point-link">Interactive shell</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Native Haptics & UI Controls:</strong> Native tactile feedback API (dioxamine.haptics.impact(), dioxamine.haptics.selection(), dioxamine.vibrate()) and hardware Back/Volume button interception.
+              <a href="./book/plugins/api/ui.html" class="point-link">Haptics & UI</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Fastboot Protocol Operations:</strong> Flash partitions, reboot targets, inspect variables, and stage binary payloads directly from plugin JavaScript.
+              <a href="./book/plugins/api/fastboot.html" class="point-link">Fastboot API</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Chunked Storage & HTTP Fetch:</strong> Chunked temporary file streams (dioxamine.tempFile) for streaming gigabyte payloads without RAM limits, and zero-CORS network requests via dioxamine.http.fetch().
+              <a href="./book/plugins/api/files.html" class="point-link">File operations</a>
+            </div>
+          </div>
+          <div class="feature-point">
+            <span class="bullet-dash">&gt;</span>
+            <div class="point-text">
+              <strong>Plugin Store & Auto-Updates:</strong> In-app registry to browse, install, and automatically update plugins (updateJson) with an open community submission pipeline.
+              <a href="./book/plugins/manifest.html" class="point-link">Plugin updates</a>
             </div>
           </div>
         </div>
@@ -684,24 +755,30 @@
           <div class="index-col-title">Getting Started & Connection</div>
           <ul class="index-list">
             <li><a href="./book/user-guide/getting-started.html" class="index-item-link">Overview & Setup</a></li>
-            <li><a href="./book/user-guide/connecting-devices.html" class="index-item-link">Connection Methods</a></li>
+            <li><a href="./book/user-guide/connecting-devices.html" class="index-item-link">Connection Methods (OTG & Wi-Fi)</a></li>
             <li><a href="./book/user-guide/oem-setup.html" class="index-item-link">OEM Setup (HyperOS, Samsung)</a></li>
             <li><a href="./book/user-guide/app-settings/adb-keys.html" class="index-item-link">ADB Key Management</a></li>
             <li><a href="./book/user-guide/app-settings/appearance.html" class="index-item-link">Appearance & Monet Theme</a></li>
+            <li><a href="./book/user-guide/app-settings/logs-export.html" class="index-item-link">Application Logs & Diagnostics</a></li>
+            <li><a href="./book/user-guide/app-settings/plugin-security.html" class="index-item-link">Plugin Security & Permissions</a></li>
           </ul>
         </div>
 
         <!-- Col 2 -->
         <div>
-          <div class="index-col-title">ADB Tools & Scrcpy</div>
+          <div class="index-col-title">ADB Built-in Tools & Scrcpy</div>
           <ul class="index-list">
-            <li><a href="./book/user-guide/adb-tools/device-info.html" class="index-item-link">Device Telemetry</a></li>
-            <li><a href="./book/user-guide/adb-tools/file-manager.html" class="index-item-link">File Manager (dxls)</a></li>
-            <li><a href="./book/user-guide/adb-tools/package-manager.html" class="index-item-link">Package Manager (PkgDump)</a></li>
-            <li><a href="./book/user-guide/adb-tools/remote-control.html" class="index-item-link">Remote Control & TV Mode</a></li>
+            <li><a href="./book/user-guide/adb-tools/device-info.html" class="index-item-link">Device Telemetry & Specs</a></li>
+            <li><a href="./book/user-guide/adb-tools/file-manager.html" class="index-item-link">File Manager & SAF Storage</a></li>
+            <li><a href="./book/user-guide/adb-tools/package-manager.html" class="index-item-link">Package Manager & Split APKs</a></li>
+            <li><a href="./book/user-guide/adb-tools/process-manager.html" class="index-item-link">Process Manager & Task Killer</a></li>
             <li><a href="./book/user-guide/adb-tools/touchpad-keyboard.html" class="index-item-link">UHID Touchpad & Keyboard</a></li>
-            <li><a href="./book/user-guide/scrcpy-mirroring/screen-mirroring.html" class="index-item-link">Scrcpy Screen Mirroring</a></li>
-            <li><a href="./book/user-guide/scrcpy-mirroring/camera-streaming.html" class="index-item-link">Camera Video Streaming</a></li>
+            <li><a href="./book/user-guide/adb-tools/remote-control.html" class="index-item-link">Remote Control & Android TV</a></li>
+            <li><a href="./book/user-guide/adb-tools/terminal-shell.html" class="index-item-link">ADB Terminal Shell</a></li>
+            <li><a href="./book/user-guide/scrcpy-mirroring/screen-mirroring.html" class="index-item-link">Scrcpy Screen Mirroring (4.1)</a></li>
+            <li><a href="./book/user-guide/scrcpy-mirroring/camera-streaming.html" class="index-item-link">Camera Video Streaming Mode</a></li>
+            <li><a href="./book/user-guide/scrcpy-mirroring/session-recording.html" class="index-item-link">Session Recording & MP4 Playback</a></li>
+            <li><a href="./book/user-guide/scrcpy-mirroring/logs-troubleshooting.html" class="index-item-link">Scrcpy Logs & Troubleshooting</a></li>
           </ul>
         </div>
 
@@ -709,12 +786,21 @@
         <div>
           <div class="index-col-title">Fastboot & Plugin Guide</div>
           <ul class="index-list">
-            <li><a href="./book/user-guide/fastboot/getting-started.html" class="index-item-link">Fastboot Connection</a></li>
+            <li><a href="./book/user-guide/fastboot/getting-started.html" class="index-item-link">Fastboot Connection & Setup</a></li>
             <li><a href="./book/user-guide/fastboot/flashing-images.html" class="index-item-link">Flashing Partition Images</a></li>
             <li><a href="./book/user-guide/fastboot/boot-image.html" class="index-item-link">Live Booting Images</a></li>
             <li><a href="./book/user-guide/fastboot/lock-bootloader.html" class="index-item-link">Bootloader Lock States</a></li>
-            <li><a href="./book/plugins/overview.html" class="index-item-link">Plugin Architecture</a></li>
+            <li><a href="./book/user-guide/fastboot/variables.html" class="index-item-link">Variables Inspector</a></li>
+            <li><a href="./book/plugins/overview.html" class="index-item-link">Plugin Architecture & Overview</a></li>
+            <li><a href="./book/plugins/quickstart.html" class="index-item-link">Quickstart: Create Your First Plugin</a></li>
+            <li><a href="./book/plugins/manifest.html" class="index-item-link">Manifest Spec & updateJson</a></li>
             <li><a href="./book/plugins/api-reference.html" class="index-item-link">JavaScript Bridge Reference</a></li>
+            <li><a href="./book/plugins/api/interactive-shell.html" class="index-item-link">Interactive Shell Sessions (PTY)</a></li>
+            <li><a href="./book/plugins/api/ui.html" class="index-item-link">Native Haptics & UI Controls</a></li>
+            <li><a href="./book/plugins/api/fastboot.html" class="index-item-link">Fastboot Operations Bridge</a></li>
+            <li><a href="./book/plugins/api/network.html" class="index-item-link">Network HTTP Client (http.fetch)</a></li>
+            <li><a href="https://github.com/Dioxamine-plugins-repo/index" target="_blank" rel="noopener" class="index-item-link">Official Plugin Registry</a></li>
+            <li><a href="https://github.com/Dioxamine-plugins-repo/plugin-submission" target="_blank" rel="noopener" class="index-item-link">Plugin Submission Guide</a></li>
           </ul>
         </div>
       </div>
@@ -729,6 +815,7 @@
         <div class="footer-links">
           <a href="./book/index.html" class="footer-link">Documentation</a>
           <a href="./book/plugins/overview.html" class="footer-link">Plugin API</a>
+          <a href="https://github.com/Dioxamine-plugins-repo/index" target="_blank" rel="noopener" class="footer-link">Plugin Store</a>
           <a href="https://github.com/rhythmcache/Dioxamine" target="_blank" rel="noopener" class="footer-link">GitHub</a>
           <a href="https://t.me/tr1ple_fault" target="_blank" rel="noopener" class="footer-link">Telegram</a>
         </div>
@@ -748,10 +835,11 @@
         { type: 'ok', text: '[100%] /sdcard/Download/backup.zip (42 MB pulled)' }
       ],
       scrcpy: [
-        { type: 'cmd', text: 'scrcpy --max-size=1080 --max-fps=60 --audio=true' },
-        { type: 'out', text: '[Scrcpy 4.1] Video encoder: c2.qti.avc.encoder (H.264 @ 8Mbps)' },
-        { type: 'out', text: '[Scrcpy 4.1] Audio encoder: c2.android.opus.encoder (Opus @ 128Kbps)' },
-        { type: 'ok', text: '[Scrcpy 4.1] Mirror session established over forward tunnel' }
+        { type: 'cmd', text: 'scrcpy --video-codec=h265 --max-fps=120 --audio-dup' },
+        { type: 'out', text: '[Scrcpy 4.1] Video encoder: c2.qti.hevc.encoder (H.265 @ 120 FPS)' },
+        { type: 'out', text: '[Scrcpy 4.1] Audio encoder: c2.android.opus.encoder (Opus @ 128Kbps, Duplicated)' },
+        { type: 'out', text: '[Scrcpy 4.1] Recording session: /sdcard/Movies/scrcpy_2026-10-02.mp4' },
+        { type: 'ok', text: '[Scrcpy 4.1] Mirror session established over low-latency USB OTG' }
       ],
       fastboot: [
         { type: 'cmd', text: 'fastboot devices' },
@@ -762,10 +850,12 @@
         { type: 'ok', text: 'Finished. Total time: 1.73s' }
       ],
       plugin: [
-        { type: 'cmd', text: 'const info = await window.Dioxamine.device.getDeviceInfo();' },
-        { type: 'out', text: '=> { model: "Pixel 8 Pro", sdk: 34, root: true }' },
-        { type: 'cmd', text: 'const res = await window.Dioxamine.shell.exec("pm list packages -3");' },
-        { type: 'ok', text: '=> package:org.videolan.vlc\\n=> package:com.wireguard.android' }
+        { type: 'cmd', text: 'const dev = await dioxamine.adb.getActiveDevice();' },
+        { type: 'out', text: '=> { connected: true, model: "Pixel 8 Pro", apiLevel: 34, isRoot: true, supportsShellV2: true }' },
+        { type: 'cmd', text: 'const session = await dioxamine.adb.openInteractiveShell();' },
+        { type: 'out', text: '=> InteractiveShellSession (PTY allocated, xterm-256color)' },
+        { type: 'cmd', text: 'dioxamine.haptics.impact("medium");' },
+        { type: 'ok', text: '=> Native tactile haptic feedback triggered on host' }
       ]
     };
 
