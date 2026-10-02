@@ -71,6 +71,8 @@
     <string name="plugins_description">"Плагины позволяют устанавливать сторонние дополнения, написанные вами или другими разработчиками."</string>
     <string name="plugins_docs_prompt">"Документацию по плагинам см. в разделе "</string>
     <string name="plugins_docs_link">"Документация к плагинам"</string>
+    <string name="plugins_submission_prompt">"Чтобы отправить свои собственные плагины, см. "</string>
+    <string name="plugins_submission_link">"Руководство по отправке плагинов"</string>
     <string name="plugins_coming_soon">Создание собственных плагинов скоро будет доступно.</string>
     <string name="plugins_no_plugins">Плагины не установлены</string>
     <string name="plugins_cd_install">Установить плагин</string>

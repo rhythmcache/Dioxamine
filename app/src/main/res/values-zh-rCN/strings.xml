@@ -69,6 +69,8 @@
     <string name="plugins_description">插件功能允许你安装自己或其他开发者编写的自定义插件。</string>
     <string name="plugins_docs_prompt">有关插件的说明，请参阅</string>
     <string name="plugins_docs_link">插件文档</string>
+    <string name="plugins_submission_prompt">如需提交自己的插件，请参阅</string>
+    <string name="plugins_submission_link">插件提交指南</string>
     <string name="plugins_coming_soon">编写自定义插件功能即将推出。</string>
     <string name="plugins_no_plugins">未安装插件</string>
     <string name="plugins_cd_install">安装插件</string>
