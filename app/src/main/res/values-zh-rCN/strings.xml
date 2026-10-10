@@ -119,6 +119,8 @@
     <string name="plugin_open_browser_title">打开外部链接</string>
     <string name="plugin_open_browser_msg">此插件想要打开外部链接：\n\n%1$s\n\n是否继续？</string>
     <string name="plugin_open_browser_btn_open">打开</string>
+    <string name="plugin_temp_file_title">临时存储请求</string>
+    <string name="plugin_temp_file_msg">此插件想要创建一个临时文件，用于在本次会话中流式传输数据。\n\n是否继续？</string>
     <string name="plugin_runner_not_found">找不到插件</string>
     <string name="plugin_menu_info">信息</string>
     <string name="plugin_menu_permissions">权限</string>
@@ -192,6 +194,26 @@
     <string name="video_source_screen">屏幕</string>
     <string name="video_source_camera">摄像头</string>
     <string name="camera_source_subtitle_req">需要 Android 12+（API 31），当前设备为 API %1$d。</string>
+    <string name="video_source_virtual">虚拟屏幕</string>
+    <string name="virtual_source_subtitle_req">需要 Android 10+（API 29），当前设备为 API %1$d。</string>
+    <string name="section_virtual_screen">虚拟屏幕</string>
+    <string name="virtual_screen_discovering">正在检测应用…</string>
+    <string name="virtual_screen_dpi">显示密度（DPI）</string>
+    <string name="virtual_screen_dpi_format">%1$d DPI</string>
+    <string name="virtual_screen_dpi_auto">自动</string>
+    <string name="virtual_screen_app">要启动的应用</string>
+    <string name="virtual_screen_default_launcher">默认启动器（不指定）</string>
+    <string name="virtual_screen_select_app">选择要启动的应用</string>
+    <string name="virtual_screen_search_apps">搜索或输入软件包名…</string>
+    <string name="virtual_screen_user_apps">用户应用</string>
+    <string name="virtual_screen_system_apps">系统应用</string>
+    <string name="virtual_screen_no_apps_found">未找到应用</string>
+    <string name="virtual_screen_discovery_timed_out">检测超时。点按刷新重试。</string>
+    <string name="virtual_screen_discovery_failed">无法加载应用列表。点按刷新重试。</string>
+    <string name="virtual_screen_use_custom_package">启动自定义软件包</string>
+    <string name="virtual_screen_empty_entry_hint">在上方输入软件包名以手动启动应用，或点按刷新重试。</string>
+    <string name="dialog_add_dpi_title">添加自定义 DPI</string>
+    <string name="dialog_add_dpi_msg">输入显示密度（DPI，例如 280、360 或 560）：</string>
 
     <string name="section_camera">摄像头</string>
     <string name="camera_facing_back">后置</string>
@@ -227,6 +249,9 @@
     <string name="settings_scrcpy_allow_custom_title">允许在配置中使用自定义值</string>
     <string name="settings_scrcpy_allow_custom_subtitle">允许添加自定义最大尺寸、帧率和码率选项</string>
     <string name="camera_discovering">正在检测摄像头功能…</string>
+    <string name="camera_discovery_timed_out">检测超时。点按刷新重试。</string>
+    <string name="camera_discovery_failed">无法加载摄像头列表。点按刷新重试。</string>
+    <string name="camera_no_cameras_found">未找到摄像头。</string>
     <string name="label_frame_rate">帧率</string>
     <string name="label_bitrate">码率</string>
     <string name="label_mbps_format">%1$d Mbps</string>
@@ -270,8 +295,11 @@
     <string name="display_bind_volume_subtitle">将本机实体音量键映射到被镜像设备</string>
 
     <string name="cd_toggle_torch">开关闪光灯</string>
+    <string name="cd_rotate_device">旋转设备</string>
     <string name="cd_toggle_fullscreen">切换全屏</string>
     <string name="cd_stop_mirroring">停止镜像</string>
+    <string name="cd_expand_controls">显示控制栏</string>
+    <string name="cd_collapse_controls">隐藏控制栏</string>
     <string name="cd_nav_back">返回</string>
     <string name="cd_nav_home">主页</string>
     <string name="cd_nav_recents">最近任务</string>
@@ -296,6 +324,9 @@
 
     <string name="settings_language_title">语言</string>
     <string name="settings_language_system_default">跟随系统</string>
+
+
+
 
 
 
@@ -945,4 +976,6 @@
     <string name="notification_keep_alive_stop_action">停止</string>
     <string name="settings_battery_opt_denied_warning">未停用电池优化，后台连接可能会在低电耗模式下暂停。</string>
     <string name="settings_notif_perm_denied_warning">通知权限已被拒绝，将无法看到后台状态通知。</string>
+    <string name="plugin_force_exit_prompt">再按一次返回键强制退出插件</string>
+    <string name="plugin_force_exit_done">已退出插件</string>
 </resources>
