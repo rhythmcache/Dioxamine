@@ -5,8 +5,6 @@ import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaFormat
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.view.Surface
 import io.github.rhythmcache.adb.AdbStream
 import io.github.rhythmcache.dioxamine.adb.readExactly
@@ -256,17 +254,7 @@ class ScrcpyDecoder(
                     }
                 }
                 outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-                    val newFormat = mc.outputFormat
-                    AppLogger.i(TAG, "drainOutput: format changed to $newFormat")
-                    val width = if (newFormat.containsKey(MediaFormat.KEY_WIDTH)) newFormat.getInteger(MediaFormat.KEY_WIDTH) else 0
-                    val height = if (newFormat.containsKey(MediaFormat.KEY_HEIGHT)) newFormat.getInteger(MediaFormat.KEY_HEIGHT) else 0
-                    if (width in 1..8192 && height in 1..8192 && (width != currentWidth || height != currentHeight)) {
-                        currentWidth = width
-                        currentHeight = height
-                        Handler(Looper.getMainLooper()).post {
-                            onDimensionsParsed(width, height)
-                        }
-                    }
+                    AppLogger.i(TAG, "drainOutput: format changed to ${mc.outputFormat}")
                     outIndex = try { mc.dequeueOutputBuffer(bufferInfo, 0) } catch (e: IllegalStateException) {
                         return
                     }

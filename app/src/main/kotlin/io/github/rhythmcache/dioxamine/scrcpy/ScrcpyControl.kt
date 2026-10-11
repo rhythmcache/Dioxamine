@@ -109,6 +109,7 @@ class ScrcpyControl(
         if (viewWidth <= 0 || viewHeight <= 0) return
         val targetWidth = videoWidth()
         val targetHeight = videoHeight()
+        if (targetWidth <= 0 || targetHeight <= 0) return
         val normX = ((localX / viewWidth.toFloat()) * targetWidth).toInt().coerceIn(0, targetWidth)
         val normY = ((localY / viewHeight.toFloat()) * targetHeight).toInt().coerceIn(0, targetHeight)
 
