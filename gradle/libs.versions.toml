@@ -47,6 +47,7 @@ junit                                    = { group = "junit", name = "junit", ve
 
 [plugins]
 android-application  = { id = "com.android.application", version.ref = "agp" }
+android-library      = { id = "com.android.library", version.ref = "agp" }
 kotlin-compose       = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktlint               = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

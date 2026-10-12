@@ -138,6 +138,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.adb.kt)
     implementation(libs.fastboot.kt)
+    implementation(project(":terminal-view"))
     implementation(libs.qrose)
 
     testImplementation(libs.junit)

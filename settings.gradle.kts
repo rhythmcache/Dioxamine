@@ -23,3 +23,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Dioxamine"
 include(":app")
+include(":terminal-emulator")
+include(":terminal-view")
