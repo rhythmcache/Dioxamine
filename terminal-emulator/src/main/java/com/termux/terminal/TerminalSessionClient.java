@@ -10,42 +10,40 @@ import androidx.annotation.Nullable;
  */
 public interface TerminalSessionClient {
 
-    void onTextChanged(@NonNull TerminalSession changedSession);
+    default void onTextChanged(@NonNull TerminalSession changedSession) {}
 
-    void onTitleChanged(@NonNull TerminalSession changedSession);
+    default void onTitleChanged(@NonNull TerminalSession changedSession) {}
 
-    void onSessionFinished(@NonNull TerminalSession finishedSession);
+    default void onSessionFinished(@NonNull TerminalSession finishedSession) {}
 
-    void onCopyTextToClipboard(@NonNull TerminalSession session, String text);
+    default void onCopyTextToClipboard(@NonNull TerminalSession session, String text) {}
 
-    void onPasteTextFromClipboard(@Nullable TerminalSession session);
+    default void onPasteTextFromClipboard(@Nullable TerminalSession session) {}
 
-    void onBell(@NonNull TerminalSession session);
+    default void onBell(@NonNull TerminalSession session) {}
 
-    void onColorsChanged(@NonNull TerminalSession session);
+    default void onColorsChanged(@NonNull TerminalSession session) {}
 
-    void onTerminalCursorStateChange(boolean state);
+    default void onTerminalCursorStateChange(boolean state) {}
 
-    void setTerminalShellPid(@NonNull TerminalSession session, int pid);
+    default void setTerminalShellPid(@NonNull TerminalSession session, int pid) {}
 
+    default Integer getTerminalCursorStyle() {
+        return null;
+    }
 
+    default void logError(String tag, String message) {}
 
-    Integer getTerminalCursorStyle();
+    default void logWarn(String tag, String message) {}
 
+    default void logInfo(String tag, String message) {}
 
+    default void logDebug(String tag, String message) {}
 
-    void logError(String tag, String message);
+    default void logVerbose(String tag, String message) {}
 
-    void logWarn(String tag, String message);
+    default void logStackTraceWithMessage(String tag, String message, Exception e) {}
 
-    void logInfo(String tag, String message);
-
-    void logDebug(String tag, String message);
-
-    void logVerbose(String tag, String message);
-
-    void logStackTraceWithMessage(String tag, String message, Exception e);
-
-    void logStackTrace(String tag, Exception e);
+    default void logStackTrace(String tag, Exception e) {}
 
 }

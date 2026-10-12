@@ -1,0 +1,27 @@
+Dioxamine
+Copyright (C) 2024-2026 rhythmcache and contributors.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program incorporates code from the following third-party projects:
+
+1. Termux (termux-app)
+   - Modules: terminal-emulator, terminal-view
+   - Upstream: https://github.com/termux/termux-app
+   - License: GNU General Public License v3.0 (GPLv3)
+   - Copyright (C) 2015-2026 Fredrik Fornwall and Termux contributors.
+
+2. Android Terminal Emulator
+   - Original foundation of terminal-emulator and terminal-view
+   - Upstream: https://github.com/jackpal/Android-Terminal-Emulator
+   - License: Apache License, Version 2.0
+   - Copyright (C) 2011-2015 Steven Luo, Jack Palevich and contributors.
+
+3. adb-kt
+   - ADB protocol client library (external dependency)
+   - Upstream: https://github.com/rhythmcache/adb-kt
+   - License: Apache License, Version 2.0
+   - Copyright (C) 2024-2026 rhythmcache and contributors.

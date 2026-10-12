@@ -16,68 +16,76 @@ import com.termux.terminal.TerminalSession;
  */
 public interface TerminalViewClient {
 
-    /**
-     * Callback function on scale events according to {@link ScaleGestureDetector#getScaleFactor()}.
-     */
-    float onScale(float scale);
+    default float onScale(float scale) {
+        return 1.0f;
+    }
 
+    default void onSingleTapUp(MotionEvent e) {}
 
+    default boolean shouldBackButtonBeMappedToEscape() {
+        return false;
+    }
 
-    /**
-     * On a single tap on the terminal if terminal mouse reporting not enabled.
-     */
-    void onSingleTapUp(MotionEvent e);
+    default boolean shouldEnforceCharBasedInput() {
+        return false;
+    }
 
-    boolean shouldBackButtonBeMappedToEscape();
+    default boolean shouldUseCtrlSpaceWorkaround() {
+        return false;
+    }
 
-    boolean shouldEnforceCharBasedInput();
+    default boolean isTerminalViewSelected() {
+        return true;
+    }
 
-    boolean shouldUseCtrlSpaceWorkaround();
+    default void copyModeChanged(boolean copyMode) {}
 
-    boolean isTerminalViewSelected();
+    default boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session) {
+        return false;
+    }
 
+    default boolean onKeyUp(int keyCode, KeyEvent e) {
+        return false;
+    }
 
+    default boolean onLongPress(MotionEvent event) {
+        return false;
+    }
 
-    void copyModeChanged(boolean copyMode);
+    default boolean readControlKey() {
+        return false;
+    }
 
+    default boolean readAltKey() {
+        return false;
+    }
 
+    default boolean readShiftKey() {
+        return false;
+    }
 
-    boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session);
+    default boolean readFnKey() {
+        return false;
+    }
 
-    boolean onKeyUp(int keyCode, KeyEvent e);
+    default boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session) {
+        return false;
+    }
 
-    boolean onLongPress(MotionEvent event);
+    default void onEmulatorSet() {}
 
+    default void logError(String tag, String message) {}
 
+    default void logWarn(String tag, String message) {}
 
-    boolean readControlKey();
+    default void logInfo(String tag, String message) {}
 
-    boolean readAltKey();
+    default void logDebug(String tag, String message) {}
 
-    boolean readShiftKey();
+    default void logVerbose(String tag, String message) {}
 
-    boolean readFnKey();
+    default void logStackTraceWithMessage(String tag, String message, Exception e) {}
 
-
-
-    boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session);
-
-
-    void onEmulatorSet();
-
-
-    void logError(String tag, String message);
-
-    void logWarn(String tag, String message);
-
-    void logInfo(String tag, String message);
-
-    void logDebug(String tag, String message);
-
-    void logVerbose(String tag, String message);
-
-    void logStackTraceWithMessage(String tag, String message, Exception e);
-
-    void logStackTrace(String tag, Exception e);
+    default void logStackTrace(String tag, Exception e) {}
 
 }
