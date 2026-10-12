@@ -548,6 +548,12 @@ val buildDioxAgentJar =
 
 val buildDxlsNative =
     tasks.register("buildDxlsNative") {
+        onlyIf {
+            val sdkDir = androidComponents.sdkComponents.sdkDirectory.get().asFile
+            val ndkParent = sdkDir.resolve("ndk")
+            ndkParent.listFiles()?.any { it.resolve("toolchains/llvm/prebuilt").exists() } == true
+        }
+
         val execOps =
             project.objects
                 .newInstance<InjectedExecOps>()

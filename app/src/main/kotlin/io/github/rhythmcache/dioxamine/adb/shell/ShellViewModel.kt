@@ -1,41 +1,22 @@
 package io.github.rhythmcache.dioxamine.adb.shell
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.rhythmcache.adb.AdbClient
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * ViewModel for the ADB interactive shell.
- *
- * Owns the [ShellSession], collects raw output into a [ShellBuffer],
- * parses ANSI colours, and exposes styled lines plus command history
- * for the Compose UI layer.
+ * ViewModel for the ADB interactive shell backed by Termux [AdbTerminalSession].
  */
 class ShellViewModel : ViewModel() {
 
-    private val buffer = ShellBuffer()
-    private var session: ShellSession? = null
-    private var collectorJob: Job? = null
+    private var session: AdbTerminalSession? = null
 
-    // -- Exposed state -----------------------------------------------
-
-    val outputLines: SnapshotStateList<String> = mutableStateListOf()
-    var currentLine by mutableStateOf("")
-        private set
-
-    private var lastReadIndex = 0L
+    private val _terminalSession = MutableStateFlow<AdbTerminalSession?>(null)
+    /** Currently active terminal session, if any. */
+    val terminalSession: StateFlow<AdbTerminalSession?> = _terminalSession
 
     private val _sessionState = MutableStateFlow(ShellSessionState.IDLE)
     /** Current session lifecycle state. */
@@ -45,7 +26,7 @@ class ShellViewModel : ViewModel() {
     /** Error detail when session is in ERROR state. */
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    // -- Command history ---------------------------------------------
+    // -- Command history for line input bar ---------------------------
 
     private val _history = mutableListOf<String>()
     private var historyIndex = -1
@@ -61,14 +42,11 @@ class ShellViewModel : ViewModel() {
      */
     fun startSession(deviceId: String?, client: AdbClient) {
         stopSession()
-        buffer.clear()
-        outputLines.clear()
-        currentLine = ""
-        lastReadIndex = buffer.oldestAvailableIndex()
         currentDeviceId = deviceId
 
-        val newSession = ShellSession()
+        val newSession = AdbTerminalSession(client, viewModelScope)
         session = newSession
+        _terminalSession.value = newSession
 
         viewModelScope.launch {
             newSession.state.collect { _sessionState.value = it }
@@ -76,51 +54,14 @@ class ShellViewModel : ViewModel() {
         viewModelScope.launch {
             newSession.errorMessage.collect { _errorMessage.value = it }
         }
-
-        collectorJob = viewModelScope.launch {
-            val dirty = AtomicBoolean(false)
-
-            launch {
-                newSession.output.collect { chunk ->
-                    buffer.append(chunk)
-                    dirty.set(true)
-                }
-            }
-
-            launch {
-                while (isActive) {
-                    if (dirty.compareAndSet(true, false)) {
-                        flushToUi()
-                    }
-                    delay(50)
-                }
-            }
-        }
-
-        newSession.start(client)
-    }
-
-    private fun flushToUi() {
-        val oldestAvailable = buffer.oldestAvailableIndex()
-        if (lastReadIndex < oldestAvailable) {
-            lastReadIndex = oldestAvailable
-        }
-
-        val total = buffer.completedLineCount()
-        if (lastReadIndex < total) {
-            outputLines.addAll(buffer.linesInRange(lastReadIndex, total))
-            lastReadIndex = total
-        }
-
-        currentLine = buffer.currentIncompleteLine()
     }
 
     /** Close the current session (if any). */
     fun stopSession() {
-        collectorJob?.cancel()
-        collectorJob = null
-        session?.close()
+        session?.destroy()
         session = null
+        _terminalSession.value = null
+        _sessionState.value = ShellSessionState.CLOSED
     }
 
     // -- Commands ----------------------------------------------------
@@ -144,10 +85,7 @@ class ShellViewModel : ViewModel() {
 
     /** Clear terminal output. */
     fun clearBuffer() {
-        buffer.clear()
-        outputLines.clear()
-        currentLine = ""
-        lastReadIndex = buffer.oldestAvailableIndex()
+        session?.reset()
     }
 
     // -- History navigation ------------------------------------------
