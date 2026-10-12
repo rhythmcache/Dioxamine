@@ -26,11 +26,6 @@ class ShellViewModel : ViewModel() {
     /** Error detail when session is in ERROR state. */
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    // -- Command history for line input bar ---------------------------
-
-    private val _history = mutableListOf<String>()
-    private var historyIndex = -1
-
     var currentDeviceId: String? = null
         private set
 
@@ -66,15 +61,6 @@ class ShellViewModel : ViewModel() {
 
     // -- Commands ----------------------------------------------------
 
-    /** Send a command string to the shell (appended to history). */
-    fun sendCommand(command: String) {
-        if (command.isNotBlank()) {
-            _history.add(command)
-        }
-        historyIndex = _history.size
-        session?.sendCommand(command)
-    }
-
     fun sendRaw(bytes: ByteArray) { session?.sendRaw(bytes) }
     fun sendInterrupt() { session?.sendInterrupt() }
     fun sendEof()       { session?.sendEof() }
@@ -86,22 +72,6 @@ class ShellViewModel : ViewModel() {
     /** Clear terminal output. */
     fun clearBuffer() {
         session?.reset()
-    }
-
-    // -- History navigation ------------------------------------------
-
-    /** Navigate up in history (older). Returns command text or null. */
-    fun historyUp(): String? {
-        if (_history.isEmpty()) return null
-        historyIndex = (historyIndex - 1).coerceAtLeast(0)
-        return _history[historyIndex]
-    }
-
-    /** Navigate down in history (newer). Returns command text or empty string. */
-    fun historyDown(): String? {
-        if (_history.isEmpty()) return null
-        historyIndex = (historyIndex + 1).coerceAtMost(_history.size)
-        return if (historyIndex < _history.size) _history[historyIndex] else ""
     }
 
     // -- Cleanup -----------------------------------------------------

@@ -9,7 +9,11 @@ import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,8 +27,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.termux.terminal.KeyHandler
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
+import com.termux.view.TerminalView
 import com.termux.view.TerminalViewClient
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
@@ -34,9 +40,9 @@ private val TerminalBackground = Color(0xFF0D1117)
 /**
  * Main ADB Shell screen composable backed by Termux terminal engine.
  *
- * Wires [ShellViewModel] to the currently-active device from [AdbViewModel].
- * Automatically starts a new shell session when a device connects and
- * tears it down on disconnect or device change.
+ * Direct terminal typing: tapping the terminal focuses it and opens the soft keyboard.
+ * Keyboard input is complemented by a 2x7 Termux-style extra keys panel sitting right
+ * above the soft keyboard (via imePadding).
  */
 @Composable
 fun ShellScreen(adbViewModel: AdbViewModel) {
@@ -54,7 +60,7 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                     prefs.edit().putBoolean("adb_shell_dont_show_info", true).apply()
                 }
                 showInfoDialog = false
-            },
+            }
         )
     }
 
@@ -67,7 +73,8 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
     val terminalSession by shellVm.terminalSession.collectAsState()
     val errorMessage by shellVm.errorMessage.collectAsState()
 
-    var ctrlActive by remember { mutableStateOf(false) }
+    var ctrlState by remember { mutableStateOf(ModifierState.OFF) }
+    var altState by remember { mutableStateOf(ModifierState.OFF) }
     var terminalViewRef by remember { mutableStateOf<BoundedTerminalView?>(null) }
 
     val typeface = remember {
@@ -83,11 +90,11 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
             override fun onScale(scale: Float): Float = 1.0f
 
             override fun onSingleTapUp(e: MotionEvent) {
-                // Tapping terminal area requests focus and shows soft keyboard for direct typing (vim/nano)
+                // Tapping terminal area requests focus and shows soft keyboard for direct typing
                 terminalViewRef?.let { tv ->
                     tv.requestFocus()
                     val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                    imm?.showSoftInput(tv, InputMethodManager.SHOW_IMPLICIT)
+                    imm?.showSoftInput(tv, 0)
                 }
             }
 
@@ -98,30 +105,36 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
             override fun copyModeChanged(copyMode: Boolean) {}
 
             override fun onKeyDown(keyCode: Int, e: KeyEvent, session: TerminalSession): Boolean = false
-            override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean = false
-            override fun onLongPress(event: MotionEvent): Boolean = false
 
-            override fun readControlKey(): Boolean = ctrlActive
-            override fun readAltKey(): Boolean = false
+            override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean {
+                // Consume single-use sticky modifiers after key release
+                if (ctrlState == ModifierState.ON) ctrlState = ModifierState.OFF
+                if (altState == ModifierState.ON) altState = ModifierState.OFF
+                return false
+            }
+
+            override fun onLongPress(event: MotionEvent): Boolean {
+                // Return false to allow Termux's built-in TextSelectionMode (copy/paste)
+                return false
+            }
+
+            override fun readControlKey(): Boolean = ctrlState != ModifierState.OFF
+            override fun readAltKey(): Boolean = altState != ModifierState.OFF
             override fun readShiftKey(): Boolean = false
             override fun readFnKey(): Boolean = false
 
             override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean {
-                if (ctrlActive) {
-                    ctrlActive = false
+                // Auto-clear single-use sticky modifiers after typing a character from soft keyboard
+                if (ctrlState == ModifierState.ON) {
+                    ctrlState = ModifierState.OFF
+                }
+                if (altState == ModifierState.ON) {
+                    altState = ModifierState.OFF
                 }
                 return false
             }
 
             override fun onEmulatorSet() {}
-
-            override fun logError(tag: String, message: String) {}
-            override fun logWarn(tag: String, message: String) {}
-            override fun logInfo(tag: String, message: String) {}
-            override fun logDebug(tag: String, message: String) {}
-            override fun logVerbose(tag: String, message: String) {}
-            override fun logStackTraceWithMessage(tag: String, message: String, e: Exception) {}
-            override fun logStackTrace(tag: String, e: Exception) {}
         }
     }
 
@@ -181,10 +194,85 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
         return
     }
 
+    // Extra keys actions
+    val onKeyAction: (Int) -> Unit = { keyCode ->
+        val ctrl = ctrlState != ModifierState.OFF
+        val alt = altState != ModifierState.OFF
+        var keyMod = 0
+        if (ctrl) keyMod = keyMod or KeyHandler.KEYMOD_CTRL
+        if (alt) keyMod = keyMod or KeyHandler.KEYMOD_ALT
+
+        terminalViewRef?.handleKeyCode(keyCode, keyMod)
+
+        if (ctrlState == ModifierState.ON) ctrlState = ModifierState.OFF
+        if (altState == ModifierState.ON) altState = ModifierState.OFF
+    }
+
+    val onCharAction: (String) -> Unit = { char ->
+        val ctrl = ctrlState != ModifierState.OFF
+        val alt = altState != ModifierState.OFF
+
+        when (char) {
+            "ESC" -> {
+                var keyMod = 0
+                if (ctrl) keyMod = keyMod or KeyHandler.KEYMOD_CTRL
+                if (alt) keyMod = keyMod or KeyHandler.KEYMOD_ALT
+                terminalViewRef?.handleKeyCode(KeyEvent.KEYCODE_ESCAPE, keyMod)
+                    ?: terminalSession?.write("\u001B")
+            }
+            "TAB" -> {
+                var keyMod = 0
+                if (ctrl) keyMod = keyMod or KeyHandler.KEYMOD_CTRL
+                if (alt) keyMod = keyMod or KeyHandler.KEYMOD_ALT
+                terminalViewRef?.handleKeyCode(KeyEvent.KEYCODE_TAB, keyMod)
+                    ?: terminalSession?.write("\t")
+            }
+            else -> {
+                terminalViewRef?.let { view ->
+                    char.codePoints().forEach { cp ->
+                        view.inputCodePoint(TerminalView.KEY_EVENT_SOURCE_VIRTUAL_KEYBOARD, cp, ctrl, alt)
+                    }
+                } ?: run {
+                    terminalSession?.write(char)
+                }
+            }
+        }
+
+        if (ctrlState == ModifierState.ON) ctrlState = ModifierState.OFF
+        if (altState == ModifierState.ON) altState = ModifierState.OFF
+    }
+
+    val onToggleCtrl = {
+        ctrlState = when (ctrlState) {
+            ModifierState.OFF -> ModifierState.ON
+            ModifierState.ON -> ModifierState.OFF
+            ModifierState.LOCKED -> ModifierState.OFF
+        }
+    }
+    val onLockCtrl = {
+        ctrlState = when (ctrlState) {
+            ModifierState.LOCKED -> ModifierState.OFF
+            else -> ModifierState.LOCKED
+        }
+    }
+    val onToggleAlt = {
+        altState = when (altState) {
+            ModifierState.OFF -> ModifierState.ON
+            ModifierState.ON -> ModifierState.OFF
+            ModifierState.LOCKED -> ModifierState.OFF
+        }
+    }
+    val onLockAlt = {
+        altState = when (altState) {
+            ModifierState.LOCKED -> ModifierState.OFF
+            else -> ModifierState.LOCKED
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding() // Bounds the entire column above the software keyboard
+            .imePadding() // Automatically positions extra keys right above the soft keyboard
     ) {
         // -- Terminal surface (strictly bounded and clipped) --------
         Box(
@@ -211,6 +299,13 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                         }
                         isFocusable = true
                         isFocusableInTouchMode = true
+                        // Context menu listener for long-press More menu
+                        setOnCreateContextMenuListener { menu, _, _ ->
+                            menu.add(ctx.getString(R.string.btn_clear)).setOnMenuItemClickListener {
+                                shellVm.clearBuffer()
+                                true
+                            }
+                        }
                     }
                 },
                 update = { view ->
@@ -222,6 +317,59 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                     }
                 },
             )
+
+            // -- Overflow options menu (Clear screen / Restart shell) --
+            var showOverflowMenu by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp)
+            ) {
+                IconButton(
+                    onClick = { showOverflowMenu = true },
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color.Black.copy(alpha = 0.45f), CircleShape),
+                ) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Terminal options",
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showOverflowMenu,
+                    onDismissRequest = { showOverflowMenu = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.btn_clear)) },
+                        leadingIcon = {
+                            Icon(Icons.Filled.DeleteOutline, contentDescription = null)
+                        },
+                        onClick = {
+                            showOverflowMenu = false
+                            shellVm.clearBuffer()
+                        },
+                    )
+                    if (sessionState == ShellSessionState.CLOSED || sessionState == ShellSessionState.ERROR) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.cd_restart_shell)) },
+                            leadingIcon = {
+                                Icon(Icons.Filled.RestartAlt, contentDescription = null)
+                            },
+                            onClick = {
+                                showOverflowMenu = false
+                                val client = adbViewModel.activeClient()
+                                if (client != null && !client.isClosed) {
+                                    shellVm.startSession(activeDeviceId, client)
+                                }
+                            },
+                        )
+                    }
+                }
+            }
         }
 
         // -- Error banner ------------------------------------------
@@ -239,30 +387,16 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
             }
         }
 
-        // -- Toolbar (Ctrl toggle, Tab, etc.) -----------------------
-        ShellToolbar(
-            sessionState = sessionState,
-            ctrlActive   = ctrlActive,
-            onToggleCtrl = { ctrlActive = !ctrlActive },
-            onTab        = { shellVm.sendTab() },
-            onClear      = { shellVm.clearBuffer() },
-            onRestart    = {
-                val client = adbViewModel.activeClient()
-                if (client != null && !client.isClosed) {
-                    shellVm.startSession(activeDeviceId, client)
-                }
-            },
-        )
-
-        // -- Input bar ---------------------------------------------
-        ShellInputBar(
-            onSend         = { shellVm.sendCommand(it) },
-            onHistoryUp    = { shellVm.historyUp() },
-            onHistoryDown  = { shellVm.historyDown() },
-            onRawKey       = { shellVm.sendRaw(it) },
-            ctrlActive     = ctrlActive,
-            onCtrlConsumed = { ctrlActive = false },
-            enabled        = sessionState == ShellSessionState.ACTIVE,
+        // -- 2x7 Termux Extra-Keys Panel ----------------------------
+        ExtraKeysPanel(
+            ctrlState = ctrlState,
+            altState = altState,
+            onToggleCtrl = onToggleCtrl,
+            onLockCtrl = onLockCtrl,
+            onToggleAlt = onToggleAlt,
+            onLockAlt = onLockAlt,
+            onKeyAction = onKeyAction,
+            onCharAction = onCharAction,
         )
     }
 }
@@ -288,10 +422,12 @@ private fun NoDeviceState() {
         Text(
             "No Device Connected",
             style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
-            "Connect a device to start a shell session",
+            "Connect an ADB device above to start a shell session.",
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
