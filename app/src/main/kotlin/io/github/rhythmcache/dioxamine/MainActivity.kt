@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
@@ -178,7 +179,8 @@ fun DioxamineApp(keyDir: File) {
         }
     }
 
-    val hideBottomBar = isScrcpyFullScreen || isPluginActive
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val hideBottomBar = isScrcpyFullScreen || isPluginActive || isImeVisible
 
     // Navigate back to ADB home tab before exiting app
     BackHandler(enabled = selectedTab != Tab.ADB && !hideBottomBar) {
@@ -208,7 +210,7 @@ fun DioxamineApp(keyDir: File) {
     ) { padding ->
         Box(
             modifier = if (hideBottomBar) Modifier.fillMaxSize()
-                       else Modifier.padding(padding).fillMaxSize()
+                       else Modifier.padding(padding).consumeWindowInsets(padding).fillMaxSize()
         ) {
             when (selectedTab) {
                 Tab.ADB -> AdbScreen(vm)

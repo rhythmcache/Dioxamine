@@ -272,6 +272,7 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black)
             .imePadding() // Automatically positions extra keys right above the soft keyboard
     ) {
         // -- Terminal surface (strictly bounded and clipped) --------
