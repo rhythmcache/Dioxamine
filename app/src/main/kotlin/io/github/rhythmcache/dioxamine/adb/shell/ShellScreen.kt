@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -48,23 +47,6 @@ private val TerminalBackground = Color(0xFF0D1117)
 @Composable
 fun ShellScreen(adbViewModel: AdbViewModel) {
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
-    var showInfoDialog by rememberSaveable {
-        mutableStateOf(!prefs.getBoolean("adb_shell_dont_show_info", false))
-    }
-
-    if (showInfoDialog) {
-        ShellInfoDialog(
-            onDismiss = { showInfoDialog = false },
-            onConfirm = { dontShowAgain ->
-                if (dontShowAgain) {
-                    prefs.edit().putBoolean("adb_shell_dont_show_info", true).apply()
-                }
-                showInfoDialog = false
-            }
-        )
-    }
-
     val shellVm: ShellViewModel = viewModel()
 
     val activeClient = adbViewModel.activeClient()

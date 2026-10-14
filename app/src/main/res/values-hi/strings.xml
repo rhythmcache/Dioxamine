@@ -16,11 +16,7 @@
     
     <string name="adb_shell_title">ADB शेल सहायता</string>
     <string name="feature_coming_soon">यह सुविधा जल्द ही आ रही है।</string>
-    <string name="adb_shell_info_dialog_title">ADB शेल सूचना</string>
-    <string name="adb_shell_info_dialog_msg_before_link">"यह इंटरैक्टिव शेल पूर्ण PTY समर्थन के साथ Termux टर्मिनल इम्यूलेशन इंजन द्वारा संचालित है। यदि आप एक अलग समर्पित टर्मिनल वातावरण पसंद करते हैं, तो आप इसका भी उपयोग कर सकते हैं: "</string>
-    <string name="adb_shell_info_dialog_link">टर्मिनल प्लगइन</string>
-    <string name="adb_shell_info_dialog_msg_after_link">।</string>
-    <string name="adb_shell_dont_show_again">"दोबारा न दिखाएं"</string>
+
 
     <string name="no_devices_connected">कोई डिवाइस कनेक्ट नहीं है</string>
     <plurals name="connected_devices_count">

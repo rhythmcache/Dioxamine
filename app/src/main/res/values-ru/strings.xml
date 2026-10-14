@@ -16,11 +16,7 @@
     
     <string name="adb_shell_title">Поддержка ADB Shell</string>
     <string name="feature_coming_soon">Эта функция появится в ближайшее время.</string>
-    <string name="adb_shell_info_dialog_title">Примечание к ADB Shell</string>
-    <string name="adb_shell_info_dialog_msg_before_link">"Этот интерактивный shell работает на базе эмулятора терминала Termux с полной поддержкой PTY. Если вы предпочитаете отдельную среду терминала, вы также можете использовать "</string>
-    <string name="adb_shell_info_dialog_link">Плагин Терминала</string>
-    <string name="adb_shell_info_dialog_msg_after_link">.</string>
-    <string name="adb_shell_dont_show_again">"Больше не показывать"</string>
+
 
     <string name="no_devices_connected">Нет подключенных устройств</string>
     <plurals name="connected_devices_count">

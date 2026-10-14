@@ -16,11 +16,7 @@
     
     <string name="adb_shell_title">ADB Shell support</string>
     <string name="feature_coming_soon">This feature is coming soon.</string>
-    <string name="adb_shell_info_dialog_title">ADB Shell Notice</string>
-    <string name="adb_shell_info_dialog_msg_before_link">"This interactive shell is powered by the Termux terminal emulation engine with full PTY support. If you prefer a separate dedicated terminal environment, you can also use the "</string>
-    <string name="adb_shell_info_dialog_link">Terminal Plugin</string>
-    <string name="adb_shell_info_dialog_msg_after_link">.</string>
-    <string name="adb_shell_dont_show_again">"Don't show again"</string>
+
 
     <string name="no_devices_connected">No devices connected</string>
     <plurals name="connected_devices_count">
