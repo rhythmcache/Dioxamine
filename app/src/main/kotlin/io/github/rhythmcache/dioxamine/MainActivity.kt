@@ -20,7 +20,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -213,13 +215,26 @@ fun DioxamineApp(keyDir: File) {
             }
         }
     ) { padding ->
+        val layoutDirection = LocalLayoutDirection.current
+        val contentPadding = remember(padding, isImeVisible, layoutDirection) {
+            if (isImeVisible) {
+                PaddingValues(
+                    start = padding.calculateStartPadding(layoutDirection),
+                    top = padding.calculateTopPadding(),
+                    end = padding.calculateEndPadding(layoutDirection),
+                    bottom = 0.dp
+                )
+            } else {
+                padding
+            }
+        }
         Box(
             modifier = if (isFullScreen) {
                 Modifier.fillMaxSize()
             } else {
                 Modifier
-                    .padding(padding)
-                    .consumeWindowInsets(padding)
+                    .padding(contentPadding)
+                    .consumeWindowInsets(contentPadding)
                     .fillMaxSize()
             }
         ) {
