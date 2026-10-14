@@ -69,6 +69,10 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
 
     val activeClient = adbViewModel.activeClient()
     val activeDeviceId = adbViewModel.activeDeviceId
+    val activeConn = activeDeviceId?.let { adbViewModel.devices[it] }
+    val supportsShellV2 = activeConn?.let { conn ->
+        conn.apiLevel?.let { it >= 24 } ?: conn.supportsShellV2
+    } ?: true
 
     val sessionState by shellVm.sessionState.collectAsState()
     val terminalSession by shellVm.terminalSession.collectAsState()
@@ -176,14 +180,15 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
         }
     }
 
-    // Start / restart shell when the active device changes
-    LaunchedEffect(activeDeviceId) {
+    // Start / restart shell when the active device or protocol support changes
+    LaunchedEffect(activeDeviceId, supportsShellV2) {
         if (activeClient != null && !activeClient.isClosed) {
             val needsRestart = shellVm.currentDeviceId != activeDeviceId ||
+                shellVm.currentSupportsShellV2 != supportsShellV2 ||
                 sessionState == ShellSessionState.CLOSED ||
                 sessionState == ShellSessionState.ERROR
             if (needsRestart) {
-                shellVm.startSession(activeDeviceId, activeClient)
+                shellVm.startSession(activeDeviceId, activeClient, supportsShellV2)
             }
         } else {
             shellVm.stopSession()
@@ -362,7 +367,7 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                                 showOverflowMenu = false
                                 val client = adbViewModel.activeClient()
                                 if (client != null && !client.isClosed) {
-                                    shellVm.startSession(activeDeviceId, client)
+                                    shellVm.startSession(activeDeviceId, client, supportsShellV2)
                                 }
                             },
                         )

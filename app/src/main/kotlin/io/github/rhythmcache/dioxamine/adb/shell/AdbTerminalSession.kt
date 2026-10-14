@@ -8,19 +8,24 @@ import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
 import io.github.rhythmcache.adb.AdbClient
 import io.github.rhythmcache.adb.AdbInteractiveSession
+import io.github.rhythmcache.adb.AdbStream
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
+import java.io.Closeable
 import java.nio.charset.StandardCharsets
 
 /**
  * An ADB-backed [TerminalSession] connecting [TerminalEmulator] to an interactive PTY session
- * over [AdbInteractiveSession].
+ * over [AdbInteractiveSession] (Android 7+ Shell v2) or [AdbStream] (legacy shell).
  */
 class AdbTerminalSession(
     private val client: AdbClient,
     private val scope: CoroutineScope,
+    private val supportsShellV2: Boolean = true,
     private val transcriptRows: Int = 2000,
 ) : TerminalSession() {
 
@@ -30,7 +35,7 @@ class AdbTerminalSession(
     }
 
     private val mainHandler = Handler(Looper.getMainLooper())
-    private var adbSession: AdbInteractiveSession? = null
+    private var backend: InteractiveBackend? = null
     private var emulator: TerminalEmulator? = null
     private var sessionClient: TerminalSessionClient? = null
 
@@ -74,17 +79,19 @@ class AdbTerminalSession(
             initialize(boundedCols, boundedRows, cellWidthPixels, cellHeightPixels)
         } else {
             emulator?.resize(boundedCols, boundedRows, cellWidthPixels, cellHeightPixels)
-            scope.launch(Dispatchers.IO) {
-                try {
-                    adbSession?.resize(
-                        cols = boundedCols,
-                        rows = boundedRows,
-                        xPixel = cellWidthPixels * boundedCols,
-                        yPixel = cellHeightPixels * boundedRows,
-                    )
-                    Log.d(TAG, "Sent resize to adbd: cols=$boundedCols, rows=$boundedRows")
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed sending resize to adbd: ${e.message}")
+            if (supportsShellV2) {
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        backend?.resize(
+                            cols = boundedCols,
+                            rows = boundedRows,
+                            xPixel = cellWidthPixels * boundedCols,
+                            yPixel = cellHeightPixels * boundedRows,
+                        )
+                        Log.d(TAG, "Sent resize to adbd: cols=$boundedCols, rows=$boundedRows")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed sending resize to adbd: ${e.message}")
+                    }
                 }
             }
         }
@@ -105,41 +112,49 @@ class AdbTerminalSession(
         // 1. Start ONE ordered writer coroutine draining writeChannel
         writerJob = scope.launch(Dispatchers.IO) {
             for (chunk in writeChannel) {
-                val s = adbSession ?: continue
+                val b = backend ?: continue
                 try {
-                    s.write(chunk)
+                    b.write(chunk)
                 } catch (e: Exception) {
                     Log.w(TAG, "Error writing to adb session: ${e.message}")
                 }
             }
         }
 
-        // 2. Open interactive shell v2 with PTY
+        // 2. Open interactive shell v2 with PTY or legacy raw shell
         sessionJob = scope.launch(Dispatchers.IO) {
             try {
                 _state.value = ShellSessionState.STARTING
                 _errorMessage.value = null
 
-                val session = client.openInteractiveShell(
-                    terminalType = "xterm-256color",
-                    rows = rows,
-                    cols = columns,
-                )
-                adbSession = session
+                val sessionBackend: InteractiveBackend = if (supportsShellV2) {
+                    val session = client.openInteractiveShell(
+                        terminalType = "xterm-256color",
+                        rows = rows,
+                        cols = columns,
+                    )
+                    ShellV2Backend(session)
+                } else {
+                    val stream = client.open("shell:")
+                    LegacyRawBackend(stream)
+                }
+                backend = sessionBackend
                 active = true
 
                 // Send current emulator dimensions in case updateSize ran while connection opened
-                emulator?.let { currentEmu ->
-                    try {
-                        session.resize(
-                            cols = currentEmu.columns,
-                            rows = currentEmu.rows,
-                            xPixel = currentEmu.cellWidthPixels * currentEmu.columns,
-                            yPixel = currentEmu.cellHeightPixels * currentEmu.rows,
-                        )
-                        Log.d(TAG, "Synchronized current terminal size to adbd: cols=${currentEmu.columns}, rows=${currentEmu.rows}")
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed syncing current terminal size to adbd: ${e.message}")
+                if (supportsShellV2) {
+                    emulator?.let { currentEmu ->
+                        try {
+                            sessionBackend.resize(
+                                cols = currentEmu.columns,
+                                rows = currentEmu.rows,
+                                xPixel = currentEmu.cellWidthPixels * currentEmu.columns,
+                                yPixel = currentEmu.cellHeightPixels * currentEmu.rows,
+                            )
+                            Log.d(TAG, "Synchronized current terminal size to adbd: cols=${currentEmu.columns}, rows=${currentEmu.rows}")
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed syncing current terminal size to adbd: ${e.message}")
+                        }
                     }
                 }
 
@@ -148,7 +163,7 @@ class AdbTerminalSession(
                 }
 
                 // 3. Feed outputFlow to emulator.append() on the Main Thread
-                session.outputFlow.collect { bytes ->
+                sessionBackend.outputFlow.collect { bytes ->
                     withContext(Dispatchers.Main) {
                         emulator?.append(bytes, bytes.size)
                         notifyScreenUpdate()
@@ -156,13 +171,15 @@ class AdbTerminalSession(
                 }
 
                 // Normal exit
-                val code = session.exitCode.await()
+                val code = sessionBackend.awaitExitCode()
                 withContext(Dispatchers.Main) {
                     handleExit(code)
                 }
             } catch (e: CancellationException) {
-                withContext(Dispatchers.Main) {
-                    handleExit(null)
+                withContext(NonCancellable) {
+                    withContext(Dispatchers.Main) {
+                        handleExit(null)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "ADB shell session error", e)
@@ -228,14 +245,14 @@ class AdbTerminalSession(
 
     override fun finishIfRunning() {
         active = false
-        val session = adbSession
-        adbSession = null
-        if (session != null) {
+        val b = backend
+        backend = null
+        if (b != null) {
             closeScope.launch {
                 runCatching {
-                    session.close()
+                    b.close()
                 }.onFailure { e ->
-                    Log.w(TAG, "Error closing adb session: ${e.message}")
+                    Log.w(TAG, "Error closing adb backend: ${e.message}")
                 }
             }
         }
@@ -270,5 +287,71 @@ class AdbTerminalSession(
         writeChannel.close()
         writerJob?.cancel()
         sessionJob?.cancel()
+    }
+}
+
+private interface InteractiveBackend : Closeable {
+    val outputFlow: Flow<ByteArray>
+    suspend fun awaitExitCode(): Int?
+    suspend fun write(data: ByteArray)
+    suspend fun resize(cols: Int, rows: Int, xPixel: Int, yPixel: Int)
+}
+
+private class ShellV2Backend(
+    private val session: AdbInteractiveSession,
+) : InteractiveBackend {
+    override val outputFlow: Flow<ByteArray> get() = session.outputFlow
+
+    override suspend fun awaitExitCode(): Int? = session.exitCode.await()
+
+    override suspend fun write(data: ByteArray) {
+        session.write(data)
+    }
+
+    override suspend fun resize(cols: Int, rows: Int, xPixel: Int, yPixel: Int) {
+        session.resize(
+            cols = cols,
+            rows = rows,
+            xPixel = xPixel,
+            yPixel = yPixel,
+        )
+    }
+
+    override fun close() {
+        session.close()
+    }
+}
+
+private class LegacyRawBackend(
+    private val stream: AdbStream,
+) : InteractiveBackend {
+    private val exitCodeDeferred = CompletableDeferred<Int?>()
+
+    override val outputFlow: Flow<ByteArray> = flow {
+        try {
+            while (true) {
+                val chunk = stream.recv() ?: break
+                emit(chunk)
+            }
+        } catch (_: Exception) {
+            // Stream closed or broken
+        } finally {
+            exitCodeDeferred.complete(null)
+        }
+    }
+
+    override suspend fun awaitExitCode(): Int? = exitCodeDeferred.await()
+
+    override suspend fun write(data: ByteArray) {
+        stream.write(data)
+    }
+
+    override suspend fun resize(cols: Int, rows: Int, xPixel: Int, yPixel: Int) {
+        // No-op: legacy shell (Android < 7) does not support dynamic PTY resizing via ADB
+    }
+
+    override fun close() {
+        exitCodeDeferred.complete(null)
+        runCatching { stream.close() }
     }
 }

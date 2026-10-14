@@ -32,17 +32,29 @@ class ShellViewModel : ViewModel() {
     var currentDeviceId: String? = null
         private set
 
+    var currentSupportsShellV2: Boolean = true
+        private set
+
     // -- Session lifecycle -------------------------------------------
 
     /**
      * Start (or restart) an interactive shell on [client].
      * Closes any existing session first.
      */
-    fun startSession(deviceId: String?, client: AdbClient) {
+    fun startSession(
+        deviceId: String?,
+        client: AdbClient,
+        supportsShellV2: Boolean = true,
+    ) {
         stopSession()
         currentDeviceId = deviceId
+        currentSupportsShellV2 = supportsShellV2
 
-        val newSession = AdbTerminalSession(client, viewModelScope)
+        val newSession = AdbTerminalSession(
+            client = client,
+            scope = viewModelScope,
+            supportsShellV2 = supportsShellV2,
+        )
         session = newSession
         _terminalSession.value = newSession
 
