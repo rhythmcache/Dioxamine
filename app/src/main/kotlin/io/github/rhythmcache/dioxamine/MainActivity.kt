@@ -179,9 +179,10 @@ fun DioxamineApp(keyDir: File) {
         }
     }
 
+    val imeInsets = WindowInsets.ime
     val density = LocalDensity.current
-    val isImeVisible by remember {
-        derivedStateOf { WindowInsets.ime.getBottom(density) > 0 }
+    val isImeVisible by remember(imeInsets, density) {
+        derivedStateOf { imeInsets.getBottom(density) > 0 }
     }
     val isFullScreen = isScrcpyFullScreen || isPluginActive
     val hideBottomBar = isFullScreen || isImeVisible
