@@ -17,7 +17,7 @@
     <string name="adb_shell_title">ADB-Shell-Unterstützung</string>
     <string name="feature_coming_soon">Diese Funktion ist bald verfügbar.</string>
     <string name="adb_shell_info_dialog_title">Hinweis zur ADB Shell</string>
-    <string name="adb_shell_info_dialog_msg_before_link">"Diese integrierte Shell ist ein minimales Terminal zum Ausführen grundlegender Befehle. Ihre Möglichkeiten sind eingeschränkt und sie bietet keine vollständige Terminalemulation. Für eine erweiterte oder vollwertige Terminalumgebung wird das "</string>
+    <string name="adb_shell_info_dialog_msg_before_link">"Diese interaktive Shell basiert auf der Termux-Terminalemulation mit voller PTY-Unterstützung. Wenn Sie eine separate Terminalumgebung bevorzugen, können Sie auch das "</string>
     <string name="adb_shell_info_dialog_link">Terminal-Plugin</string>
     <string name="adb_shell_info_dialog_msg_after_link"> empfohlen.</string>
     <string name="adb_shell_dont_show_again">"Nicht mehr anzeigen"</string>

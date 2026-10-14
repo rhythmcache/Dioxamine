@@ -26,6 +26,7 @@ class AdbTerminalSession(
 
     companion object {
         private const val TAG = "AdbTerminalSession"
+        private val closeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -211,11 +212,18 @@ class AdbTerminalSession(
 
     override fun reset() {
         mainHandler.post {
-            emulator?.getScreen()?.clearTranscript()
+            val emu = emulator
+            emu?.getScreen()?.clearTranscript()
+            if (!active) {
+                // If session is closed/idle, reset emulator state so visible screen is cleared
+                emu?.reset()
+            }
             notifyScreenUpdate()
         }
-        // Write Ctrl+L (Form Feed, 0x0C) to remote shell so readline/sh redraws prompt
-        write(byteArrayOf(0x0C), 0, 1)
+        if (active) {
+            // Write Ctrl+L (Form Feed, 0x0C) to remote shell only when active so readline redraws prompt
+            write(byteArrayOf(0x0C), 0, 1)
+        }
     }
 
     override fun finishIfRunning() {
@@ -223,10 +231,12 @@ class AdbTerminalSession(
         val session = adbSession
         adbSession = null
         if (session != null) {
-            runCatching {
-                session.close()
-            }.onFailure { e ->
-                Log.w(TAG, "Error closing adb session: ${e.message}")
+            closeScope.launch {
+                runCatching {
+                    session.close()
+                }.onFailure { e ->
+                    Log.w(TAG, "Error closing adb session: ${e.message}")
+                }
             }
         }
     }

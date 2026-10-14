@@ -17,7 +17,7 @@
     <string name="adb_shell_title">ADB Shell 支持</string>
     <string name="feature_coming_soon">此功能即将推出。</string>
     <string name="adb_shell_info_dialog_title">ADB Shell 提示</string>
-    <string name="adb_shell_info_dialog_msg_before_link">此内置 Shell 是用于运行基本命令的简易终端，功能有限且不提供完整的终端模拟。如需高级或功能完整的终端体验，建议使用</string>
+    <string name="adb_shell_info_dialog_msg_before_link">此交互式 Shell 基于 Termux 终端模拟引擎构建，具有完整的 PTY 支持。如果您更喜欢独立的终端环境，也可以使用</string>
     <string name="adb_shell_info_dialog_link">终端插件</string>
     <string name="adb_shell_info_dialog_msg_after_link">。</string>
     <string name="adb_shell_dont_show_again">不再显示</string>

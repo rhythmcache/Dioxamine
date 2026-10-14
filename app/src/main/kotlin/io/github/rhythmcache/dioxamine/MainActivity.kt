@@ -179,8 +179,11 @@ fun DioxamineApp(keyDir: File) {
         }
     }
 
+    val density = LocalDensity.current
+    val isImeVisible by remember {
+        derivedStateOf { WindowInsets.ime.getBottom(density) > 0 }
+    }
     val isFullScreen = isScrcpyFullScreen || isPluginActive
-    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val hideBottomBar = isFullScreen || isImeVisible
 
     // Navigate back to ADB home tab before exiting app

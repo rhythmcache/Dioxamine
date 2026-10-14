@@ -151,7 +151,6 @@ private fun RepeatableKeyCell(
                     val repeatJob = coroutineScope.launch {
                         delay(400)
                         while (isActive) {
-                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                             currentOnPress()
                             delay(75)
                         }

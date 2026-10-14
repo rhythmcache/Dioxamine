@@ -17,7 +17,7 @@
     <string name="adb_shell_title">پشتیبانی از ADB Shell</string>
     <string name="feature_coming_soon">این قابلیت به‌زودی اضافه می‌شود.</string>
     <string name="adb_shell_info_dialog_title">توجه درباره ADB Shell</string>
-    <string name="adb_shell_info_dialog_msg_before_link">"این شل داخلی یک ترمینال ساده برای اجرای دستورات اولیه است. این بخش امکانات محدودی دارد و شبیه‌ساز کامل ترمینال نیست. برای تجربه کامل‌تر یا پیشرفته‌تر ترمینال، توصیه می‌شود از "</string>
+    <string name="adb_shell_info_dialog_msg_before_link">"این شل تعاملی بر پایه موتور شبیه‌ساز ترمینال ترموکس با پشتیبانی کامل از PTY کار می‌کند. اگر محیط ترمینال اختصاصی و مجزا را ترجیح می‌دهید، می‌توانید از "</string>
     <string name="adb_shell_info_dialog_link">پلاگین ترمینال</string>
     <string name="adb_shell_info_dialog_msg_after_link"> استفاده کنید.</string>
     <string name="adb_shell_dont_show_again">"دیگر نشان داده نشود"</string>
