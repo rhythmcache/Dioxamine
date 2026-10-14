@@ -47,8 +47,6 @@ class AdbTerminalSession(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    var onScreenUpdate: (() -> Unit)? = null
-
     override fun getEmulator(): TerminalEmulator? = emulator
 
     override fun updateTerminalSessionClient(client: TerminalSessionClient?) {
@@ -129,6 +127,21 @@ class AdbTerminalSession(
                 adbSession = session
                 active = true
 
+                // Send current emulator dimensions in case updateSize ran while connection opened
+                emulator?.let { currentEmu ->
+                    try {
+                        session.resize(
+                            cols = currentEmu.columns,
+                            rows = currentEmu.rows,
+                            xPixel = currentEmu.cellWidthPixels * currentEmu.columns,
+                            yPixel = currentEmu.cellHeightPixels * currentEmu.rows,
+                        )
+                        Log.d(TAG, "Synchronized current terminal size to adbd: cols=${currentEmu.columns}, rows=${currentEmu.rows}")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed syncing current terminal size to adbd: ${e.message}")
+                    }
+                }
+
                 withContext(Dispatchers.Main) {
                     _state.value = ShellSessionState.ACTIVE
                 }
@@ -187,12 +200,6 @@ class AdbTerminalSession(
         writeChannel.trySend(chunk)
     }
 
-    /** Write a command string with newline. */
-    fun sendCommand(command: String) {
-        val line = "$command\n"
-        writeChannel.trySend(line.toByteArray(StandardCharsets.UTF_8))
-    }
-
     /** Send raw bytes to stdin. */
     fun sendRaw(bytes: ByteArray) {
         writeChannel.trySend(bytes)
@@ -201,21 +208,24 @@ class AdbTerminalSession(
     fun sendInterrupt() = sendRaw(byteArrayOf(0x03)) // Ctrl+C
     fun sendEof()       = sendRaw(byteArrayOf(0x04)) // Ctrl+D
     fun sendSuspend()   = sendRaw(byteArrayOf(0x1A)) // Ctrl+Z
-    fun sendTab()       = sendRaw(byteArrayOf(0x09)) // Tab
 
     override fun reset() {
         mainHandler.post {
-            emulator?.reset()
+            emulator?.getScreen()?.clearTranscript()
             notifyScreenUpdate()
         }
+        // Write Ctrl+L (Form Feed, 0x0C) to remote shell so readline/sh redraws prompt
+        write(byteArrayOf(0x0C), 0, 1)
     }
 
     override fun finishIfRunning() {
         active = false
-        scope.launch(Dispatchers.IO) {
-            try {
-                adbSession?.close()
-            } catch (e: Exception) {
+        val session = adbSession
+        adbSession = null
+        if (session != null) {
+            runCatching {
+                session.close()
+            }.onFailure { e ->
                 Log.w(TAG, "Error closing adb session: ${e.message}")
             }
         }
@@ -223,7 +233,6 @@ class AdbTerminalSession(
 
     private fun notifyScreenUpdate() {
         sessionClient?.onTextChanged(this)
-        onScreenUpdate?.invoke()
     }
 
     override fun titleChanged(oldTitle: String?, newTitle: String?) {

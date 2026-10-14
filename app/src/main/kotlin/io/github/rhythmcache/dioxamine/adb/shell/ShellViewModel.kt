@@ -3,6 +3,7 @@ package io.github.rhythmcache.dioxamine.adb.shell
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.rhythmcache.adb.AdbClient
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -13,6 +14,8 @@ import kotlinx.coroutines.launch
 class ShellViewModel : ViewModel() {
 
     private var session: AdbTerminalSession? = null
+    private var stateJob: Job? = null
+    private var errorJob: Job? = null
 
     private val _terminalSession = MutableStateFlow<AdbTerminalSession?>(null)
     /** Currently active terminal session, if any. */
@@ -43,16 +46,20 @@ class ShellViewModel : ViewModel() {
         session = newSession
         _terminalSession.value = newSession
 
-        viewModelScope.launch {
+        stateJob = viewModelScope.launch {
             newSession.state.collect { _sessionState.value = it }
         }
-        viewModelScope.launch {
+        errorJob = viewModelScope.launch {
             newSession.errorMessage.collect { _errorMessage.value = it }
         }
     }
 
     /** Close the current session (if any). */
     fun stopSession() {
+        stateJob?.cancel()
+        stateJob = null
+        errorJob?.cancel()
+        errorJob = null
         session?.destroy()
         session = null
         _terminalSession.value = null
@@ -64,7 +71,6 @@ class ShellViewModel : ViewModel() {
     fun sendRaw(bytes: ByteArray) { session?.sendRaw(bytes) }
     fun sendInterrupt() { session?.sendInterrupt() }
     fun sendEof()       { session?.sendEof() }
-    fun sendTab()       { session?.sendTab() }
     fun sendSuspend()   { session?.sendSuspend() }
 
     // -- Buffer management -------------------------------------------

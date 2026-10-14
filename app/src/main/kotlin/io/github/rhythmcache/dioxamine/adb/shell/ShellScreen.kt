@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
+import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
@@ -290,7 +291,11 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                 factory = { ctx ->
                     BoundedTerminalView(ctx).apply {
                         terminalViewRef = this
-                        val fontPx = (13 * ctx.resources.displayMetrics.scaledDensity).toInt()
+                        val fontPx = TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_SP,
+                            13f,
+                            ctx.resources.displayMetrics,
+                        ).toInt()
                         setTextSize(fontPx)
                         setTypeface(typeface)
                         setTerminalViewClient(viewClient)
@@ -300,13 +305,6 @@ fun ShellScreen(adbViewModel: AdbViewModel) {
                         }
                         isFocusable = true
                         isFocusableInTouchMode = true
-                        // Context menu listener for long-press More menu
-                        setOnCreateContextMenuListener { menu, _, _ ->
-                            menu.add(ctx.getString(R.string.btn_clear)).setOnMenuItemClickListener {
-                                shellVm.clearBuffer()
-                                true
-                            }
-                        }
                     }
                 },
                 update = { view ->

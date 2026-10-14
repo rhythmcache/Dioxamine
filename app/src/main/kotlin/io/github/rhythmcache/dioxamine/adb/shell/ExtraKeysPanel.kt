@@ -1,5 +1,6 @@
 package io.github.rhythmcache.dioxamine.adb.shell
 
+import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -101,13 +103,17 @@ private fun RegularKeyCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val view = LocalView.current
     Box(
         modifier = modifier
             .fillMaxHeight()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(color = Color.White),
-                onClick = onClick,
+                onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    onClick()
+                },
             ),
         contentAlignment = Alignment.Center,
     ) {
@@ -129,6 +135,7 @@ private fun RepeatableKeyCell(
 ) {
     val currentOnPress by rememberUpdatedState(onPress)
     val coroutineScope = rememberCoroutineScope()
+    val view = LocalView.current
     var isPressed by remember { mutableStateOf(false) }
 
     Box(
@@ -139,10 +146,12 @@ private fun RepeatableKeyCell(
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
                     isPressed = true
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     currentOnPress()
                     val repeatJob = coroutineScope.launch {
                         delay(400)
                         while (isActive) {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                             currentOnPress()
                             delay(75)
                         }
@@ -175,6 +184,10 @@ private fun ModifierKeyCell(
     onLock: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val currentOnToggle by rememberUpdatedState(onToggle)
+    val currentOnLock by rememberUpdatedState(onLock)
+    val view = LocalView.current
+
     val bgColor = when (state) {
         ModifierState.OFF -> Color.Transparent
         ModifierState.ON -> Color(0xFF2E3B4E)
@@ -195,11 +208,16 @@ private fun ModifierKeyCell(
         modifier = modifier
             .fillMaxHeight()
             .background(bgColor)
-            .pointerInput(state) {
+            .pointerInput(Unit) {
                 detectTapGestures(
-                    onTap = { onToggle() },
-                    onDoubleTap = { onLock() },
-                    onLongPress = { onLock() },
+                    onTap = {
+                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        currentOnToggle()
+                    },
+                    onLongPress = {
+                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        currentOnLock()
+                    },
                 )
             },
         contentAlignment = Alignment.Center,

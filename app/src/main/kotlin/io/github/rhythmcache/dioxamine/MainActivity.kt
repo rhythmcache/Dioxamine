@@ -179,8 +179,9 @@ fun DioxamineApp(keyDir: File) {
         }
     }
 
+    val isFullScreen = isScrcpyFullScreen || isPluginActive
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    val hideBottomBar = isScrcpyFullScreen || isPluginActive || isImeVisible
+    val hideBottomBar = isFullScreen || isImeVisible
 
     // Navigate back to ADB home tab before exiting app
     BackHandler(enabled = selectedTab != Tab.ADB && !hideBottomBar) {
@@ -209,8 +210,14 @@ fun DioxamineApp(keyDir: File) {
         }
     ) { padding ->
         Box(
-            modifier = if (hideBottomBar) Modifier.fillMaxSize()
-                       else Modifier.padding(padding).consumeWindowInsets(padding).fillMaxSize()
+            modifier = if (isFullScreen) {
+                Modifier.fillMaxSize()
+            } else {
+                Modifier
+                    .padding(padding)
+                    .consumeWindowInsets(padding)
+                    .fillMaxSize()
+            }
         ) {
             when (selectedTab) {
                 Tab.ADB -> AdbScreen(vm)
