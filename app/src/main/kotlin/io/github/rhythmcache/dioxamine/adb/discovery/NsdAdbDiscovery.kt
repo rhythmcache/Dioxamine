@@ -7,10 +7,8 @@ import androidx.compose.runtime.mutableStateMapOf
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentLinkedQueue
 
 enum class AdbServiceType(val serviceType: String) {
     TLS_CONNECT("_adb-tls-connect._tcp"),
@@ -45,17 +43,12 @@ class NsdAdbDiscovery(private val context: Context) {
 
     private val listeners = mutableListOf<NsdManager.DiscoveryListener>()
     private var isDiscovering = false
-
-    private val resolveQueue = ConcurrentLinkedQueue<Pair<NsdServiceInfo, AdbServiceType>>()
-    private val resolveLock = Any()
-    private var isResolving = false
     private val scope = CoroutineScope(Dispatchers.IO)
 
     fun start() {
         if (isDiscovering) return
         isDiscovering = true
         discovered.clear()
-        resolveQueue.clear()
         AdbServiceType.values().forEach { startForType(it) }
         probeLocalhost()
     }
@@ -81,7 +74,6 @@ class NsdAdbDiscovery(private val context: Context) {
         isDiscovering = false
         listeners.forEach { runCatching { nsdManager.stopServiceDiscovery(it) } }
         listeners.clear()
-        resolveQueue.clear()
     }
 
     private fun startForType(type: AdbServiceType) {
@@ -91,7 +83,31 @@ class NsdAdbDiscovery(private val context: Context) {
             }
             override fun onServiceFound(service: NsdServiceInfo) {
                 AppLogger.i("NsdAdbDiscovery", "Service found: ${service.serviceName} (${type.serviceType})")
-                enqueueResolve(service, type)
+                NsdResolver.resolve(
+                    nsdManager = nsdManager,
+                    serviceInfo = service,
+                    onResolved = { resolvedInfo ->
+                        val candidates = NsdAddressHelper.pickHosts(resolvedInfo)
+                        val chosenHost = candidates.firstOrNull()
+                        if (chosenHost != null) {
+                            val key = "${resolvedInfo.serviceName}|${type.serviceType}"
+                            val deviceId = extractDeviceIdentity(resolvedInfo.serviceName)
+                            discovered[key] = DiscoveredAdbDevice(
+                                serviceName = resolvedInfo.serviceName,
+                                host = chosenHost,
+                                port = resolvedInfo.port,
+                                type = type,
+                                deviceId = deviceId
+                            )
+                            AppLogger.i("NsdAdbDiscovery", "Successfully resolved ${resolvedInfo.serviceName} -> $chosenHost:${resolvedInfo.port} (deviceId=$deviceId, candidate=$chosenHost of $candidates, API ${android.os.Build.VERSION.SDK_INT})")
+                        } else {
+                            AppLogger.w("NsdAdbDiscovery", "No usable candidate address resolved for ${resolvedInfo.serviceName} (API ${android.os.Build.VERSION.SDK_INT})")
+                        }
+                    },
+                    onFailed = { errorCode ->
+                        AppLogger.e("NsdAdbDiscovery", "Resolve failed for ${service.serviceName}: code=$errorCode")
+                    }
+                )
             }
             override fun onServiceLost(service: NsdServiceInfo) {
                 AppLogger.i("NsdAdbDiscovery", "Service lost: ${service.serviceName}")
@@ -107,74 +123,6 @@ class NsdAdbDiscovery(private val context: Context) {
         listeners.add(listener)
         runCatching {
             nsdManager.discoverServices(type.serviceType, NsdManager.PROTOCOL_DNS_SD, listener)
-        }
-    }
-
-    private fun enqueueResolve(service: NsdServiceInfo, type: AdbServiceType) {
-        resolveQueue.add(Pair(service, type))
-        processNextResolve()
-    }
-
-    private fun processNextResolve() {
-        synchronized(resolveLock) {
-            if (isResolving || resolveQueue.isEmpty()) return
-            isResolving = true
-        }
-
-        val item = resolveQueue.poll()
-        if (item == null) {
-            synchronized(resolveLock) { isResolving = false }
-            return
-        }
-
-        val (service, type) = item
-        AppLogger.i("NsdAdbDiscovery", "Resolving service: ${service.serviceName} (${type.serviceType})")
-
-        val resolveListener = object : NsdManager.ResolveListener {
-            override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                AppLogger.e("NsdAdbDiscovery", "Resolve failed for ${serviceInfo.serviceName}: code=$errorCode")
-                if (errorCode == 3) {
-                    // FAILURE_ALREADY_ACTIVE -> retry after short delay
-                    scope.launch {
-                        delay(250)
-                        enqueueResolve(serviceInfo, type)
-                    }
-                }
-                synchronized(resolveLock) {
-                    isResolving = false
-                }
-                processNextResolve()
-            }
-
-            override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-                @Suppress("DEPRECATION")
-                val hostAddr = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    serviceInfo.hostAddresses.firstOrNull()
-                } else {
-                    serviceInfo.host
-                }
-                val hostStr = hostAddr?.hostAddress
-                if (hostStr != null) {
-                    val cleanHost = hostStr.removePrefix("/").split("%")[0]
-                    val key = "${serviceInfo.serviceName}|${type.serviceType}"
-                    val deviceId = extractDeviceIdentity(serviceInfo.serviceName)
-                    discovered[key] = DiscoveredAdbDevice(serviceInfo.serviceName, cleanHost, serviceInfo.port, type, deviceId)
-                    AppLogger.i("NsdAdbDiscovery", "Successfully resolved ${serviceInfo.serviceName} -> $cleanHost:${serviceInfo.port} (deviceId=$deviceId)")
-                }
-                synchronized(resolveLock) {
-                    isResolving = false
-                }
-                processNextResolve()
-            }
-        }
-
-        runCatching {
-            @Suppress("DEPRECATION")
-            nsdManager.resolveService(service, resolveListener)
-        }.onFailure { e ->
-            AppLogger.e("NsdAdbDiscovery", "Exception calling resolveService for ${service.serviceName}", e)
-            synchronized(resolveLock) { isResolving = false }
-            processNextResolve()
         }
     }
 

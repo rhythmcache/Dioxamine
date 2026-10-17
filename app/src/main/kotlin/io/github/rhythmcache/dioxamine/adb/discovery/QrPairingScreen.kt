@@ -24,6 +24,7 @@ import io.github.rhythmcache.dioxamine.BuildConfig
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import java.io.File
+import java.net.InetAddress
 
 /**
  * Full-screen "pair by QR" flow. Generates a QR the device's Wireless
@@ -73,7 +74,7 @@ fun QrPairingScreen(
         val matchingEntry = discovery.discovered.values.firstOrNull { dev ->
             if (dev.type != AdbServiceType.TLS_CONNECT) return@firstOrNull false
 
-            val matchesHost = dev.host == host
+            val matchesHost = areHostsEqual(dev.host, host)
             val matchesGuid = guid != null && (dev.deviceId == guid || dev.serviceName.contains(guid))
 
             matchesHost || matchesGuid
@@ -211,4 +212,20 @@ fun QrPairingScreen(
             }
         }
     }
+}
+
+/**
+ * Compares two host strings by normalized [InetAddress] equality.
+ * Strips interface scope IDs and parses numeric IP addresses to correctly equate
+ * IPv6 addresses across scoped/unscoped representations.
+ */
+private fun areHostsEqual(host1: String, host2: String): Boolean {
+    if (host1.equals(host2, ignoreCase = true)) return true
+    return runCatching {
+        val clean1 = host1.removePrefix("/").split("%")[0]
+        val clean2 = host2.removePrefix("/").split("%")[0]
+        val addr1 = InetAddress.getByName(clean1)
+        val addr2 = InetAddress.getByName(clean2)
+        addr1 == addr2
+    }.getOrDefault(false)
 }

@@ -3,6 +3,7 @@ package io.github.rhythmcache.dioxamine.adb.discovery
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,12 +12,12 @@ import io.github.rhythmcache.adb.pairing.PairingClient
 import io.github.rhythmcache.adb.pairing.PeerInfoBuilder
 import io.github.rhythmcache.adb.pairing.buildPairingIdentity
 import io.github.rhythmcache.dioxamine.core.AppLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.security.SecureRandom
-import java.security.interfaces.RSAPublicKey
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** Result of a completed QR-pairing session. */
@@ -50,6 +51,7 @@ class QrPairingEngine(
     private var discoveryListener: NsdManager.DiscoveryListener? = null
     private var engineJob: Job? = null
     private val pairingAttempted = AtomicBoolean(false)
+    private val outcomeDispatched = AtomicBoolean(false)
 
     var qrPayload by mutableStateOf<String?>(null)
         private set
@@ -58,6 +60,7 @@ class QrPairingEngine(
 
     fun start(scope: CoroutineScope, onResult: (QrPairingOutcome) -> Unit) {
         pairingAttempted.set(false)
+        outcomeDispatched.set(false)
         engineJob = scope.launch(Dispatchers.IO) {
             try {
                 val identity = buildPairingIdentity(keyProvider)
@@ -72,9 +75,21 @@ class QrPairingEngine(
                 startDiscovery(scope, targetServiceName, password, ourPeerInfo, identity, onResult)
             } catch (e: Exception) {
                 AppLogger.e("QrPairingEngine", "Failed to initialize QR pairing engine", e)
-                state = QrPairingState.Error(e.message ?: "Failed to start QR pairing engine")
-                onResult(QrPairingOutcome.Failure(e.message ?: "Failed to start QR pairing engine"))
+                dispatchOutcome(QrPairingOutcome.Failure(e.message ?: "Failed to start QR pairing engine"), onResult) {
+                    state = QrPairingState.Error(e.message ?: "Failed to start QR pairing engine")
+                }
             }
+        }
+    }
+
+    private fun dispatchOutcome(
+        outcome: QrPairingOutcome,
+        onResult: (QrPairingOutcome) -> Unit,
+        updateState: () -> Unit
+    ) {
+        if (outcomeDispatched.compareAndSet(false, true)) {
+            updateState()
+            onResult(outcome)
         }
     }
 
@@ -97,58 +112,96 @@ class QrPairingEngine(
 
                 if (foundName == targetServiceName || foundName.contains(targetServiceName) || foundName.startsWith("studio-")) {
                     if (pairingAttempted.get()) return
-                    runCatching {
-                        @Suppress("DEPRECATION")
-                        nsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
-                            override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) {
-                                AppLogger.e("QrPairingEngine", "Failed to resolve pairing service $foundName: code=$errorCode")
-                            }
 
-                            override fun onServiceResolved(info: NsdServiceInfo) {
-                                @Suppress("DEPRECATION")
-                                val hostAddr = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                                    info.hostAddresses.firstOrNull()
-                                } else {
-                                    info.host
+                    NsdResolver.resolve(
+                        nsdManager = nsdManager,
+                        serviceInfo = serviceInfo,
+                        onResolved = { info ->
+                            val candidates = NsdAddressHelper.pickHosts(info)
+                            if (candidates.isEmpty()) {
+                                val msg = "No usable host addresses found for ${info.serviceName}"
+                                AppLogger.w("QrPairingEngine", msg)
+                                if (!pairingAttempted.get()) {
+                                    dispatchOutcome(QrPairingOutcome.Failure(msg), onResult) {
+                                        state = QrPairingState.Error(msg)
+                                    }
                                 }
-                                val hostStr = hostAddr?.hostAddress ?: return
+                            } else {
                                 val portNum = info.port
-                                val cleanHost = hostStr.removePrefix("/").split("%")[0]
-
                                 if (pairingAttempted.compareAndSet(false, true)) {
-                                    AppLogger.i("QrPairingEngine", "Connecting as PairingClient to phone at $cleanHost:$portNum...")
                                     scope.launch(Dispatchers.IO) {
-                                        val pairResult = PairingClient.pair(cleanHost, portNum, password, ourPeerInfo, identity)
-                                        pairResult.fold(
-                                            onSuccess = { pairingResult ->
-                                                val guid = runCatching {
-                                                    PeerInfoBuilder.extractDeviceGuid(pairingResult.peerInfo)
-                                                }.getOrNull()
-                                                AppLogger.i("QrPairingEngine", "Paired successfully with phone at $cleanHost! Device GUID: $guid")
-                                                state = QrPairingState.Paired
-                                                onResult(QrPairingOutcome.Success(guid = guid, host = cleanHost))
-                                            },
-                                            onFailure = { e ->
-                                                AppLogger.e("QrPairingEngine", "PairingClient.pair failed", e)
-                                                state = QrPairingState.Error(e.message ?: "Pairing failed")
-                                                onResult(QrPairingOutcome.Failure(e.message ?: "Pairing failed"))
+                                        try {
+                                            var lastError: Throwable? = null
+                                            var success = false
+
+                                            for ((index, candidateHost) in candidates.withIndex()) {
+                                                AppLogger.i("QrPairingEngine", "Connecting as PairingClient to phone at $candidateHost:$portNum (API ${Build.VERSION.SDK_INT}, candidate ${index + 1}/${candidates.size})...")
+                                                val pairResult = PairingClient.pair(candidateHost, portNum, password, ourPeerInfo, identity)
+                                                pairResult.fold(
+                                                    onSuccess = { pairingResult ->
+                                                        val guid = runCatching {
+                                                            PeerInfoBuilder.extractDeviceGuid(pairingResult.peerInfo)
+                                                        }.getOrNull()
+                                                        AppLogger.i("QrPairingEngine", "Paired successfully with phone at $candidateHost! Device GUID: $guid (used candidate $candidateHost, API ${Build.VERSION.SDK_INT})")
+                                                        dispatchOutcome(QrPairingOutcome.Success(guid = guid, host = candidateHost), onResult) {
+                                                            state = QrPairingState.Paired
+                                                        }
+                                                        stopInternal()
+                                                        success = true
+                                                    },
+                                                    onFailure = { e ->
+                                                        lastError = e
+                                                        AppLogger.w("QrPairingEngine", "PairingClient.pair failed on candidate $candidateHost: ${e.message}")
+                                                        if (index < candidates.size - 1) {
+                                                            AppLogger.i("QrPairingEngine", "Trying next candidate address (${index + 2}/${candidates.size})...")
+                                                        }
+                                                    }
+                                                )
+                                                if (success) {
+                                                    return@launch
+                                                }
                                             }
-                                        )
-                                        stopInternal()
+
+                                            AppLogger.e("QrPairingEngine", "PairingClient.pair failed on all candidates: $candidates", lastError)
+                                            dispatchOutcome(QrPairingOutcome.Failure(lastError?.message ?: "Pairing failed"), onResult) {
+                                                state = QrPairingState.Error(lastError?.message ?: "Pairing failed")
+                                            }
+                                            stopInternal()
+                                        } catch (e: Exception) {
+                                            if (e is CancellationException) throw e
+                                            AppLogger.e("QrPairingEngine", "Exception during pairing attempt", e)
+                                            dispatchOutcome(QrPairingOutcome.Failure(e.message ?: "Pairing failed"), onResult) {
+                                                state = QrPairingState.Error(e.message ?: "Pairing failed")
+                                            }
+                                            stopInternal()
+                                        }
                                     }
                                 }
                             }
-                        })
-                    }
+                        },
+                        onFailed = { errorCode ->
+                            val msg = "Failed to resolve pairing service $foundName: code=$errorCode"
+                            AppLogger.e("QrPairingEngine", msg)
+                            if (!pairingAttempted.get()) {
+                                dispatchOutcome(QrPairingOutcome.Failure(msg), onResult) {
+                                    state = QrPairingState.Error(msg)
+                                }
+                            }
+                        }
+                    )
                 }
             }
 
             override fun onServiceLost(serviceInfo: NsdServiceInfo) {}
             override fun onDiscoveryStopped(serviceType: String) {}
             override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
+                val msg = "mDNS discovery failed (code=$errorCode)"
                 AppLogger.e("QrPairingEngine", "mDNS start discovery failed: code=$errorCode")
-                state = QrPairingState.Error("mDNS discovery failed (code=$errorCode)")
+                dispatchOutcome(QrPairingOutcome.Failure(msg), onResult) {
+                    state = QrPairingState.Error(msg)
+                }
             }
+
             override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
         }
 
