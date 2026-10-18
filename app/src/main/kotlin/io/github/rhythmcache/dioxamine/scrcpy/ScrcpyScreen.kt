@@ -2904,13 +2904,26 @@ private fun ScrcpyVideoPlayer(
                 var winH by rememberSaveable { mutableFloatStateOf(with(density) { 230.dp.toPx() }) }
                 var offX by rememberSaveable { mutableFloatStateOf((parentW - winW - 24f).coerceAtLeast(0f)) }
                 var offY by rememberSaveable { mutableFloatStateOf((parentH - winH - 24f).coerceAtLeast(0f)) }
+                var prevParentW by rememberSaveable { mutableFloatStateOf(parentW) }
+                var prevParentH by rememberSaveable { mutableFloatStateOf(parentH) }
 
-                // Clamp size and saved offset only when parent changes (rotation), NOT for the IME
+                // Clamp size and saved offset when parent changes (rotation), preserving proportional screen placement
                 LaunchedEffect(parentW, parentH) {
-                    winW = winW.coerceIn(minW, parentW.coerceAtLeast(minW))
-                    winH = winH.coerceIn(minH, parentH.coerceAtLeast(minH))
-                    offX = offX.coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
-                    offY = offY.coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
+                    if (prevParentW > 0f && prevParentH > 0f && (prevParentW != parentW || prevParentH != parentH)) {
+                        val relX = (offX / (prevParentW - winW).coerceAtLeast(1f)).coerceIn(0f, 1f)
+                        val relY = (offY / (prevParentH - winH).coerceAtLeast(1f)).coerceIn(0f, 1f)
+                        winW = winW.coerceIn(minW, parentW.coerceAtLeast(minW))
+                        winH = winH.coerceIn(minH, parentH.coerceAtLeast(minH))
+                        offX = (relX * (parentW - winW).coerceAtLeast(0f)).coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
+                        offY = (relY * (parentH - winH).coerceAtLeast(0f)).coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
+                        prevParentW = parentW
+                        prevParentH = parentH
+                    } else {
+                        winW = winW.coerceIn(minW, parentW.coerceAtLeast(minW))
+                        winH = winH.coerceIn(minH, parentH.coerceAtLeast(minH))
+                        offX = offX.coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
+                        offY = offY.coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
+                    }
                 }
 
                 // Display offset: temporarily lift above the soft keyboard without altering saved offY
@@ -2923,7 +2936,7 @@ private fun ScrcpyVideoPlayer(
                 val currentWinW by rememberUpdatedState(winW)
                 val currentWinH by rememberUpdatedState(winH)
                 val currentOffX by rememberUpdatedState(displayOffX)
-                val currentShownOffY by rememberUpdatedState(shownOffY)
+                val currentShownOffY by rememberUpdatedState(displayOffY)
                 val currentImeBottom by rememberUpdatedState(imeBottomPx)
 
                 AnimatedVisibility(
