@@ -12,6 +12,7 @@ import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.animation.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -2452,7 +2453,7 @@ private fun ScrcpyVideoPlayer(
                     playerHeight = it.height
                 }
                 .pointerInteropFilter { event ->
-                    if (videoSourceIsCamera || showTouchpadOverlay) return@pointerInteropFilter false
+                    if (videoSourceIsCamera) return@pointerInteropFilter false
                     when (event.actionMasked) {
                         MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                             val idx = event.actionIndex
@@ -2865,23 +2866,95 @@ private fun ScrcpyVideoPlayer(
             )
         }
 
-        AnimatedVisibility(
-            visible = showTouchpadOverlay && !videoSourceIsCamera,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+        BoxWithConstraints(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
+                .fillMaxSize()
                 .zIndex(15f)
         ) {
-            ScrcpyTouchpadOverlay(
-                session = session,
-                onClose = { showTouchpadOverlay = false },
-                isFullScreen = isFullScreen,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = if (isFullScreen) 260.dp else 190.dp)
-            )
+            val density = LocalDensity.current
+            val parentW = with(density) { maxWidth.toPx() }
+            val parentH = with(density) { maxHeight.toPx() }
+            val minW = with(density) { 220.dp.toPx() }
+            val minH = with(density) { 160.dp.toPx() }
+
+            val imeBottomPx = WindowInsets.ime.getBottom(density).toFloat()
+
+            var winW by rememberSaveable { mutableFloatStateOf(with(density) { 320.dp.toPx() }) }
+            var winH by rememberSaveable { mutableFloatStateOf(with(density) { 230.dp.toPx() }) }
+            var offX by rememberSaveable { mutableFloatStateOf(if (parentW > winW) parentW - winW - 24f else 24f) }
+            var offY by rememberSaveable { mutableFloatStateOf(if (parentH > winH) parentH - winH - 24f else 24f) }
+
+            // Reset/clamp geometry if parent dimensions change (e.g. rotation) or if IME appears
+            LaunchedEffect(parentW, parentH, imeBottomPx) {
+                if (parentW > 0f && parentH > 0f) {
+                    val maxAllowedW = parentW.coerceAtLeast(minW)
+                    val maxAllowedH = (parentH - imeBottomPx).coerceAtLeast(minH)
+                    winW = winW.coerceIn(minW, maxAllowedW)
+                    winH = winH.coerceIn(minH, maxAllowedH)
+                    val maxOffX = (parentW - winW).coerceAtLeast(0f)
+                    val maxOffY = (parentH - winH - imeBottomPx).coerceAtLeast(0f)
+                    offX = offX.coerceIn(0f, maxOffX)
+                    offY = offY.coerceIn(0f, maxOffY)
+                }
+            }
+
+            val currentParentW by rememberUpdatedState(parentW)
+            val currentParentH by rememberUpdatedState(parentH)
+            val currentWinW by rememberUpdatedState(winW)
+            val currentWinH by rememberUpdatedState(winH)
+            val currentOffX by rememberUpdatedState(offX)
+            val currentOffY by rememberUpdatedState(offY)
+            val currentImeBottom by rememberUpdatedState(imeBottomPx)
+
+            AnimatedVisibility(
+                visible = showTouchpadOverlay && !videoSourceIsCamera,
+                enter = fadeIn() + scaleIn(initialScale = 0.92f),
+                exit = fadeOut() + scaleOut(targetScale = 0.92f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .offset { IntOffset(offX.roundToInt(), offY.roundToInt()) }
+                        .size(with(density) { winW.toDp() }, with(density) { winH.toDp() })
+                ) {
+                    ScrcpyTouchpadOverlay(
+                        session = session,
+                        onClose = { showTouchpadOverlay = false },
+                        isFullScreen = isFullScreen,
+                        onDrag = { dx, dy ->
+                            val maxOffX = (currentParentW - currentWinW).coerceAtLeast(0f)
+                            val maxOffY = (currentParentH - currentWinH - currentImeBottom).coerceAtLeast(0f)
+                            offX = (offX + dx).coerceIn(0f, maxOffX)
+                            offY = (offY + dy).coerceIn(0f, maxOffY)
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // Resize grip, bottom-right
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(28.dp)
+                            .pointerInput(Unit) {
+                                detectDragGestures { change, drag ->
+                                    change.consume()
+                                    val maxAllowedW = (currentParentW - currentOffX).coerceAtLeast(minW)
+                                    val maxAllowedH = (currentParentH - currentOffY - currentImeBottom).coerceAtLeast(minH)
+                                    winW = (winW + drag.x).coerceIn(minW, maxAllowedW)
+                                    winH = (winH + drag.y).coerceIn(minH, maxAllowedH)
+                                }
+                            }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.DragHandle,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(16.dp)
+                                .rotate(-45f)
+                        )
+                    }
+                }
+            }
         }
     }
 }

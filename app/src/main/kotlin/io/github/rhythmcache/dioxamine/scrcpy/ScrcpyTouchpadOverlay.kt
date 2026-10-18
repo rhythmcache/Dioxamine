@@ -5,6 +5,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
@@ -40,10 +41,12 @@ import kotlin.math.roundToInt
 fun ScrcpyTouchpadOverlay(
     session: ScrcpySession?,
     onClose: () -> Unit,
-    isFullScreen: Boolean,
-    modifier: Modifier = Modifier
+    isFullScreen: Boolean = false,
+    modifier: Modifier = Modifier,
+    onDrag: (Float, Float) -> Unit = { _, _ -> }
 ) {
     val haptics = LocalHapticFeedback.current
+    val currentOnDrag by rememberUpdatedState(onDrag)
 
     var sensitivity by remember { mutableFloatStateOf(1.2f) }
     var showSensitivitySlider by remember { mutableStateOf(false) }
@@ -65,250 +68,265 @@ fun ScrcpyTouchpadOverlay(
         session?.setMouseButtonState(mask)
     }
 
-    Surface(
-        modifier = modifier
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    down.consume()
-                }
-            },
-        shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
-        color = Color(0xEE1E1E1E),
-        tonalElevation = 8.dp,
-        shadowElevation = 12.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-        )
-    ) {
-        Column(
+    BoxWithConstraints(modifier = modifier) {
+        val showExpandedRows = maxHeight > 200.dp
+
+        Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        down.consume()
+                    }
+                },
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xC81E1E1E), // sleek translucent dark surface
+            tonalElevation = 8.dp,
+            shadowElevation = 12.dp,
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+            )
         ) {
-            // Header: Title & Actions
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                // Header: Title & Actions (drag handle on header row)
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Filled.TouchApp,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.tab_touchpad),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = { showSensitivitySlider = !showSensitivitySlider },
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Tune,
-                            contentDescription = stringResource(R.string.cd_sensitivity_settings),
-                            tint = if (showSensitivitySlider) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(17.dp)
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onClose,
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = stringResource(R.string.cd_close),
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(17.dp)
-                        )
-                    }
-                }
-            }
-
-            // Sensitivity slider
-            AnimatedVisibility(
-                visible = showSensitivitySlider,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.35f)),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, drag ->
+                                change.consume()
+                                currentOnDrag(drag.x, drag.y)
+                            }
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.touchpad_sensitivity),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                        Slider(
-                            value = sensitivity,
-                            onValueChange = { sensitivity = it },
-                            valueRange = 0.5f..3.0f,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = String.format(Locale.US, "%.1fx", sensitivity),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            // Touchpad Canvas
-            val padHeight = if (isFullScreen) 120.dp else 84.dp
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.Black.copy(alpha = 0.4f)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(padHeight)
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(12.dp))
-                        .touchpadGestures(
-                            sensitivity = sensitivity,
-                            onMove = { dx, dy ->
-                                session?.sendMouseMove(dx, dy)
-                            },
-                            onTap = {
-                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                session?.clickMouseButton(HidKeyCodes.MOUSE_BTN_LEFT)
-                            },
-                            onLongPress = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                session?.clickMouseButton(HidKeyCodes.MOUSE_BTN_RIGHT)
-                            },
-                            onScroll = { wheelDelta, panDelta ->
-                                session?.sendMouseScroll(wheelDelta, panDelta)
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.TouchApp,
+                            Icons.Filled.DragHandle,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = Color.White.copy(alpha = 0.35f)
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(Modifier.height(4.dp))
                         Text(
-                            text = stringResource(R.string.touchpad_surface_hint),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.5f),
-                            textAlign = TextAlign.Center,
-                            fontSize = 10.sp
+                            text = stringResource(R.string.tab_touchpad),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (showExpandedRows) {
+                            IconButton(
+                                onClick = { showSensitivitySlider = !showSensitivitySlider },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    Icons.Filled.Tune,
+                                    contentDescription = stringResource(R.string.cd_sensitivity_settings),
+                                    tint = if (showSensitivitySlider) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = onClose,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.cd_close),
+                                tint = Color.White.copy(alpha = 0.7f),
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            // Left / Middle / Right Mouse Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(38.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                HoldableMouseButton(
-                    label = stringResource(R.string.touchpad_btn_left),
-                    isHeld = isLeftButtonHeld,
-                    modifier = Modifier.weight(1f),
-                    onPressDown = {
-                        isLeftButtonHeld = true
-                        updateButtonMask(left = true, right = isRightButtonHeld)
-                    },
-                    onPressUp = {
-                        isLeftButtonHeld = false
-                        updateButtonMask(left = false, right = isRightButtonHeld)
-                    }
-                )
-
-                Surface(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        session?.clickMouseButton(HidKeyCodes.MOUSE_BTN_MIDDLE)
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.White.copy(alpha = 0.12f),
-                    modifier = Modifier
-                        .weight(0.7f)
-                        .fillMaxHeight()
+                // Sensitivity slider (hidden when window height is compact)
+                AnimatedVisibility(
+                    visible = showExpandedRows && showSensitivitySlider,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            stringResource(R.string.touchpad_btn_middle),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
+                    Card(
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.touchpad_sensitivity),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                            Slider(
+                                value = sensitivity,
+                                onValueChange = { sensitivity = it },
+                                valueRange = 0.5f..3.0f,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = String.format(Locale.US, "%.1fx", sensitivity),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 
-                HoldableMouseButton(
-                    label = stringResource(R.string.touchpad_btn_right),
-                    isHeld = isRightButtonHeld,
-                    modifier = Modifier.weight(1f),
-                    onPressDown = {
-                        isRightButtonHeld = true
-                        updateButtonMask(left = isLeftButtonHeld, right = true)
-                    },
-                    onPressUp = {
-                        isRightButtonHeld = false
-                        updateButtonMask(left = isLeftButtonHeld, right = false)
+                // Touchpad Canvas (weighted layout to fill remaining window space)
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Black.copy(alpha = 0.35f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(12.dp))
+                            .touchpadGestures(
+                                sensitivity = sensitivity,
+                                onMove = { dx, dy ->
+                                    session?.sendMouseMove(dx, dy)
+                                },
+                                onTap = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    session?.clickMouseButton(HidKeyCodes.MOUSE_BTN_LEFT)
+                                },
+                                onLongPress = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    session?.clickMouseButton(HidKeyCodes.MOUSE_BTN_RIGHT)
+                                },
+                                onScroll = { wheelDelta, panDelta ->
+                                    session?.sendMouseScroll(wheelDelta, panDelta)
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.TouchApp,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = Color.White.copy(alpha = 0.35f)
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(R.string.touchpad_surface_hint),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.5f),
+                                textAlign = TextAlign.Center,
+                                fontSize = 10.sp
+                            )
+                        }
                     }
-                )
-            }
+                }
 
-            // Quick Action Bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                KeyButton("Esc", Modifier.weight(1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_ESC) }
-                KeyButton("Tab", Modifier.weight(1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_TAB) }
-                KeyButton("Enter", Modifier.weight(1.1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_ENTER) }
-                KeyButton("⌫ Del", Modifier.weight(1.1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_BACKSPACE) }
+                // Left / Middle / Right Mouse Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    HoldableMouseButton(
+                        label = stringResource(R.string.touchpad_btn_left),
+                        isHeld = isLeftButtonHeld,
+                        modifier = Modifier.weight(1f),
+                        onPressDown = {
+                            isLeftButtonHeld = true
+                            updateButtonMask(left = true, right = isRightButtonHeld)
+                        },
+                        onPressUp = {
+                            isLeftButtonHeld = false
+                            updateButtonMask(left = false, right = isRightButtonHeld)
+                        }
+                    )
+
+                    Surface(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            session?.clickMouseButton(HidKeyCodes.MOUSE_BTN_MIDDLE)
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color.White.copy(alpha = 0.12f),
+                        modifier = Modifier
+                            .weight(0.7f)
+                            .fillMaxHeight()
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                stringResource(R.string.touchpad_btn_middle),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
+
+                    HoldableMouseButton(
+                        label = stringResource(R.string.touchpad_btn_right),
+                        isHeld = isRightButtonHeld,
+                        modifier = Modifier.weight(1f),
+                        onPressDown = {
+                            isRightButtonHeld = true
+                            updateButtonMask(left = isLeftButtonHeld, right = true)
+                        },
+                        onPressUp = {
+                            isRightButtonHeld = false
+                            updateButtonMask(left = isLeftButtonHeld, right = false)
+                        }
+                    )
+                }
+
+                // Quick Action Bar (shown when window height > 200.dp)
+                if (showExpandedRows) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        KeyButton("Esc", Modifier.weight(1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_ESC) }
+                        KeyButton("Tab", Modifier.weight(1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_TAB) }
+                        KeyButton("Enter", Modifier.weight(1.1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_ENTER) }
+                        KeyButton("⌫ Del", Modifier.weight(1.1f)) { session?.sendKeyStroke(HidKeyCodes.KEY_BACKSPACE) }
+                    }
+                }
             }
         }
     }
