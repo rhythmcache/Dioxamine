@@ -71,7 +71,6 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
-import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlin.math.roundToInt
 
 private enum class ScrcpyTab { CONFIGURATOR, LOGS, RECORDINGS }

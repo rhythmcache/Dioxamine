@@ -31,6 +31,7 @@ import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.HidKeyCodes
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Locale
 import kotlin.math.roundToInt
