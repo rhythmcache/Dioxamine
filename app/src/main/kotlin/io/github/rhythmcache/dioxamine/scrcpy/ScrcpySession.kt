@@ -318,6 +318,30 @@ class ScrcpySession(
         control?.sendRotateDevice()
     }
 
+    fun ensureUhidDevices() {
+        control?.ensureUhidDevices()
+    }
+
+    fun sendMouseMove(dx: Int, dy: Int, buttons: Int? = null) {
+        control?.sendMouseMove(dx, dy, buttons)
+    }
+
+    fun setMouseButtonState(buttons: Int) {
+        control?.setMouseButtonState(buttons)
+    }
+
+    fun clickMouseButton(buttonMask: Int) {
+        control?.clickMouseButton(buttonMask)
+    }
+
+    fun sendMouseScroll(wheel: Int, hPan: Int = 0) {
+        control?.sendMouseScroll(wheel, hPan)
+    }
+
+    fun sendKeyStroke(hidKeyCode: Int, modifiers: Int = 0) {
+        control?.sendKeyStroke(hidKeyCode, modifiers)
+    }
+
     fun startRecording() {
         if (recorder?.isRecording == true) return
 

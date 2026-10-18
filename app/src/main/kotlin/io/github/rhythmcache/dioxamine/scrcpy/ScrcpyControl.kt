@@ -1,16 +1,28 @@
 package io.github.rhythmcache.dioxamine.scrcpy
 
 import io.github.rhythmcache.adb.AdbStream
+import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.UhidControlManager
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Builds and sends scrcpy control-socket messages.
@@ -80,11 +92,72 @@ class ScrcpyControl(
         }
     }
 
+    // UHID Device & Mouse/Keyboard state
+    @Volatile private var uhidDevicesRegistered = false
+    private val uhidInitLock = Any()
+
+    private val pendingDx = AtomicInteger(0)
+    private val pendingDy = AtomicInteger(0)
+    private val pendingWheel = AtomicInteger(0)
+    private val pendingHPan = AtomicInteger(0)
+    private val heldMouseButtons = AtomicInteger(0)
+    private val clickedMouseButtons = AtomicInteger(0)
+    private val currentMouseButtons = AtomicInteger(0)
+    private val mouseStateChanged = AtomicBoolean(false)
+
+    private val clickMutex = Mutex()
+    private var mouseLoopJob: Job? = null
+
+    private class HidKeyStroke(val keyCode: Int, val modifiers: Int)
+    private val keyStrokeChannel = Channel<HidKeyStroke>(Channel.UNLIMITED)
+    private val keyStrokeJob = writerScope.launch {
+        for (stroke in keyStrokeChannel) {
+            if (stream.isClosed) break
+            try {
+                sendKeyboardReport(stroke.modifiers, listOf(stroke.keyCode))
+                delay(12)
+            } finally {
+                withContext(NonCancellable) {
+                    sendKeyboardReport(0, emptyList())
+                    delay(4)
+                }
+            }
+        }
+    }
+
+    private fun updateEffectiveButtons() {
+        val total = heldMouseButtons.get() or clickedMouseButtons.get()
+        val prev = currentMouseButtons.getAndSet(total)
+        if (prev != total) {
+            mouseStateChanged.set(true)
+        }
+    }
+
+    private fun releaseAllMouseButtons(): Boolean {
+        heldMouseButtons.set(0)
+        clickedMouseButtons.set(0)
+        return currentMouseButtons.getAndSet(0) != 0
+    }
+
     /**
      * Closes the control message queue and waits for pending messages (e.g. power-on)
      * to flush before cancelling the writer scope.
      */
     suspend fun close(drainTimeoutMs: Long = 300) {
+        mouseLoopJob?.cancel()
+        keyStrokeChannel.close()
+        runCatching { keyStrokeJob.cancel() }
+        if (uhidDevicesRegistered) {
+            runCatching {
+                if (releaseAllMouseButtons()) {
+                    sendGuaranteed(buildMouseReportPacket(0, 0, 0, 0, 0))
+                }
+                sendGuaranteed(buildKeyboardReportPacket(0, emptyList()))
+                sendUhidDestroy(UhidControlManager.ID_MOUSE)
+                sendUhidDestroy(UhidControlManager.ID_KEYBOARD)
+            }
+            uhidDevicesRegistered = false
+        }
         queue.close()
         runCatching {
             withTimeoutOrNull(drainTimeoutMs) {
@@ -95,7 +168,26 @@ class ScrcpyControl(
     }
 
     fun closeImmediately() {
+        mouseLoopJob?.cancel()
+        keyStrokeChannel.close()
+        runCatching { keyStrokeJob.cancel() }
         queue.close()
+        writerJob.cancel()
+        if (uhidDevicesRegistered && !stream.isClosed) {
+            runCatching {
+                runBlocking(Dispatchers.IO) {
+                    withTimeoutOrNull(200) {
+                        if (releaseAllMouseButtons()) {
+                            stream.write(buildMouseReportPacket(0, 0, 0, 0, 0))
+                        }
+                        stream.write(buildKeyboardReportPacket(0, emptyList()))
+                        stream.write(buildDestroyPacket(UhidControlManager.ID_MOUSE))
+                        stream.write(buildDestroyPacket(UhidControlManager.ID_KEYBOARD))
+                    }
+                }
+            }
+            uhidDevicesRegistered = false
+        }
         writerScope.cancel()
     }
 
@@ -230,15 +322,185 @@ class ScrcpyControl(
         sendGuaranteed(buf.array())
     }
 
-    fun sendInjectText(text: String) {
-        val textBytes = text.toByteArray(Charsets.UTF_8)
-        val truncated = if (textBytes.size > 300) textBytes.copyOf(300) else textBytes
-        // type(1) + len(4) + text(N)
-        val buf = ByteBuffer.allocate(5 + truncated.size)
-        buf.put(TYPE_INJECT_TEXT.toByte())
-        buf.putInt(truncated.size)
-        buf.put(truncated)
-        sendGuaranteed(buf.array())
+    fun ensureUhidDevices() {
+        if (uhidDevicesRegistered) return
+        synchronized(uhidInitLock) {
+            if (uhidDevicesRegistered) return
+            val mousePkt = buildCreateDevicePacket(
+                UhidControlManager.ID_MOUSE,
+                0x18d1,
+                0x0001,
+                "Dioxamine Mouse",
+                UhidControlManager.MOUSE_REPORT_DESC
+            )
+            val kbPkt = buildCreateDevicePacket(
+                UhidControlManager.ID_KEYBOARD,
+                0x18d1,
+                0x0002,
+                "Dioxamine Keyboard",
+                UhidControlManager.KEYBOARD_REPORT_DESC
+            )
+            sendGuaranteed(mousePkt)
+            sendGuaranteed(kbPkt)
+            uhidDevicesRegistered = true
+            startMouseLoop()
+        }
+    }
+
+    fun sendUhidDestroy(id: Int) {
+        sendGuaranteed(buildDestroyPacket(id))
+    }
+
+    private fun buildDestroyPacket(id: Int): ByteArray {
+        val buf = ByteBuffer.allocate(3)
+        buf.order(ByteOrder.BIG_ENDIAN)
+        buf.put(TYPE_UHID_DESTROY.toByte())
+        buf.putShort(id.toShort())
+        return buf.array()
+    }
+
+    private fun buildCreateDevicePacket(
+        id: Int,
+        vendorId: Int,
+        productId: Int,
+        name: String,
+        reportDesc: ByteArray
+    ): ByteArray {
+        val nameBytes = name.toByteArray(Charsets.UTF_8)
+        val buf = ByteBuffer.allocate(1 + 2 + 2 + 2 + 1 + nameBytes.size + 2 + reportDesc.size)
+        buf.order(ByteOrder.BIG_ENDIAN)
+        buf.put(TYPE_UHID_CREATE.toByte())
+        buf.putShort(id.toShort())
+        buf.putShort(vendorId.toShort())
+        buf.putShort(productId.toShort())
+        buf.put(nameBytes.size.toByte())
+        buf.put(nameBytes)
+        buf.putShort(reportDesc.size.toShort())
+        buf.put(reportDesc)
+        return buf.array()
+    }
+
+    private fun buildMouseReportPacket(
+        buttons: Int,
+        dx: Int,
+        dy: Int,
+        wheel: Int,
+        hPan: Int
+    ): ByteArray {
+        val mouseBuf = ByteBuffer.allocate(10)
+        mouseBuf.order(ByteOrder.BIG_ENDIAN)
+        mouseBuf.put(TYPE_UHID_INPUT.toByte())
+        mouseBuf.putShort(UhidControlManager.ID_MOUSE.toShort())
+        mouseBuf.putShort(5.toShort()) // report len: 5 bytes
+        mouseBuf.put(buttons.toByte())
+        mouseBuf.put(dx.toByte())
+        mouseBuf.put(dy.toByte())
+        mouseBuf.put(wheel.toByte())
+        mouseBuf.put(hPan.toByte())
+        return mouseBuf.array()
+    }
+
+    private fun buildKeyboardReportPacket(modifiers: Int, keys: List<Int>): ByteArray {
+        val buf = ByteBuffer.allocate(13)
+        buf.order(ByteOrder.BIG_ENDIAN)
+        buf.put(TYPE_UHID_INPUT.toByte())
+        buf.putShort(UhidControlManager.ID_KEYBOARD.toShort())
+        buf.putShort(8.toShort()) // report len: 8 bytes
+        buf.put(modifiers.toByte())
+        buf.put(0.toByte()) // Reserved
+        val count = minOf(6, keys.size)
+        for (i in 0 until count) {
+            buf.put(keys[i].toByte())
+        }
+        while (buf.position() < 13) {
+            buf.put(0.toByte())
+        }
+        return buf.array()
+    }
+
+    private fun consumeDelta(accumulator: AtomicInteger): Int {
+        while (true) {
+            val current = accumulator.get()
+            if (current == 0) return 0
+            val amount = current.coerceIn(-127, 127)
+            if (accumulator.compareAndSet(current, current - amount)) {
+                return amount
+            }
+        }
+    }
+
+    private fun startMouseLoop() {
+        if (mouseLoopJob?.isActive == true) return
+        mouseLoopJob = writerScope.launch {
+            while (isActive && !stream.isClosed) {
+                val dx = consumeDelta(pendingDx)
+                val dy = consumeDelta(pendingDy)
+                val wheel = consumeDelta(pendingWheel)
+                val hPan = consumeDelta(pendingHPan)
+                val hadStateChange = mouseStateChanged.getAndSet(false)
+                val buttons = currentMouseButtons.get()
+
+                if (dx != 0 || dy != 0 || wheel != 0 || hPan != 0 || hadStateChange) {
+                    val packet = buildMouseReportPacket(buttons, dx, dy, wheel, hPan)
+                    if (hadStateChange) {
+                        sendGuaranteed(packet)
+                    } else {
+                        sendDroppable(packet)
+                    }
+                }
+                delay(8)
+            }
+        }
+    }
+
+    fun sendMouseMove(dx: Int, dy: Int, buttons: Int? = null) {
+        ensureUhidDevices()
+        if (buttons != null) {
+            heldMouseButtons.set(buttons)
+            updateEffectiveButtons()
+        }
+        pendingDx.addAndGet(dx)
+        pendingDy.addAndGet(dy)
+    }
+
+    fun setMouseButtonState(buttons: Int) {
+        ensureUhidDevices()
+        heldMouseButtons.set(buttons)
+        updateEffectiveButtons()
+    }
+
+    fun clickMouseButton(buttonMask: Int) {
+        ensureUhidDevices()
+        writerScope.launch {
+            clickMutex.withLock {
+                try {
+                    clickedMouseButtons.updateAndGet { it or buttonMask }
+                    updateEffectiveButtons()
+                    delay(40)
+                } finally {
+                    withContext(NonCancellable) {
+                        clickedMouseButtons.updateAndGet { it and buttonMask.inv() }
+                        updateEffectiveButtons()
+                    }
+                }
+            }
+        }
+    }
+
+    fun sendMouseScroll(wheel: Int, hPan: Int = 0) {
+        ensureUhidDevices()
+        pendingWheel.addAndGet(wheel)
+        pendingHPan.addAndGet(hPan)
+    }
+
+    fun sendKeyboardReport(modifiers: Int, keys: List<Int>) {
+        ensureUhidDevices()
+        sendGuaranteed(buildKeyboardReportPacket(modifiers, keys))
+    }
+
+    fun sendKeyStroke(hidKeyCode: Int, modifiers: Int = 0) {
+        ensureUhidDevices()
+        keyStrokeChannel.trySend(HidKeyStroke(hidKeyCode, modifiers))
     }
 
     fun sendScanFile(path: String) {

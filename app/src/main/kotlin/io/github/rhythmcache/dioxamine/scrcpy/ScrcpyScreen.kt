@@ -11,6 +11,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.animation.*
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -19,8 +20,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
+import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.HidKeyCodes
+import io.github.rhythmcache.dioxamine.core.AppLogger
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -410,6 +422,7 @@ fun ScrcpyScreen(
                     if (config.videoEnabled) {
                         ScrcpyVideoPlayer(
                             modifier = Modifier.fillMaxSize(),
+                            session = activeSession,
                             videoWidth = videoWidth,
                             videoHeight = videoHeight,
                             isFullScreen = isFullScreen,
@@ -2226,10 +2239,11 @@ private fun FloatingVerticalNavBar(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun ScrcpyVideoPlayer(
     modifier: Modifier,
+    session: ScrcpySession? = null,
     videoWidth: Int?,
     videoHeight: Int?,
     isFullScreen: Boolean,
@@ -2253,7 +2267,13 @@ private fun ScrcpyVideoPlayer(
     onSurfaceDestroyed: () -> Unit = {}
 ) {
     val focusRequester = remember { FocusRequester() }
+    val keyboardFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val isImeVisible = WindowInsets.isImeVisible
+    var imeBuffer by remember { mutableStateOf(TextFieldValue("  ", selection = TextRange(2))) }
+
     var controlsExpanded by remember { mutableStateOf(false) }
+    var showTouchpadOverlay by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -2286,6 +2306,81 @@ private fun ScrcpyVideoPlayer(
             },
         contentAlignment = Alignment.Center
     ) {
+        // Always-composed invisible text field to intercept keyboard input and map to HID keystrokes
+        BasicTextField(
+            value = imeBuffer,
+            onValueChange = { newBuffer ->
+                val oldLen = imeBuffer.text.length
+                val newLen = newBuffer.text.length
+                if (newLen < oldLen) {
+                    val deleteCount = oldLen - newLen
+                    repeat(deleteCount) {
+                        session?.sendKeyStroke(HidKeyCodes.KEY_BACKSPACE)
+                    }
+                } else if (newLen > oldLen) {
+                    val inserted = newBuffer.text.substring(oldLen)
+                    for (ch in inserted) {
+                        val mapping = HidKeyMapper.charToHid(ch)
+                        if (mapping != null) {
+                            val mods = if (mapping.shift) HidKeyCodes.MOD_LEFT_SHIFT else HidKeyCodes.MOD_NONE
+                            session?.sendKeyStroke(mapping.hidKeyCode, mods)
+                        } else {
+                            AppLogger.d("SCRCPY_IME", "Dropped unmapped character: $ch (U+${ch.code.toString(16)})")
+                        }
+                    }
+                }
+                imeBuffer = TextFieldValue("  ", selection = TextRange(2))
+            },
+            modifier = Modifier
+                .size(1.dp)
+                .alpha(0f)
+                .focusRequester(keyboardFocusRequester)
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown) {
+                        when (event.key) {
+                            Key.Enter, Key.NumPadEnter -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_ENTER)
+                                true
+                            }
+                            Key.Tab -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_TAB)
+                                true
+                            }
+                            Key.Escape -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_ESC)
+                                true
+                            }
+                            Key.DirectionLeft -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_LEFT)
+                                true
+                            }
+                            Key.DirectionRight -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_RIGHT)
+                                true
+                            }
+                            Key.DirectionUp -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_UP)
+                                true
+                            }
+                            Key.DirectionDown -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_DOWN)
+                                true
+                            }
+                            Key.Delete -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_DELETE)
+                                true
+                            }
+                            else -> false
+                        }
+                    } else false
+                },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                autoCorrectEnabled = false,
+                imeAction = ImeAction.None
+            ),
+            singleLine = true
+        )
         val hasDimensions = videoWidth != null && videoHeight != null && videoWidth > 0 && videoHeight > 0
         val videoRatio = if (hasDimensions) {
             (videoWidth.toFloat() / maxOf(videoHeight, 1).toFloat()).coerceIn(0.2f, 5.0f)
@@ -2358,7 +2453,7 @@ private fun ScrcpyVideoPlayer(
                     playerHeight = it.height
                 }
                 .pointerInteropFilter { event ->
-                    if (videoSourceIsCamera) return@pointerInteropFilter false
+                    if (videoSourceIsCamera || showTouchpadOverlay) return@pointerInteropFilter false
                     when (event.actionMasked) {
                         MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                             val idx = event.actionIndex
@@ -2480,6 +2575,49 @@ private fun ScrcpyVideoPlayer(
                             Icons.Filled.ScreenRotation,
                             contentDescription = stringResource(R.string.cd_rotate_device),
                             tint = Color.White
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            if (!showTouchpadOverlay) session?.ensureUhidDevices()
+                            showTouchpadOverlay = !showTouchpadOverlay
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (showTouchpadOverlay) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                            } else {
+                                Color.Black.copy(alpha = 0.6f)
+                            }
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.TouchApp,
+                            contentDescription = stringResource(R.string.tab_touchpad),
+                            tint = if (showTouchpadOverlay) MaterialTheme.colorScheme.onPrimary else Color.White
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            if (isImeVisible) {
+                                keyboardController?.hide()
+                            } else {
+                                session?.ensureUhidDevices()
+                                runCatching { keyboardFocusRequester.requestFocus() }
+                                keyboardController?.show()
+                            }
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (isImeVisible) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                            } else {
+                                Color.Black.copy(alpha = 0.6f)
+                            }
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.Keyboard,
+                            contentDescription = stringResource(R.string.tab_keyboard),
+                            tint = if (isImeVisible) MaterialTheme.colorScheme.onPrimary else Color.White
                         )
                     }
                 }
@@ -2725,6 +2863,25 @@ private fun ScrcpyVideoPlayer(
                 onNavBack = onNavBack,
                 onNavHome = onNavHome,
                 onNavRecents = onNavRecents
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showTouchpadOverlay && !videoSourceIsCamera,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .zIndex(15f)
+        ) {
+            ScrcpyTouchpadOverlay(
+                session = session,
+                onClose = { showTouchpadOverlay = false },
+                isFullScreen = isFullScreen,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = if (isFullScreen) 260.dp else 190.dp)
             )
         }
     }
