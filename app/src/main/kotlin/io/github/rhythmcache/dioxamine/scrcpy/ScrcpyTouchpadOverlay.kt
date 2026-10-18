@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -76,7 +77,7 @@ fun ScrcpyTouchpadOverlay(
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     awaitEachGesture {
-                        val down = awaitFirstDown()
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
                         down.consume()
                     }
                 },
@@ -99,6 +100,7 @@ fun ScrcpyTouchpadOverlay(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = 40.dp)
                         .pointerInput(Unit) {
                             detectDragGestures { change, drag ->
                                 change.consume()
