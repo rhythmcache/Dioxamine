@@ -2910,20 +2910,22 @@ private fun ScrcpyVideoPlayer(
                 // Clamp size and saved offset when parent changes (rotation), preserving proportional screen placement
                 LaunchedEffect(parentW, parentH) {
                     if (prevParentW > 0f && prevParentH > 0f && (prevParentW != parentW || prevParentH != parentH)) {
-                        val relX = (offX / (prevParentW - winW).coerceAtLeast(1f)).coerceIn(0f, 1f)
-                        val relY = (offY / (prevParentH - winH).coerceAtLeast(1f)).coerceIn(0f, 1f)
+                        val oldW = winW
+                        val oldH = winH
+                        val relX = (offX / (prevParentW - oldW).coerceAtLeast(1f)).coerceIn(0f, 1f)
+                        val relY = (offY / (prevParentH - oldH).coerceAtLeast(1f)).coerceIn(0f, 1f)
                         winW = winW.coerceIn(minW, parentW.coerceAtLeast(minW))
                         winH = winH.coerceIn(minH, parentH.coerceAtLeast(minH))
                         offX = (relX * (parentW - winW).coerceAtLeast(0f)).coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
                         offY = (relY * (parentH - winH).coerceAtLeast(0f)).coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
-                        prevParentW = parentW
-                        prevParentH = parentH
                     } else {
                         winW = winW.coerceIn(minW, parentW.coerceAtLeast(minW))
                         winH = winH.coerceIn(minH, parentH.coerceAtLeast(minH))
                         offX = offX.coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
                         offY = offY.coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
                     }
+                    prevParentW = parentW
+                    prevParentH = parentH
                 }
 
                 // Display offset: temporarily lift above the soft keyboard without altering saved offY
