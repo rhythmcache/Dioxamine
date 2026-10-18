@@ -54,6 +54,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -2279,6 +2280,13 @@ private fun ScrcpyVideoPlayer(
     var controlsExpanded by remember { mutableStateOf(false) }
     var showTouchpadOverlay by rememberSaveable { mutableStateOf(false) }
     var overlayRectInRoot by remember { mutableStateOf(Rect.Zero) }
+    var videoPositionInRoot by remember { mutableStateOf(Offset.Zero) }
+
+    LaunchedEffect(showTouchpadOverlay) {
+        if (!showTouchpadOverlay) {
+            overlayRectInRoot = Rect.Zero
+        }
+    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -2457,9 +2465,13 @@ private fun ScrcpyVideoPlayer(
                     playerWidth = it.width
                     playerHeight = it.height
                 }
+                .onGloballyPositioned {
+                    videoPositionInRoot = it.positionInRoot()
+                }
                 .pointerInteropFilter { event ->
                     if (videoSourceIsCamera) return@pointerInteropFilter false
-                    if (showTouchpadOverlay && overlayRectInRoot.contains(Offset(event.rawX, event.rawY))) {
+                    val touchInRoot = Offset(event.x, event.y) + videoPositionInRoot
+                    if (showTouchpadOverlay && overlayRectInRoot.contains(touchInRoot)) {
                         return@pointerInteropFilter false
                     }
                     when (event.actionMasked) {
@@ -2890,8 +2902,8 @@ private fun ScrcpyVideoPlayer(
             if (parentW > 0f && parentH > 0f) {
                 var winW by rememberSaveable { mutableFloatStateOf(with(density) { 320.dp.toPx() }) }
                 var winH by rememberSaveable { mutableFloatStateOf(with(density) { 230.dp.toPx() }) }
-                var offX by rememberSaveable(parentW > 0f) { mutableFloatStateOf((parentW - winW - 24f).coerceAtLeast(0f)) }
-                var offY by rememberSaveable(parentH > 0f) { mutableFloatStateOf((parentH - winH - 24f).coerceAtLeast(0f)) }
+                var offX by rememberSaveable { mutableFloatStateOf((parentW - winW - 24f).coerceAtLeast(0f)) }
+                var offY by rememberSaveable { mutableFloatStateOf((parentH - winH - 24f).coerceAtLeast(0f)) }
 
                 // Clamp size and saved offset only when parent changes (rotation), NOT for the IME
                 LaunchedEffect(parentW, parentH) {
@@ -2903,12 +2915,16 @@ private fun ScrcpyVideoPlayer(
 
                 // Display offset: temporarily lift above the soft keyboard without altering saved offY
                 val shownOffY = offY.coerceAtMost((parentH - winH - imeBottomPx).coerceAtLeast(0f))
+                val displayOffX = offX.coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
+                val displayOffY = shownOffY.coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
 
                 val currentParentW by rememberUpdatedState(parentW)
                 val currentParentH by rememberUpdatedState(parentH)
                 val currentWinW by rememberUpdatedState(winW)
                 val currentWinH by rememberUpdatedState(winH)
-                val currentOffX by rememberUpdatedState(offX)
+                val currentOffX by rememberUpdatedState(displayOffX)
+                val currentShownOffY by rememberUpdatedState(shownOffY)
+                val currentImeBottom by rememberUpdatedState(imeBottomPx)
 
                 AnimatedVisibility(
                     visible = showTouchpadOverlay && !videoSourceIsCamera,
@@ -2917,13 +2933,16 @@ private fun ScrcpyVideoPlayer(
                 ) {
                     Box(
                         modifier = Modifier
-                            .offset { IntOffset(offX.roundToInt(), shownOffY.roundToInt()) }
+                            .offset { IntOffset(displayOffX.roundToInt(), displayOffY.roundToInt()) }
                             .size(with(density) { winW.toDp() }, with(density) { winH.toDp() })
                             .onGloballyPositioned { overlayRectInRoot = it.boundsInRoot() }
                     ) {
                         ScrcpyTouchpadOverlay(
                             session = session,
-                            onClose = { showTouchpadOverlay = false },
+                            onClose = {
+                                showTouchpadOverlay = false
+                                overlayRectInRoot = Rect.Zero
+                            },
                             isFullScreen = isFullScreen,
                             onDrag = { dx, dy ->
                                 val maxOffX = (currentParentW - currentWinW).coerceAtLeast(0f)
@@ -2942,7 +2961,7 @@ private fun ScrcpyVideoPlayer(
                                     detectDragGestures { change, drag ->
                                         change.consume()
                                         val maxAllowedW = (currentParentW - currentOffX).coerceAtLeast(minW)
-                                        val maxAllowedH = (currentParentH - offY).coerceAtLeast(minH)
+                                        val maxAllowedH = (currentParentH - currentShownOffY - currentImeBottom).coerceAtLeast(minH)
                                         winW = (winW + drag.x).coerceIn(minW, maxAllowedW)
                                         winH = (winH + drag.y).coerceIn(minH, maxAllowedH)
                                     }
