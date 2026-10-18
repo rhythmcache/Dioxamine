@@ -14,6 +14,7 @@ data class ScrcpyConfig(
     val turnScreenOff: Boolean = false,
     val bindVolumeKeys: Boolean = false,
     val controlEnabled: Boolean = true, // Enabled for touch control
+    val clipboardSync: Boolean = false, // Bidirectional clipboard sync between host and device
 
     // --- Video source: display (default), camera, or virtual ---
     val videoSource: String = "display", // "display", "camera", or "virtual"
@@ -161,6 +162,7 @@ data class ScrcpyConfig(
         json.put("turnScreenOff", turnScreenOff)
         json.put("bindVolumeKeys", bindVolumeKeys)
         json.put("controlEnabled", controlEnabled)
+        json.put("clipboardSync", clipboardSync)
         json.put("videoSource", videoSource)
         cameraId?.let { json.put("cameraId", it) }
         cameraFacing?.let { json.put("cameraFacing", it) }
@@ -194,6 +196,7 @@ data class ScrcpyConfig(
                     turnScreenOff = json.optBoolean("turnScreenOff", false),
                     bindVolumeKeys = json.optBoolean("bindVolumeKeys", false),
                     controlEnabled = json.optBoolean("controlEnabled", true),
+                    clipboardSync = json.optBoolean("clipboardSync", false),
                     videoSource = json.optString("videoSource", "display"),
                     cameraId = json.optString("cameraId").takeIf { it.isNotEmpty() && it != "null" },
                     cameraFacing = json.optString("cameraFacing").takeIf { it.isNotEmpty() && it != "null" },

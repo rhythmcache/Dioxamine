@@ -1,5 +1,6 @@
 package io.github.rhythmcache.dioxamine.scrcpy
 
+import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import android.view.KeyEvent
@@ -424,6 +425,18 @@ fun ScrcpyScreen(
                             },
                             onToggleFullScreen = { isFullScreen = !isFullScreen },
                             onRotateDevice = { activeSession?.sendRotateDevice() },
+                            onPasteClipboard = if (config.controlEnabled && config.videoSource != "camera") {
+                                {
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                    val clip = cm?.primaryClip
+                                    if (clip != null && clip.itemCount > 0) {
+                                        val text = clip.getItemAt(0)?.text?.toString()
+                                        if (!text.isNullOrEmpty()) {
+                                            activeSession?.sendSetClipboard(text, paste = true)
+                                        }
+                                    }
+                                }
+                            } else null,
                             onStop = { stopMirroring() },
                             onNavBack = { activeSession?.sendNavBack() },
                             onNavHome = { activeSession?.sendNavHome() },
@@ -697,7 +710,10 @@ fun ScrcpyScreen(
                                                 isMirroring = isMirroring,
                                                 showFloatingNav = showFloatingNav,
                                                 onShowFloatingNavChange = { showFloatingNav = it },
-                                                onConfigChange = { config = it }
+                                                onConfigChange = {
+                                                    config = it
+                                                    activeSession?.clipboardSyncEnabled = it.clipboardSync
+                                                }
                                             )
 
                                             Spacer(Modifier.height(16.dp))
@@ -2152,6 +2168,23 @@ private fun DisplaySettings(
             onCheckedChange = { onConfigChange(config.copy(bindVolumeKeys = it)) }
         )
     }
+
+    Spacer(Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.display_clipboard_sync_title), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.display_clipboard_sync_subtitle), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(
+            checked = config.clipboardSync,
+            onCheckedChange = { onConfigChange(config.copy(clipboardSync = it)) }
+        )
+    }
 }
 
 @Composable
@@ -2238,6 +2271,7 @@ private fun ScrcpyVideoPlayer(
     onToggleTorch: () -> Unit,
     onToggleFullScreen: () -> Unit,
     onRotateDevice: () -> Unit,
+    onPasteClipboard: (() -> Unit)? = null,
     onStop: () -> Unit,
     onNavBack: () -> Unit,
     onNavHome: () -> Unit,
@@ -2473,6 +2507,18 @@ private fun ScrcpyVideoPlayer(
                             contentDescription = stringResource(R.string.cd_rotate_device),
                             tint = Color.White
                         )
+                    }
+                    if (onPasteClipboard != null) {
+                        IconButton(
+                            onClick = onPasteClipboard,
+                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                        ) {
+                            Icon(
+                                Icons.Filled.ContentPaste,
+                                contentDescription = stringResource(R.string.cd_paste_clipboard),
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
                 IconButton(

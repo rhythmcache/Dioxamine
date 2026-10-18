@@ -289,7 +289,10 @@
     <string name="display_floating_nav_subtitle">Show vertical Back, Home, and Recents buttons over screen</string>
     <string name="display_bind_volume_title">Forward Volume Buttons</string>
     <string name="display_bind_volume_subtitle">Bind hardware volume buttons to the mirrored device</string>
+    <string name="display_clipboard_sync_title">Clipboard Bidirectional Sync</string>
+    <string name="display_clipboard_sync_subtitle">Sync copied text between host and target device</string>
 
+    <string name="cd_paste_clipboard">Paste Clipboard to Device</string>
     <string name="cd_toggle_torch">Toggle Torch</string>
     <string name="cd_rotate_device">Rotate Device</string>
     <string name="cd_toggle_fullscreen">Toggle Fullscreen</string>

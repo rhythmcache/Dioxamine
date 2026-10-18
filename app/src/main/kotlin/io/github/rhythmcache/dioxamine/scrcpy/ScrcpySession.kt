@@ -1,6 +1,9 @@
 package io.github.rhythmcache.dioxamine.scrcpy
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.os.SystemClock
 import android.view.SurfaceHolder
 import io.github.rhythmcache.adb.AdbClient
 import io.github.rhythmcache.adb.AdbEndpoint
@@ -23,6 +26,25 @@ class ScrcpySession(
     @Volatile private var stoppedByUser = false
     @Volatile private var socketsConnected = false
     @Volatile private var errorReported = false
+    private val recentSentToDevice = java.util.Collections.synchronizedMap(
+        object : java.util.LinkedHashMap<String, Long>(16, 0.75f, false) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
+                return size > 16
+            }
+        }
+    )
+    @Volatile private var lastAppliedFromDevice: String? = null
+    @Volatile private var lastSentText: String? = null
+    @Volatile var clipboardSyncEnabled: Boolean = config.clipboardSync
+        set(value) {
+            field = value
+            if (value) {
+                setupHostClipboardSync()
+            } else {
+                removeHostClipboardSync()
+            }
+        }
+    private var clipboardListener: ClipboardManager.OnPrimaryClipChangedListener? = null
 
     private var serverStream: AdbStream? = null
     private var videoStream: AdbStream? = null
@@ -172,8 +194,15 @@ class ScrcpySession(
                         parentScope = this,
                         stream = currentControlStream,
                         videoWidth = { videoWidth },
-                        videoHeight = { videoHeight }
+                        videoHeight = { videoHeight },
+                        onClipboardReceived = { text ->
+                            handleDeviceClipboard(text)
+                        }
                     )
+
+                    if (clipboardSyncEnabled) {
+                        setupHostClipboardSync()
+                    }
 
                     if (config.turnScreenOff) {
                         AppLogger.i(TAG_CLIENT, "Sending SET_DISPLAY_POWER(off) via control channel")
@@ -294,6 +323,84 @@ class ScrcpySession(
         control?.sendRotateDevice()
     }
 
+    fun sendSetClipboard(text: String, paste: Boolean = false) {
+        lastSentText = text
+        val now = SystemClock.uptimeMillis()
+        synchronized(recentSentToDevice) {
+            recentSentToDevice[text] = now + 2000L
+        }
+        control?.sendSetClipboard(text, paste)
+    }
+
+    private fun handleDeviceClipboard(text: String) {
+        if (!clipboardSyncEnabled || text.isEmpty()) return
+        val now = SystemClock.uptimeMillis()
+        val isRecentEcho = synchronized(recentSentToDevice) {
+            val expiry = recentSentToDevice[text]
+            expiry != null && now < expiry
+        }
+        if (isRecentEcho || text == lastAppliedFromDevice) return
+        lastAppliedFromDevice = text
+        lastSentText = null
+        sessionScope.launch {
+            delay(1000)
+            if (lastAppliedFromDevice == text) {
+                lastAppliedFromDevice = null
+            }
+        }
+        sessionScope.launch(Dispatchers.Main) {
+            runCatching {
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                val clip = ClipData.newPlainText("scrcpy", text)
+                cm?.setPrimaryClip(clip)
+                AppLogger.d(TAG_CLIENT, "Device clipboard synced to host (${text.length} chars)")
+            }
+        }
+    }
+
+    private fun setupHostClipboardSync() {
+        if (!config.controlEnabled || clipboardListener != null) return
+        sessionScope.launch(Dispatchers.Main) {
+            if (clipboardListener != null || !clipboardSyncEnabled) return@launch
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return@launch
+            val listener = ClipboardManager.OnPrimaryClipChangedListener {
+                if (!clipboardSyncEnabled) return@OnPrimaryClipChangedListener
+                val clip = cm.primaryClip
+                if (clip != null && clip.itemCount > 0) {
+                    val text = clip.getItemAt(0)?.text?.toString()
+                    if (!text.isNullOrEmpty()) {
+                        if (text == lastAppliedFromDevice) {
+                            lastAppliedFromDevice = null
+                            return@OnPrimaryClipChangedListener
+                        }
+                        if (text == lastSentText) {
+                            return@OnPrimaryClipChangedListener
+                        }
+                        lastSentText = text
+                        val now = SystemClock.uptimeMillis()
+                        synchronized(recentSentToDevice) {
+                            recentSentToDevice[text] = now + 2000L
+                        }
+                        AppLogger.d(TAG_CLIENT, "Host clipboard syncing to device (${text.length} chars)")
+                        control?.sendSetClipboard(text, paste = false)
+                    }
+                }
+            }
+            clipboardListener = listener
+            cm.addPrimaryClipChangedListener(listener)
+        }
+    }
+
+    private fun removeHostClipboardSync() {
+        clipboardListener?.let { listener ->
+            clipboardListener = null
+            CoroutineScope(Dispatchers.Main).launch {
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                runCatching { cm?.removePrimaryClipChangedListener(listener) }
+            }
+        }
+    }
+
     fun startRecording() {
         if (recorder?.isRecording == true) return
 
@@ -359,6 +466,12 @@ class ScrcpySession(
 
     private fun cleanup() {
         AppLogger.i(TAG_CLIENT, "Cleaning up scrcpy session streams...")
+        removeHostClipboardSync()
+        synchronized(recentSentToDevice) {
+            recentSentToDevice.clear()
+        }
+        lastAppliedFromDevice = null
+        lastSentText = null
         runCatching { stopRecording() }
         runCatching { control?.close() }
         runCatching { videoDecoder?.stop() }
