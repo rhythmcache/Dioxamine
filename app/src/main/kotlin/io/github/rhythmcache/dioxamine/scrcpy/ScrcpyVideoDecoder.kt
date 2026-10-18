@@ -1,5 +1,6 @@
 package io.github.rhythmcache.dioxamine.scrcpy
 
+import android.graphics.SurfaceTexture
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
@@ -26,10 +27,16 @@ class ScrcpyDecoder(
     private val onDimensionsParsed: (Int, Int) -> Unit = { _, _ -> },
     private val isStoppedByUser: () -> Boolean = { false }
 ) {
+    private val codecLock = Any()
     private var codec: MediaCodec? = null
     private var currentWidth = 0
     private var currentHeight = 0
     private var mimeType: String = MediaFormat.MIMETYPE_VIDEO_AVC
+
+    private var dummySurfaceTexture: SurfaceTexture? = null
+    private var dummySurface: Surface? = null
+    @Volatile var isSurfaceAttached: Boolean = true
+        private set
 
     var recorder: ScrcpyRecorder? = null
     private var lastConfigBytes: ByteArray? = null
@@ -56,14 +63,96 @@ class ScrcpyDecoder(
         }
     }
 
-    fun setSurface(newSurface: Surface) {
-        this.surface = newSurface
-        runCatching {
-            codec?.setOutputSurface(newSurface)
-            AppLogger.i(TAG, "ScrcpyDecoder: Output surface swapped successfully")
-        }.onFailure {
-            AppLogger.e(TAG, "ScrcpyDecoder: Failed to swap output surface: ${it.message}", it)
+    private fun getOrCreateDummySurface(): Surface {
+        var s = dummySurface
+        if (s == null || !s.isValid) {
+            runCatching { dummySurface?.release() }
+            runCatching { dummySurfaceTexture?.release() }
+            val st = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                SurfaceTexture(false)
+            } else {
+                SurfaceTexture(0)
+            }
+            st.setDefaultBufferSize(1, 1)
+            dummySurfaceTexture = st
+            s = Surface(st)
+            dummySurface = s
         }
+        return s
+    }
+
+    private fun releaseDummySurface() {
+        runCatching { dummySurface?.release() }
+        dummySurface = null
+        runCatching { dummySurfaceTexture?.release() }
+        dummySurfaceTexture = null
+    }
+
+    fun attachSurface(newSurface: Surface) {
+        synchronized(codecLock) {
+            this.surface = newSurface
+            isSurfaceAttached = true
+            val mc = codec ?: return
+            val success = runCatching {
+                mc.setOutputSurface(newSurface)
+                AppLogger.i(TAG, "ScrcpyDecoder: Output surface swapped successfully via setOutputSurface")
+                true
+            }.getOrElse { e ->
+                AppLogger.w(TAG, "ScrcpyDecoder: setOutputSurface failed (${e.message}), recreating codec fallback")
+                false
+            }
+            if (!success) {
+                recreateCodecWithSurface(newSurface)
+            }
+        }
+    }
+
+    fun detachSurface() {
+        synchronized(codecLock) {
+            isSurfaceAttached = false
+            val dummy = getOrCreateDummySurface()
+            this.surface = dummy
+            val mc = codec ?: return
+            runCatching {
+                mc.setOutputSurface(dummy)
+                AppLogger.i(TAG, "ScrcpyDecoder: Detached output surface (redirected to dummy 1x1 surface)")
+            }.onFailure {
+                AppLogger.w(TAG, "ScrcpyDecoder: Failed to redirect to dummy surface: ${it.message}")
+            }
+        }
+    }
+
+    private fun recreateCodecWithSurface(newSurface: Surface) {
+        runCatching {
+            codec?.stop()
+            codec?.release()
+        }
+        codec = null
+
+        val width = if (currentWidth > 0) currentWidth else defaultWidth
+        val height = if (currentHeight > 0) currentHeight else defaultHeight
+        currentWidth = width
+        currentHeight = height
+        val format = MediaFormat.createVideoFormat(mimeType, width, height)
+
+        val config = lastConfigBytes
+        if (config != null) {
+            format.setByteBuffer("csd-0", ByteBuffer.wrap(config))
+            if (mustMergeConfigPacket) {
+                pendingConfigBytes = config
+            }
+        }
+
+        try {
+            codec = createDecoderWithFallback(mimeType, width, height, format, newSurface)
+            AppLogger.i(TAG, "ScrcpyDecoder: Recreated decoder with new surface successfully (${width}x${height})")
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "ScrcpyDecoder: Failed to recreate decoder with new surface: ${e.message}", e)
+        }
+    }
+
+    fun setSurface(newSurface: Surface) {
+        attachSurface(newSurface)
     }
 
     suspend fun decodeStream(stream: AdbStream) = withContext(Dispatchers.IO) {
@@ -155,23 +244,25 @@ class ScrcpyDecoder(
                         pendingConfigBytes = configData
                         AppLogger.i(TAG, "Buffered config packet ($packetSize bytes), waiting for next media packet")
                     } else {
-                        val mc = codec ?: continue
-                        var inIndex = -1
-                        var retries = 0
-                        while (inIndex < 0 && retries < 5) {
-                            inIndex = try { mc.dequeueInputBuffer(2000) } catch (e: IllegalStateException) { -2 }
-                            if (inIndex == -2) break
-                            if (inIndex < 0) { drainOutput(mc, bufferInfo); retries++ }
-                        }
-                        if (inIndex >= 0) {
-                            val inputBuffer = mc.getInputBuffer(inIndex)
-                            if (inputBuffer != null) {
-                                inputBuffer.clear()
-                                inputBuffer.put(payloadBuffer, 0, packetSize)
-                                mc.queueInputBuffer(inIndex, 0, packetSize, 0L, MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
+                        synchronized(codecLock) {
+                            val mc = codec ?: return@synchronized
+                            var inIndex = -1
+                            var retries = 0
+                            while (inIndex < 0 && retries < 5) {
+                                inIndex = try { mc.dequeueInputBuffer(2000) } catch (e: IllegalStateException) { -2 }
+                                if (inIndex == -2) break
+                                if (inIndex < 0) { drainOutput(mc, bufferInfo); retries++ }
                             }
+                            if (inIndex >= 0) {
+                                val inputBuffer = mc.getInputBuffer(inIndex)
+                                if (inputBuffer != null) {
+                                    inputBuffer.clear()
+                                    inputBuffer.put(payloadBuffer, 0, packetSize)
+                                    mc.queueInputBuffer(inIndex, 0, packetSize, 0L, MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
+                                }
+                            }
+                            drainOutput(mc, bufferInfo)
                         }
-                        drainOutput(mc, bufferInfo)
                     }
                     continue
                 } else {
@@ -191,42 +282,47 @@ class ScrcpyDecoder(
                         finalBuffer = payloadBuffer
                     }
 
-                    val mc = codec ?: break
+                    val streamActive = synchronized(codecLock) {
+                        val mc = codec ?: return@synchronized false
 
-                    var inIndex = -1
-                    var retries = 0
-                    while (inIndex < 0 && retries < 5) {
-                        inIndex = try {
-                            mc.dequeueInputBuffer(2000)
-                        } catch (e: IllegalStateException) {
-                            -2
+                        var inIndex = -1
+                        var retries = 0
+                        while (inIndex < 0 && retries < 5) {
+                            inIndex = try {
+                                mc.dequeueInputBuffer(2000)
+                            } catch (e: IllegalStateException) {
+                                -2
+                            }
+                            if (inIndex == -2) {
+                                if (codec == null || isStoppedByUser()) return@synchronized false
+                                retries++
+                            } else if (inIndex < 0) {
+                                drainOutput(mc, bufferInfo)
+                                retries++
+                            }
                         }
-                        if (inIndex == -2) {
-                            if (codec == null || isStoppedByUser()) break
-                            retries++
-                        } else if (inIndex < 0) {
-                            drainOutput(mc, bufferInfo)
-                            retries++
+
+                        if (codec == null || isStoppedByUser()) return@synchronized false
+
+                        if (inIndex >= 0) {
+                            val inputBuffer = mc.getInputBuffer(inIndex)
+                            if (inputBuffer != null) {
+                                inputBuffer.clear()
+                                inputBuffer.put(finalBuffer, 0, finalSize)
+                                mc.queueInputBuffer(inIndex, 0, finalSize, pts, 0)
+                            }
                         }
+
+                        drainOutput(mc, bufferInfo)
+                        true
                     }
 
-                    if (codec == null || isStoppedByUser()) break
-
-                    if (inIndex >= 0) {
-                        val inputBuffer = mc.getInputBuffer(inIndex)
-                        if (inputBuffer != null) {
-                            inputBuffer.clear()
-                            inputBuffer.put(finalBuffer, 0, finalSize)
-                            mc.queueInputBuffer(inIndex, 0, finalSize, pts, 0)
-                        }
-                    }
+                    if (!streamActive) break
 
                     // Tee media packet to recorder
                     val isKeyFrame = (ptsAndFlags and PACKET_FLAG_KEY_FRAME) != 0L
                     val recorderFlags = if (isKeyFrame) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0
                     recorder?.writeVideoSample(finalBuffer, 0, finalSize, pts, recorderFlags)
-
-                    drainOutput(mc, bufferInfo)
                 }
             }
             AppLogger.i(TAG, "ScrcpyDecoder: Stream ended. Total payload bytes = $totalBytesRead")
@@ -280,28 +376,37 @@ class ScrcpyDecoder(
             }
         }
 
-        if (codec != null && width == currentWidth && height == currentHeight) {
-            runCatching { codec?.flush() }
-            AppLogger.i(TAG, "ScrcpyDecoder: Flushed existing decoder for resolution ${width}x${height}")
-            return
-        }
+        synchronized(codecLock) {
+            if (codec != null && width == currentWidth && height == currentHeight) {
+                runCatching { codec?.flush() }
+                AppLogger.i(TAG, "ScrcpyDecoder: Flushed existing decoder for resolution ${width}x${height}")
+                return@synchronized
+            }
 
-        runCatching {
-            codec?.stop()
-            codec?.release()
-        }
-        codec = null
+            runCatching {
+                codec?.stop()
+                codec?.release()
+            }
+            codec = null
 
-        currentWidth = width
-        currentHeight = height
+            currentWidth = width
+            currentHeight = height
+
+            val format = MediaFormat.createVideoFormat(mimeType, width, height)
+            val config = lastConfigBytes
+            if (config != null) {
+                format.setByteBuffer("csd-0", ByteBuffer.wrap(config))
+                if (mustMergeConfigPacket) {
+                    pendingConfigBytes = config
+                }
+            }
+            codec = createDecoderWithFallback(mimeType, width, height, format, surface)
+            AppLogger.i(TAG, "ScrcpyDecoder: (Re)initialized decoder for ${width}x${height} using $mimeType")
+        }
 
         withContext(Dispatchers.Main) {
             onDimensionsParsed(width, height)
         }
-
-        val format = MediaFormat.createVideoFormat(mimeType, width, height)
-        codec = createDecoderWithFallback(mimeType, width, height, format, surface)
-        AppLogger.i(TAG, "ScrcpyDecoder: (Re)initialized decoder for ${width}x${height} using $mimeType")
     }
 
     private fun createDecoderWithFallback(
@@ -389,10 +494,13 @@ class ScrcpyDecoder(
 
     fun stop() {
         AppLogger.i(TAG, "ScrcpyDecoder: Stopping MediaCodec decoder...")
-        runCatching {
-            codec?.stop()
-            codec?.release()
+        synchronized(codecLock) {
+            runCatching {
+                codec?.stop()
+                codec?.release()
+            }
+            codec = null
+            releaseDummySurface()
         }
-        codec = null
     }
 }

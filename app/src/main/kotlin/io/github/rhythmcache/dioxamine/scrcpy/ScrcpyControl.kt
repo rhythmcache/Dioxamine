@@ -9,6 +9,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.withTimeoutOrNull
 import java.nio.ByteBuffer
 
 /**
@@ -68,25 +69,32 @@ class ScrcpyControl(
     // Unbounded queue: guaranteed events (DOWN/UP) must never block waiting for space,
     // and under normal load this queue drains far faster than it fills.
     private val queue = Channel<ByteArray>(Channel.UNLIMITED)
-
-    init {
-        writerScope.launch {
-            try {
-                for (packet in queue) {
-                    if (stream.isClosed) break
-                    stream.write(packet)
-                }
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "ScrcpyControl writer channel crashed: ${e.message}", e)
+    private val writerJob = writerScope.launch {
+        try {
+            for (packet in queue) {
+                if (stream.isClosed) break
+                stream.write(packet)
             }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "ScrcpyControl writer channel crashed: ${e.message}", e)
         }
     }
 
     /**
-     * Closes the control message queue and cancels the writer scope to cleanly
-     * release resources and exit the writer coroutine.
+     * Closes the control message queue and waits for pending messages (e.g. power-on)
+     * to flush before cancelling the writer scope.
      */
-    fun close() {
+    suspend fun close(drainTimeoutMs: Long = 300) {
+        queue.close()
+        runCatching {
+            withTimeoutOrNull(drainTimeoutMs) {
+                writerJob.join()
+            }
+        }
+        writerScope.cancel()
+    }
+
+    fun closeImmediately() {
         queue.close()
         writerScope.cancel()
     }

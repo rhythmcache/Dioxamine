@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 import io.github.rhythmcache.adb.AdbDeviceMode
@@ -70,6 +71,7 @@ private enum class DiscoveryState { IDLE, LOADING, SUCCESS, EMPTY, TIMED_OUT, FA
 @Composable
 fun ScrcpyScreen(
     vm: AdbViewModel,
+    scrcpyVm: ScrcpyViewModel = viewModel(),
     onFullScreenChange: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -132,8 +134,8 @@ fun ScrcpyScreen(
         }
     }
 
-    var isMirroring by remember { mutableStateOf(false) }
-    var isRecording by remember { mutableStateOf(false) }
+    val isMirroring = scrcpyVm.isMirroring
+    val isRecording = scrcpyVm.isRecording
     var isFullScreen by remember { mutableStateOf(false) }
 
     BackHandler(enabled = isFullScreen) {
@@ -176,13 +178,13 @@ fun ScrcpyScreen(
         }
     }
 
-    var torchOn by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val torchOn = scrcpyVm.torchOn
+    val errorMessage = scrcpyVm.errorMessage
 
-    var videoWidth by remember { mutableStateOf<Int?>(null) }
-    var videoHeight by remember { mutableStateOf<Int?>(null) }
+    val videoWidth = scrcpyVm.videoWidth
+    val videoHeight = scrcpyVm.videoHeight
 
-    var activeSession by remember { mutableStateOf<ScrcpySession?>(null) }
+    val activeSession = scrcpyVm.activeSession
 
     var discoveredCameras by remember(activeId) {
         mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getCameras(it) } ?: emptyList())
@@ -330,18 +332,12 @@ fun ScrcpyScreen(
     }
 
     fun stopMirroring() {
-        activeSession?.stop()
-        activeSession = null
-        isMirroring = false
+        scrcpyVm.stopMirroring()
         isFullScreen = false
-        isRecording = false
-        videoWidth = null
-        videoHeight = null
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            stopMirroring()
             onFullScreenChange(false)
         }
     }
@@ -350,8 +346,8 @@ fun ScrcpyScreen(
         val activeClient = client ?: return
         val validationErrors = config.validate(apiLevel)
         if (validationErrors.isNotEmpty()) {
-            errorMessage = context.getString(R.string.scrcpy_invalid_config_prefix) + validationErrors.joinToString("\n") { "\u2022 $it" }
-            isMirroring = false
+            scrcpyVm.errorMessage = context.getString(R.string.scrcpy_invalid_config_prefix) + validationErrors.joinToString("\n") { "\u2022 $it" }
+            scrcpyVm.isMirroring = false
             return
         }
 
@@ -360,22 +356,28 @@ fun ScrcpyScreen(
         }
 
         val session = ScrcpySession(
-            context = context,
+            context = context.applicationContext,
             client = activeClient,
             config = config,
             onDimensions = { w, h ->
-                videoWidth = w
-                videoHeight = h
+                scrcpyVm.videoWidth = w
+                scrcpyVm.videoHeight = h
             },
             onError = { msg ->
-                errorMessage = msg
-                stopMirroring()
+                if (scrcpyVm.isMirroring) {
+                    scrcpyVm.errorMessage = msg
+                    scrcpyVm.stopMirroring()
+                }
             },
             onRecordingStateChanged = { recording ->
-                isRecording = recording
+                scrcpyVm.isRecording = recording
+            },
+            awaitPreviousTeardown = {
+                scrcpyVm.awaitPreviousTeardown()
             }
         )
-        activeSession = session
+        scrcpyVm.activeSession = session
+        scrcpyVm.isMirroring = true
         session.start(holder)
     }
 
@@ -419,8 +421,8 @@ fun ScrcpyScreen(
                             canRecord = canRecord,
                             onToggleRecord = { toggleRecording() },
                             onToggleTorch = {
-                                torchOn = !torchOn
-                                activeSession?.sendCameraSetTorch(torchOn)
+                                scrcpyVm.torchOn = !torchOn
+                                activeSession?.sendCameraSetTorch(scrcpyVm.torchOn)
                             },
                             onToggleFullScreen = { isFullScreen = !isFullScreen },
                             onRotateDevice = { activeSession?.sendRotateDevice() },
@@ -438,11 +440,14 @@ fun ScrcpyScreen(
                             },
                             onSurfaceCreated = { holder ->
                                 val existingSession = activeSession
-                                if (existingSession != null) {
-                                    existingSession.setSurface(holder.surface)
+                                if (existingSession != null && isMirroring) {
+                                    existingSession.attachSurface(holder.surface)
                                 } else {
                                     startMirroring(holder)
                                 }
+                            },
+                            onSurfaceDestroyed = {
+                                activeSession?.detachSurface()
                             }
                         )
                     } else {
@@ -483,7 +488,7 @@ fun ScrcpyScreen(
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                         Spacer(Modifier.height(8.dp))
-                        TextButton(onClick = { errorMessage = null }) {
+                        TextButton(onClick = { scrcpyVm.errorMessage = null }) {
                             Text(stringResource(R.string.btn_dismiss), color = MaterialTheme.colorScheme.error)
                         }
                     }
@@ -765,7 +770,7 @@ fun ScrcpyScreen(
 
                                             Button(
                                                 onClick = {
-                                                    errorMessage = null
+                                                    scrcpyVm.errorMessage = null
                                                     if (isMirroring) {
                                                         stopMirroring()
                                                     } else {
@@ -773,9 +778,9 @@ fun ScrcpyScreen(
                                                             ScrcpyConfigStore.save(context, deviceKey, config)
                                                         }
                                                         if (config.videoEnabled) {
-                                                            isMirroring = true
+                                                            scrcpyVm.isMirroring = true
                                                         } else {
-                                                            isMirroring = true
+                                                            scrcpyVm.isMirroring = true
                                                             startMirroring(null)
                                                         }
                                                     }
@@ -2244,7 +2249,8 @@ private fun ScrcpyVideoPlayer(
     onNavRecents: () -> Unit,
     onKeyEvent: (action: Int, keyCode: Int) -> Unit,
     onTouchEvent: (action: Int, pointerId: Long, x: Float, y: Float, vw: Int, vh: Int) -> Unit,
-    onSurfaceCreated: (SurfaceHolder) -> Unit
+    onSurfaceCreated: (SurfaceHolder) -> Unit,
+    onSurfaceDestroyed: () -> Unit = {}
 ) {
     val focusRequester = remember { FocusRequester() }
     var controlsExpanded by remember { mutableStateOf(false) }
@@ -2325,7 +2331,9 @@ private fun ScrcpyVideoPlayer(
                             onSurfaceCreated(holder)
                         }
                         override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, height: Int) {}
-                        override fun surfaceDestroyed(h: SurfaceHolder) {}
+                        override fun surfaceDestroyed(h: SurfaceHolder) {
+                            onSurfaceDestroyed()
+                        }
                     })
                 }
             },

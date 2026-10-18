@@ -32,6 +32,7 @@ import io.github.rhythmcache.dioxamine.fastboot.FastbootScreen
 import io.github.rhythmcache.dioxamine.fastboot.FastbootViewModel
 import io.github.rhythmcache.dioxamine.fastboot.ListenForFastbootDevices
 import io.github.rhythmcache.dioxamine.scrcpy.ScrcpyScreen
+import io.github.rhythmcache.dioxamine.scrcpy.ScrcpyViewModel
 import io.github.rhythmcache.dioxamine.settings.SettingsScreen
 import io.github.rhythmcache.dioxamine.plugin.PluginsScreen
 import io.github.rhythmcache.adb.AdbDeviceMode
@@ -134,6 +135,7 @@ fun DioxamineApp(keyDir: File) {
         }
     })
     val fastbootVm: FastbootViewModel = viewModel()
+    val scrcpyVm: ScrcpyViewModel = viewModel()
 
     val coroutineScope = rememberCoroutineScope()
     val pluginRepo = remember { io.github.rhythmcache.dioxamine.plugin.PluginRepository(context.applicationContext, coroutineScope) }
@@ -240,7 +242,7 @@ fun DioxamineApp(keyDir: File) {
         ) {
             when (selectedTab) {
                 Tab.ADB -> AdbScreen(vm)
-                Tab.SCRCPY -> ScrcpyScreen(vm, onFullScreenChange = { isScrcpyFullScreen = it })
+                Tab.SCRCPY -> ScrcpyScreen(vm, scrcpyVm = scrcpyVm, onFullScreenChange = { isScrcpyFullScreen = it })
                 Tab.FASTBOOT -> FastbootScreen(fastbootVm)
                 Tab.PLUGINS -> PluginsScreen(
                     vm = vm,

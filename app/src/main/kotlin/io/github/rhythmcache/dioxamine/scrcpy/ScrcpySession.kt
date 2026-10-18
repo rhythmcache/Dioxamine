@@ -16,10 +16,11 @@ class ScrcpySession(
     private val config: ScrcpyConfig,
     private val onDimensions: (Int, Int) -> Unit,
     private val onError: (String) -> Unit,
-    private val onRecordingStateChanged: (Boolean) -> Unit = {}
+    private val onRecordingStateChanged: (Boolean) -> Unit = {},
+    private val awaitPreviousTeardown: suspend () -> Unit = {}
 ) {
     private val sessionScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var sessionJob: Job? = null
+    @Volatile private var sessionJob: Job? = null
     @Volatile private var stoppedByUser = false
     @Volatile private var socketsConnected = false
     @Volatile private var errorReported = false
@@ -44,14 +45,20 @@ class ScrcpySession(
         private const val TAG_SERVER = "SCRCPY_SERVER"
     }
 
+    private val cleanedUp = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val teardownLock = Any()
+    @Volatile private var teardownJob: Job? = null
+
     private fun reportError(msg: String) {
         synchronized(this) {
             if (stoppedByUser || errorReported) return
             errorReported = true
         }
         AppLogger.e(TAG_CLIENT, "Scrcpy Error: $msg")
-        sessionScope.launch(Dispatchers.Main) {
-            onError(msg)
+        CoroutineScope(Dispatchers.Main).launch {
+            if (!stoppedByUser) {
+                onError(msg)
+            }
         }
     }
 
@@ -67,6 +74,7 @@ class ScrcpySession(
 
         sessionJob = sessionScope.launch {
             try {
+                awaitPreviousTeardown()
                 runCatching {
                     val killStream = client.open("shell:pkill -f com.genymobile.scrcpy.Server || killall com.genymobile.scrcpy.Server")
                     val buf = ByteArray(128)
@@ -240,6 +248,9 @@ class ScrcpySession(
                 reportError("Mirroring stopped unexpectedly: ${e.message}")
             } finally {
                 cleanup()
+                if (!stoppedByUser) {
+                    reportError("Mirroring session ended")
+                }
             }
         }
     }
@@ -262,8 +273,21 @@ class ScrcpySession(
         return null
     }
 
+    fun attachSurface(surface: android.view.Surface) {
+        videoDecoder?.attachSurface(surface)
+        sendResetVideo()
+    }
+
+    fun detachSurface() {
+        videoDecoder?.detachSurface()
+    }
+
+    fun sendResetVideo() {
+        control?.sendResetVideo()
+    }
+
     fun setSurface(surface: android.view.Surface) {
-        videoDecoder?.setSurface(surface)
+        attachSurface(surface)
     }
 
     fun sendTouchEvent(action: Int, pointerId: Long, x: Float, y: Float, vw: Int, vh: Int) {
@@ -345,22 +369,29 @@ class ScrcpySession(
         }
     }
 
-    fun stop() {
+    fun stop(): Job = synchronized(teardownLock) {
+        teardownJob?.let { return@synchronized it }
         stoppedByUser = true
-        // Stop recording gracefully before tearing down session
-        runCatching { stopRecording() }
-        if (config.turnScreenOff) {
-            runCatching { control?.sendSetDisplayPower(true) }
-        }
-        runCatching { control?.close() }
-        sessionJob?.cancel("Session stopped by user")
-        sessionScope.cancel("Session stopped by user")
+        val job = sessionJob
+        sessionJob = null
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching { stopRecording() }
+            if (config.turnScreenOff) {
+                runCatching { control?.sendSetDisplayPower(true) }
+            }
+            runCatching { control?.close() }
+            job?.cancel("Session stopped by user")
+            job?.join()
+            cleanup()
+            sessionScope.cancel("Session stopped by user")
+        }.also { teardownJob = it }
     }
 
     private fun cleanup() {
+        if (!cleanedUp.compareAndSet(false, true)) return
         AppLogger.i(TAG_CLIENT, "Cleaning up scrcpy session streams...")
         runCatching { stopRecording() }
-        runCatching { control?.close() }
+        runCatching { control?.closeImmediately() }
         runCatching { videoDecoder?.stop() }
         runCatching { audioDecoder?.stop() }
         runCatching { controlStream?.close() }
