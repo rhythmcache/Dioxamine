@@ -51,6 +51,12 @@ jobs:
         id: sha
         run: echo "short_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
+      - name: Run unit tests
+        if: matrix.variant == 'debug'
+        run: |
+          set -euo pipefail
+          ./gradlew testDebugUnitTest --no-daemon
+
       - name: Build ${{ matrix.variant }} APK
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}

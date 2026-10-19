@@ -92,7 +92,7 @@ object ScrcpyDiscoveryCache {
                     return@withLock DiscoveryQueryResult.Failed("Failed to push server jar: ${e.message}", e)
                 }
 
-                val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 4.1 log_level=info $queryArg cleanup=false"
+                val cmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server ${Constants.SCRCPY_SERVER_VERSION} log_level=info $queryArg cleanup=false"
 
                 try {
                     val shellRes = client.shell(cmd)

@@ -72,6 +72,11 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
+      - name: Run unit tests
+        run: |
+          set -euo pipefail
+          ./gradlew testDebugUnitTest --no-daemon
+
       - name: Build release APK
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}

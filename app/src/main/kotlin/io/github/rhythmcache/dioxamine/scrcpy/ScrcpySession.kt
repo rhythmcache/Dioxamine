@@ -8,6 +8,7 @@ import android.view.SurfaceHolder
 import io.github.rhythmcache.adb.AdbClient
 import io.github.rhythmcache.adb.AdbEndpoint
 import io.github.rhythmcache.adb.AdbStream
+import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.VirtualKeyboardController
 import io.github.rhythmcache.dioxamine.core.AppLogger
 import io.github.rhythmcache.dioxamine.core.Constants
 import kotlinx.coroutines.*
@@ -19,10 +20,11 @@ class ScrcpySession(
     private val config: ScrcpyConfig,
     private val onDimensions: (Int, Int) -> Unit,
     private val onError: (String) -> Unit,
-    private val onRecordingStateChanged: (Boolean) -> Unit = {}
-) {
+    private val onRecordingStateChanged: (Boolean) -> Unit = {},
+    private val awaitPreviousTeardown: suspend () -> Unit = {}
+) : VirtualKeyboardController {
     private val sessionScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var sessionJob: Job? = null
+    @Volatile private var sessionJob: Job? = null
     @Volatile private var stoppedByUser = false
     @Volatile private var socketsConnected = false
     @Volatile private var errorReported = false
@@ -66,14 +68,20 @@ class ScrcpySession(
         private const val TAG_SERVER = "SCRCPY_SERVER"
     }
 
+    private val cleanedUp = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val teardownLock = Any()
+    @Volatile private var teardownJob: Job? = null
+
     private fun reportError(msg: String) {
         synchronized(this) {
             if (stoppedByUser || errorReported) return
             errorReported = true
         }
         AppLogger.e(TAG_CLIENT, "Scrcpy Error: $msg")
-        sessionScope.launch(Dispatchers.Main) {
-            onError(msg)
+        CoroutineScope(Dispatchers.Main).launch {
+            if (!stoppedByUser) {
+                onError(msg)
+            }
         }
     }
 
@@ -89,6 +97,7 @@ class ScrcpySession(
 
         sessionJob = sessionScope.launch {
             try {
+                awaitPreviousTeardown()
                 runCatching {
                     val killStream = client.open("shell:pkill -f com.genymobile.scrcpy.Server || killall com.genymobile.scrcpy.Server")
                     val buf = ByteArray(128)
@@ -104,7 +113,7 @@ class ScrcpySession(
                 }
                 AppLogger.i(TAG_CLIENT, "Step 1 Complete: Asset pushed successfully")
 
-                val serverCmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 4.1 ${config.toServerArgs()}"
+                val serverCmd = "CLASSPATH=${Constants.DEVICE_TMP_DIR}/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server ${Constants.SCRCPY_SERVER_VERSION} ${config.toServerArgs()}"
                 AppLogger.i(TAG_CLIENT, "Step 2: Executing server command: $serverCmd")
 
                 launch {
@@ -269,6 +278,9 @@ class ScrcpySession(
                 reportError("Mirroring stopped unexpectedly: ${e.message}")
             } finally {
                 cleanup()
+                if (!stoppedByUser) {
+                    reportError("Mirroring session ended")
+                }
             }
         }
     }
@@ -291,8 +303,21 @@ class ScrcpySession(
         return null
     }
 
+    fun attachSurface(surface: android.view.Surface) {
+        videoDecoder?.attachSurface(surface)
+        sendResetVideo()
+    }
+
+    fun detachSurface() {
+        videoDecoder?.detachSurface()
+    }
+
+    fun sendResetVideo() {
+        control?.sendResetVideo()
+    }
+
     fun setSurface(surface: android.view.Surface) {
-        videoDecoder?.setSurface(surface)
+        attachSurface(surface)
     }
 
     fun sendTouchEvent(action: Int, pointerId: Long, x: Float, y: Float, vw: Int, vh: Int) {
@@ -401,6 +426,44 @@ class ScrcpySession(
         }
     }
 
+    fun ensureUhidDevices() {
+        control?.ensureUhidDevices()
+    }
+
+    fun sendMouseMove(dx: Int, dy: Int, buttons: Int? = null) {
+        control?.sendMouseMove(dx, dy, buttons)
+    }
+
+    fun setMouseButtonState(buttons: Int) {
+        control?.setMouseButtonState(buttons)
+    }
+
+    fun clickMouseButton(buttonMask: Int) {
+        control?.clickMouseButton(buttonMask)
+    }
+
+    fun sendMouseScroll(wheel: Int, hPan: Int = 0) {
+        control?.sendMouseScroll(wheel, hPan)
+    }
+
+    override fun sendKeyStroke(hidKeyCode: Int, modifiers: Int) {
+        val ctrl = control
+        if (ctrl == null) {
+            AppLogger.d(TAG_CLIENT, "Dropping key stroke (control channel not connected)")
+            return
+        }
+        ctrl.sendKeyStroke(hidKeyCode, modifiers)
+    }
+
+    override fun sendInjectText(text: String) {
+        val ctrl = control
+        if (ctrl == null) {
+            AppLogger.d(TAG_CLIENT, "Dropping inject text (control channel not connected)")
+            return
+        }
+        ctrl.sendInjectText(text)
+    }
+
     fun startRecording() {
         if (recorder?.isRecording == true) return
 
@@ -452,19 +515,26 @@ class ScrcpySession(
         }
     }
 
-    fun stop() {
+    fun stop(): Job = synchronized(teardownLock) {
+        teardownJob?.let { return@synchronized it }
         stoppedByUser = true
-        // Stop recording gracefully before tearing down session
-        runCatching { stopRecording() }
-        if (config.turnScreenOff) {
-            runCatching { control?.sendSetDisplayPower(true) }
-        }
-        runCatching { control?.close() }
-        sessionJob?.cancel("Session stopped by user")
-        sessionScope.cancel("Session stopped by user")
+        val job = sessionJob
+        sessionJob = null
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching { stopRecording() }
+            if (config.turnScreenOff) {
+                runCatching { control?.sendSetDisplayPower(true) }
+            }
+            runCatching { control?.close() }
+            job?.cancel("Session stopped by user")
+            job?.join()
+            cleanup()
+            sessionScope.cancel("Session stopped by user")
+        }.also { teardownJob = it }
     }
 
     private fun cleanup() {
+        if (!cleanedUp.compareAndSet(false, true)) return
         AppLogger.i(TAG_CLIENT, "Cleaning up scrcpy session streams...")
         removeHostClipboardSync()
         synchronized(recentSentToDevice) {
@@ -473,7 +543,7 @@ class ScrcpySession(
         lastAppliedFromDevice = null
         lastSentText = null
         runCatching { stopRecording() }
-        runCatching { control?.close() }
+        runCatching { control?.closeImmediately() }
         runCatching { videoDecoder?.stop() }
         runCatching { audioDecoder?.stop() }
         runCatching { controlStream?.close() }

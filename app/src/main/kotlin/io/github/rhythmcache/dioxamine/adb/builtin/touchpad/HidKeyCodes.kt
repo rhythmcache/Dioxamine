@@ -67,12 +67,42 @@ object HidKeyCodes {
     const val KEY_VOLUME_UP = 0x80
     const val KEY_VOLUME_DOWN = 0x81
 
-    // Alphanumeric keys for shortcuts
+    // Alphanumeric keys (Page 0x07)
     const val KEY_A = 0x04
+    const val KEY_B = 0x05
     const val KEY_C = 0x06
     const val KEY_D = 0x07
+    const val KEY_E = 0x08
+    const val KEY_F = 0x09
+    const val KEY_G = 0x0A
+    const val KEY_H = 0x0B
+    const val KEY_I = 0x0C
+    const val KEY_J = 0x0D
+    const val KEY_K = 0x0E
+    const val KEY_L = 0x0F
+    const val KEY_M = 0x10
+    const val KEY_N = 0x11
+    const val KEY_O = 0x12
+    const val KEY_P = 0x13
+    const val KEY_Q = 0x14
+    const val KEY_R = 0x15
+    const val KEY_S = 0x16
+    const val KEY_T = 0x17
+    const val KEY_U = 0x18
     const val KEY_V = 0x19
+    const val KEY_W = 0x1A
     const val KEY_X = 0x1B
     const val KEY_Y = 0x1C
     const val KEY_Z = 0x1D
+
+    const val KEY_1 = 0x1E
+    const val KEY_2 = 0x1F
+    const val KEY_3 = 0x20
+    const val KEY_4 = 0x21
+    const val KEY_5 = 0x22
+    const val KEY_6 = 0x23
+    const val KEY_7 = 0x24
+    const val KEY_8 = 0x25
+    const val KEY_9 = 0x26
+    const val KEY_0 = 0x27
 }

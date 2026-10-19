@@ -12,6 +12,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.animation.*
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -20,8 +22,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
+import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.HidKeyCodes
+import io.github.rhythmcache.dioxamine.adb.builtin.touchpad.VirtualKeyboardHelper
+import io.github.rhythmcache.dioxamine.core.AppLogger
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -36,8 +50,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -47,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.rhythmcache.dioxamine.R
 import io.github.rhythmcache.dioxamine.adb.AdbViewModel
 import io.github.rhythmcache.adb.AdbDeviceMode
@@ -59,7 +79,6 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
-import io.github.rhythmcache.dioxamine.core.AppLogger
 import kotlin.math.roundToInt
 
 private enum class ScrcpyTab { CONFIGURATOR, LOGS, RECORDINGS }
@@ -71,6 +90,7 @@ private enum class DiscoveryState { IDLE, LOADING, SUCCESS, EMPTY, TIMED_OUT, FA
 @Composable
 fun ScrcpyScreen(
     vm: AdbViewModel,
+    scrcpyVm: ScrcpyViewModel = viewModel(),
     onFullScreenChange: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -133,8 +153,8 @@ fun ScrcpyScreen(
         }
     }
 
-    var isMirroring by remember { mutableStateOf(false) }
-    var isRecording by remember { mutableStateOf(false) }
+    val isMirroring = scrcpyVm.isMirroring
+    val isRecording = scrcpyVm.isRecording
     var isFullScreen by remember { mutableStateOf(false) }
 
     BackHandler(enabled = isFullScreen) {
@@ -177,13 +197,13 @@ fun ScrcpyScreen(
         }
     }
 
-    var torchOn by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val torchOn = scrcpyVm.torchOn
+    val errorMessage = scrcpyVm.errorMessage
 
-    var videoWidth by remember { mutableStateOf<Int?>(null) }
-    var videoHeight by remember { mutableStateOf<Int?>(null) }
+    val videoWidth = scrcpyVm.videoWidth
+    val videoHeight = scrcpyVm.videoHeight
 
-    var activeSession by remember { mutableStateOf<ScrcpySession?>(null) }
+    val activeSession = scrcpyVm.activeSession
 
     var discoveredCameras by remember(activeId) {
         mutableStateOf(activeId?.let { ScrcpyDiscoveryCache.getCameras(it) } ?: emptyList())
@@ -331,18 +351,12 @@ fun ScrcpyScreen(
     }
 
     fun stopMirroring() {
-        activeSession?.stop()
-        activeSession = null
-        isMirroring = false
+        scrcpyVm.stopMirroring()
         isFullScreen = false
-        isRecording = false
-        videoWidth = null
-        videoHeight = null
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            stopMirroring()
             onFullScreenChange(false)
         }
     }
@@ -351,8 +365,8 @@ fun ScrcpyScreen(
         val activeClient = client ?: return
         val validationErrors = config.validate(apiLevel)
         if (validationErrors.isNotEmpty()) {
-            errorMessage = context.getString(R.string.scrcpy_invalid_config_prefix) + validationErrors.joinToString("\n") { "\u2022 $it" }
-            isMirroring = false
+            scrcpyVm.errorMessage = context.getString(R.string.scrcpy_invalid_config_prefix) + validationErrors.joinToString("\n") { "\u2022 $it" }
+            scrcpyVm.isMirroring = false
             return
         }
 
@@ -361,22 +375,28 @@ fun ScrcpyScreen(
         }
 
         val session = ScrcpySession(
-            context = context,
+            context = context.applicationContext,
             client = activeClient,
             config = config,
             onDimensions = { w, h ->
-                videoWidth = w
-                videoHeight = h
+                scrcpyVm.videoWidth = w
+                scrcpyVm.videoHeight = h
             },
             onError = { msg ->
-                errorMessage = msg
-                stopMirroring()
+                if (scrcpyVm.isMirroring) {
+                    scrcpyVm.errorMessage = msg
+                    scrcpyVm.stopMirroring()
+                }
             },
             onRecordingStateChanged = { recording ->
-                isRecording = recording
+                scrcpyVm.isRecording = recording
+            },
+            awaitPreviousTeardown = {
+                scrcpyVm.awaitPreviousTeardown()
             }
         )
-        activeSession = session
+        scrcpyVm.activeSession = session
+        scrcpyVm.isMirroring = true
         session.start(holder)
     }
 
@@ -409,6 +429,7 @@ fun ScrcpyScreen(
                     if (config.videoEnabled) {
                         ScrcpyVideoPlayer(
                             modifier = Modifier.fillMaxSize(),
+                            session = activeSession,
                             videoWidth = videoWidth,
                             videoHeight = videoHeight,
                             isFullScreen = isFullScreen,
@@ -420,8 +441,8 @@ fun ScrcpyScreen(
                             canRecord = canRecord,
                             onToggleRecord = { toggleRecording() },
                             onToggleTorch = {
-                                torchOn = !torchOn
-                                activeSession?.sendCameraSetTorch(torchOn)
+                                scrcpyVm.torchOn = !torchOn
+                                activeSession?.sendCameraSetTorch(scrcpyVm.torchOn)
                             },
                             onToggleFullScreen = { isFullScreen = !isFullScreen },
                             onRotateDevice = { activeSession?.sendRotateDevice() },
@@ -451,11 +472,14 @@ fun ScrcpyScreen(
                             },
                             onSurfaceCreated = { holder ->
                                 val existingSession = activeSession
-                                if (existingSession != null) {
-                                    existingSession.setSurface(holder.surface)
+                                if (existingSession != null && isMirroring) {
+                                    existingSession.attachSurface(holder.surface)
                                 } else {
                                     startMirroring(holder)
                                 }
+                            },
+                            onSurfaceDestroyed = {
+                                activeSession?.detachSurface()
                             }
                         )
                     } else {
@@ -496,7 +520,7 @@ fun ScrcpyScreen(
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                         Spacer(Modifier.height(8.dp))
-                        TextButton(onClick = { errorMessage = null }) {
+                        TextButton(onClick = { scrcpyVm.errorMessage = null }) {
                             Text(stringResource(R.string.btn_dismiss), color = MaterialTheme.colorScheme.error)
                         }
                     }
@@ -781,7 +805,7 @@ fun ScrcpyScreen(
 
                                             Button(
                                                 onClick = {
-                                                    errorMessage = null
+                                                    scrcpyVm.errorMessage = null
                                                     if (isMirroring) {
                                                         stopMirroring()
                                                     } else {
@@ -789,9 +813,9 @@ fun ScrcpyScreen(
                                                             ScrcpyConfigStore.save(context, deviceKey, config)
                                                         }
                                                         if (config.videoEnabled) {
-                                                            isMirroring = true
+                                                            scrcpyVm.isMirroring = true
                                                         } else {
-                                                            isMirroring = true
+                                                            scrcpyVm.isMirroring = true
                                                             startMirroring(null)
                                                         }
                                                     }
@@ -2254,10 +2278,11 @@ private fun FloatingVerticalNavBar(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun ScrcpyVideoPlayer(
     modifier: Modifier,
+    session: ScrcpySession? = null,
     videoWidth: Int?,
     videoHeight: Int?,
     isFullScreen: Boolean,
@@ -2278,10 +2303,25 @@ private fun ScrcpyVideoPlayer(
     onNavRecents: () -> Unit,
     onKeyEvent: (action: Int, keyCode: Int) -> Unit,
     onTouchEvent: (action: Int, pointerId: Long, x: Float, y: Float, vw: Int, vh: Int) -> Unit,
-    onSurfaceCreated: (SurfaceHolder) -> Unit
+    onSurfaceCreated: (SurfaceHolder) -> Unit,
+    onSurfaceDestroyed: () -> Unit = {}
 ) {
     val focusRequester = remember { FocusRequester() }
+    val keyboardFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val isImeVisible = WindowInsets.isImeVisible
+    var imeBuffer by remember { mutableStateOf(TextFieldValue("  ", selection = TextRange(2))) }
+
     var controlsExpanded by remember { mutableStateOf(false) }
+    var showTouchpadOverlay by rememberSaveable { mutableStateOf(false) }
+    var overlayRectInRoot by remember { mutableStateOf(Rect.Zero) }
+    var videoPositionInRoot by remember { mutableStateOf(Offset.Zero) }
+
+    LaunchedEffect(showTouchpadOverlay) {
+        if (!showTouchpadOverlay) {
+            overlayRectInRoot = Rect.Zero
+        }
+    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -2314,6 +2354,64 @@ private fun ScrcpyVideoPlayer(
             },
         contentAlignment = Alignment.Center
     ) {
+        // Always-composed invisible text field to intercept keyboard input and map to HID keystrokes
+        BasicTextField(
+            value = imeBuffer,
+            onValueChange = { newBuffer ->
+                imeBuffer = session?.let {
+                    VirtualKeyboardHelper.handleImeValueChange(newBuffer, "  ", it)
+                } ?: TextFieldValue("  ", selection = TextRange(2))
+            },
+            modifier = Modifier
+                .size(1.dp)
+                .alpha(0f)
+                .focusRequester(keyboardFocusRequester)
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown) {
+                        when (event.key) {
+                            Key.Enter, Key.NumPadEnter -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_ENTER)
+                                true
+                            }
+                            Key.Tab -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_TAB)
+                                true
+                            }
+                            Key.Escape -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_ESC)
+                                true
+                            }
+                            Key.DirectionLeft -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_LEFT)
+                                true
+                            }
+                            Key.DirectionRight -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_RIGHT)
+                                true
+                            }
+                            Key.DirectionUp -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_UP)
+                                true
+                            }
+                            Key.DirectionDown -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_DOWN)
+                                true
+                            }
+                            Key.Delete -> {
+                                session?.sendKeyStroke(HidKeyCodes.KEY_DELETE)
+                                true
+                            }
+                            else -> false
+                        }
+                    } else false
+                },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                autoCorrectEnabled = false,
+                imeAction = ImeAction.None
+            ),
+            singleLine = true
+        )
         val hasDimensions = videoWidth != null && videoHeight != null && videoWidth > 0 && videoHeight > 0
         val videoRatio = if (hasDimensions) {
             (videoWidth.toFloat() / maxOf(videoHeight, 1).toFloat()).coerceIn(0.2f, 5.0f)
@@ -2359,7 +2457,9 @@ private fun ScrcpyVideoPlayer(
                             onSurfaceCreated(holder)
                         }
                         override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, height: Int) {}
-                        override fun surfaceDestroyed(h: SurfaceHolder) {}
+                        override fun surfaceDestroyed(h: SurfaceHolder) {
+                            onSurfaceDestroyed()
+                        }
                     })
                 }
             },
@@ -2383,8 +2483,15 @@ private fun ScrcpyVideoPlayer(
                     playerWidth = it.width
                     playerHeight = it.height
                 }
+                .onGloballyPositioned {
+                    videoPositionInRoot = it.positionInRoot()
+                }
                 .pointerInteropFilter { event ->
                     if (videoSourceIsCamera) return@pointerInteropFilter false
+                    val touchInRoot = Offset(event.x, event.y) + videoPositionInRoot
+                    if (showTouchpadOverlay && overlayRectInRoot.contains(touchInRoot)) {
+                        return@pointerInteropFilter false
+                    }
                     when (event.actionMasked) {
                         MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                             val idx = event.actionIndex
@@ -2519,6 +2626,49 @@ private fun ScrcpyVideoPlayer(
                                 tint = Color.White
                             )
                         }
+                    }
+                    IconButton(
+                        onClick = {
+                            if (!showTouchpadOverlay) session?.ensureUhidDevices()
+                            showTouchpadOverlay = !showTouchpadOverlay
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (showTouchpadOverlay) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                            } else {
+                                Color.Black.copy(alpha = 0.6f)
+                            }
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.TouchApp,
+                            contentDescription = stringResource(R.string.tab_touchpad),
+                            tint = if (showTouchpadOverlay) MaterialTheme.colorScheme.onPrimary else Color.White
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            if (isImeVisible) {
+                                keyboardController?.hide()
+                            } else {
+                                session?.ensureUhidDevices()
+                                runCatching { keyboardFocusRequester.requestFocus() }
+                                keyboardController?.show()
+                            }
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (isImeVisible) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                            } else {
+                                Color.Black.copy(alpha = 0.6f)
+                            }
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.Keyboard,
+                            contentDescription = stringResource(R.string.tab_keyboard),
+                            tint = if (isImeVisible) MaterialTheme.colorScheme.onPrimary else Color.White
+                        )
                     }
                 }
                 IconButton(
@@ -2764,6 +2914,117 @@ private fun ScrcpyVideoPlayer(
                 onNavHome = onNavHome,
                 onNavRecents = onNavRecents
             )
+        }
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(15f)
+        ) {
+            val density = LocalDensity.current
+            val parentW = with(density) { maxWidth.toPx() }
+            val parentH = with(density) { maxHeight.toPx() }
+            val minW = with(density) { 220.dp.toPx() }
+            val minH = with(density) { 160.dp.toPx() }
+
+            val imeBottomPx = WindowInsets.ime.getBottom(density).toFloat()
+
+            if (parentW > 0f && parentH > 0f) {
+                var winW by rememberSaveable { mutableFloatStateOf(with(density) { 320.dp.toPx() }) }
+                var winH by rememberSaveable { mutableFloatStateOf(with(density) { 230.dp.toPx() }) }
+                var offX by rememberSaveable { mutableFloatStateOf((parentW - winW - 24f).coerceAtLeast(0f)) }
+                var offY by rememberSaveable { mutableFloatStateOf((parentH - winH - 24f).coerceAtLeast(0f)) }
+                var prevParentW by rememberSaveable { mutableFloatStateOf(parentW) }
+                var prevParentH by rememberSaveable { mutableFloatStateOf(parentH) }
+
+                // Clamp size and saved offset when parent changes (rotation), preserving proportional screen placement
+                LaunchedEffect(parentW, parentH) {
+                    if (prevParentW > 0f && prevParentH > 0f && (prevParentW != parentW || prevParentH != parentH)) {
+                        val oldW = winW
+                        val oldH = winH
+                        val relX = (offX / (prevParentW - oldW).coerceAtLeast(1f)).coerceIn(0f, 1f)
+                        val relY = (offY / (prevParentH - oldH).coerceAtLeast(1f)).coerceIn(0f, 1f)
+                        winW = winW.coerceIn(minW, parentW.coerceAtLeast(minW))
+                        winH = winH.coerceIn(minH, parentH.coerceAtLeast(minH))
+                        offX = (relX * (parentW - winW).coerceAtLeast(0f)).coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
+                        offY = (relY * (parentH - winH).coerceAtLeast(0f)).coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
+                    } else {
+                        winW = winW.coerceIn(minW, parentW.coerceAtLeast(minW))
+                        winH = winH.coerceIn(minH, parentH.coerceAtLeast(minH))
+                        offX = offX.coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
+                        offY = offY.coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
+                    }
+                    prevParentW = parentW
+                    prevParentH = parentH
+                }
+
+                // Display offset: temporarily lift above the soft keyboard without altering saved offY
+                val shownOffY = offY.coerceAtMost((parentH - winH - imeBottomPx).coerceAtLeast(0f))
+                val displayOffX = offX.coerceIn(0f, (parentW - winW).coerceAtLeast(0f))
+                val displayOffY = shownOffY.coerceIn(0f, (parentH - winH).coerceAtLeast(0f))
+
+                val currentParentW by rememberUpdatedState(parentW)
+                val currentParentH by rememberUpdatedState(parentH)
+                val currentWinW by rememberUpdatedState(winW)
+                val currentWinH by rememberUpdatedState(winH)
+                val currentOffX by rememberUpdatedState(displayOffX)
+                val currentShownOffY by rememberUpdatedState(displayOffY)
+                val currentImeBottom by rememberUpdatedState(imeBottomPx)
+
+                AnimatedVisibility(
+                    visible = showTouchpadOverlay && !videoSourceIsCamera,
+                    enter = fadeIn() + scaleIn(initialScale = 0.92f),
+                    exit = fadeOut() + scaleOut(targetScale = 0.92f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .offset { IntOffset(displayOffX.roundToInt(), displayOffY.roundToInt()) }
+                            .size(with(density) { winW.toDp() }, with(density) { winH.toDp() })
+                            .onGloballyPositioned { overlayRectInRoot = it.boundsInRoot() }
+                    ) {
+                        ScrcpyTouchpadOverlay(
+                            session = session,
+                            onClose = {
+                                showTouchpadOverlay = false
+                                overlayRectInRoot = Rect.Zero
+                            },
+                            isFullScreen = isFullScreen,
+                            onDrag = { dx, dy ->
+                                val maxOffX = (currentParentW - currentWinW).coerceAtLeast(0f)
+                                val maxOffY = (currentParentH - currentWinH).coerceAtLeast(0f)
+                                offX = (offX + dx).coerceIn(0f, maxOffX)
+                                offY = (offY + dy).coerceIn(0f, maxOffY)
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        // Resize grip, bottom-right (enlarged hit area to 36.dp)
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(36.dp)
+                                .pointerInput(Unit) {
+                                    detectDragGestures { change, drag ->
+                                        change.consume()
+                                        val maxAllowedW = (currentParentW - currentOffX).coerceAtLeast(minW)
+                                        val maxAllowedH = (currentParentH - currentShownOffY - currentImeBottom).coerceAtLeast(minH)
+                                        winW = (winW + drag.x).coerceIn(minW, maxAllowedW)
+                                        winH = (winH + drag.y).coerceIn(minH, maxAllowedH)
+                                    }
+                                }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.DragHandle,
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(16.dp)
+                                    .rotate(-45f)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
