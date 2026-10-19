@@ -291,6 +291,10 @@
     <string name="display_bind_volume_subtitle">Bind hardware volume buttons to the mirrored device</string>
     <string name="display_clipboard_sync_title">Clipboard Bidirectional Sync</string>
     <string name="display_clipboard_sync_subtitle">Sync copied text between host and target device</string>
+    <string name="display_touchpad_title">Virtual TouchPad</string>
+    <string name="display_touchpad_subtitle">Show floating touchpad overlay to control cursor</string>
+    <string name="display_keyboard_title">Virtual Keyboard</string>
+    <string name="display_keyboard_subtitle">Open soft keyboard to send keystrokes to device</string>
 
     <string name="cd_paste_clipboard">Paste Clipboard to Device</string>
     <string name="cd_toggle_torch">Toggle Torch</string>

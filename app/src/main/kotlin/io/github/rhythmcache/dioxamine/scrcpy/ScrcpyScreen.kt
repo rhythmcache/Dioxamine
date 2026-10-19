@@ -138,7 +138,9 @@ fun ScrcpyScreen(
     var dialogErrorMsg by remember { mutableStateOf<String?>(null) }
 
     val deviceKey = activeConn?.uniqueId ?: activeConn?.id
-    var config by remember { mutableStateOf(ScrcpyConfig()) }
+    var config by remember(deviceKey) {
+        mutableStateOf(scrcpyVm.activeSession?.config ?: ScrcpyConfig())
+    }
     var rememberSettings by remember(deviceKey) {
         mutableStateOf(ScrcpyConfigStore.isRememberEnabled(context, deviceKey))
     }
@@ -147,7 +149,17 @@ fun ScrcpyScreen(
         if (deviceKey != null) {
             val savedConfig = ScrcpyConfigStore.load(context, deviceKey)
             if (savedConfig != null) {
-                config = savedConfig
+                if (!scrcpyVm.isMirroring) {
+                    config = savedConfig
+                    scrcpyVm.showFloatingNav = savedConfig.showFloatingNav
+                    scrcpyVm.showTouchpadOverlay = savedConfig.showTouchpad
+                    scrcpyVm.showKeyboard = savedConfig.showKeyboard
+                }
+            } else if (!scrcpyVm.isMirroring) {
+                config = ScrcpyConfig()
+                scrcpyVm.showFloatingNav = false
+                scrcpyVm.showTouchpadOverlay = false
+                scrcpyVm.showKeyboard = false
             }
             rememberSettings = ScrcpyConfigStore.isRememberEnabled(context, deviceKey)
         }
@@ -160,8 +172,6 @@ fun ScrcpyScreen(
     BackHandler(enabled = isFullScreen) {
         isFullScreen = false
     }
-
-    var showFloatingNav by remember { mutableStateOf(false) }
     var selectedTab by remember(isDeviceConnected) {
         mutableStateOf(if (isDeviceConnected) ScrcpyTab.CONFIGURATOR else ScrcpyTab.RECORDINGS)
     }
@@ -374,6 +384,10 @@ fun ScrcpyScreen(
             ScrcpyConfigStore.save(context, deviceKey, config)
         }
 
+        scrcpyVm.showFloatingNav = config.showFloatingNav
+        scrcpyVm.showTouchpadOverlay = config.showTouchpad
+        scrcpyVm.showKeyboard = config.showKeyboard
+
         val session = ScrcpySession(
             context = context.applicationContext,
             client = activeClient,
@@ -433,7 +447,34 @@ fun ScrcpyScreen(
                             videoWidth = videoWidth,
                             videoHeight = videoHeight,
                             isFullScreen = isFullScreen,
-                            showFloatingNav = showFloatingNav,
+                            showFloatingNav = scrcpyVm.showFloatingNav,
+                            onToggleFloatingNav = {
+                                val next = !scrcpyVm.showFloatingNav
+                                scrcpyVm.showFloatingNav = next
+                                config = config.copy(showFloatingNav = next)
+                                if (rememberSettings && deviceKey != null) {
+                                    ScrcpyConfigStore.save(context, deviceKey, config)
+                                }
+                            },
+                            showTouchpadOverlay = scrcpyVm.showTouchpadOverlay,
+                            onToggleTouchpadOverlay = {
+                                val next = !scrcpyVm.showTouchpadOverlay
+                                scrcpyVm.showTouchpadOverlay = next
+                                config = config.copy(showTouchpad = next)
+                                if (next) activeSession?.ensureUhidDevices()
+                                if (rememberSettings && deviceKey != null) {
+                                    ScrcpyConfigStore.save(context, deviceKey, config)
+                                }
+                            },
+                            showKeyboard = scrcpyVm.showKeyboard,
+                            onToggleKeyboard = { next ->
+                                scrcpyVm.showKeyboard = next
+                                config = config.copy(showKeyboard = next)
+                                if (next) activeSession?.ensureUhidDevices()
+                                if (rememberSettings && deviceKey != null) {
+                                    ScrcpyConfigStore.save(context, deviceKey, config)
+                                }
+                            },
                             bindVolumeKeys = config.bindVolumeKeys,
                             videoSourceIsCamera = config.videoSource == "camera",
                             torchOn = torchOn,
@@ -732,11 +773,38 @@ fun ScrcpyScreen(
                                             DisplaySettings(
                                                 config = config,
                                                 isMirroring = isMirroring,
-                                                showFloatingNav = showFloatingNav,
-                                                onShowFloatingNavChange = { showFloatingNav = it },
+                                                showFloatingNav = scrcpyVm.showFloatingNav,
+                                                showTouchpadOverlay = scrcpyVm.showTouchpadOverlay,
+                                                showKeyboard = scrcpyVm.showKeyboard,
+                                                onShowFloatingNavChange = { next ->
+                                                    scrcpyVm.showFloatingNav = next
+                                                    config = config.copy(showFloatingNav = next)
+                                                    if (rememberSettings && deviceKey != null) {
+                                                        ScrcpyConfigStore.save(context, deviceKey, config)
+                                                    }
+                                                },
+                                                onShowTouchpadChange = { next ->
+                                                    scrcpyVm.showTouchpadOverlay = next
+                                                    config = config.copy(showTouchpad = next)
+                                                    if (next) activeSession?.ensureUhidDevices()
+                                                    if (rememberSettings && deviceKey != null) {
+                                                        ScrcpyConfigStore.save(context, deviceKey, config)
+                                                    }
+                                                },
+                                                onShowKeyboardChange = { next ->
+                                                    scrcpyVm.showKeyboard = next
+                                                    config = config.copy(showKeyboard = next)
+                                                    if (next) activeSession?.ensureUhidDevices()
+                                                    if (rememberSettings && deviceKey != null) {
+                                                        ScrcpyConfigStore.save(context, deviceKey, config)
+                                                    }
+                                                },
                                                 onConfigChange = {
                                                     config = it
                                                     activeSession?.clipboardSyncEnabled = it.clipboardSync
+                                                    if (rememberSettings && deviceKey != null) {
+                                                        ScrcpyConfigStore.save(context, deviceKey, it)
+                                                    }
                                                 }
                                             )
 
@@ -2137,7 +2205,11 @@ private fun DisplaySettings(
     config: ScrcpyConfig,
     isMirroring: Boolean,
     showFloatingNav: Boolean,
+    showTouchpadOverlay: Boolean,
+    showKeyboard: Boolean,
     onShowFloatingNavChange: (Boolean) -> Unit,
+    onShowTouchpadChange: (Boolean) -> Unit,
+    onShowKeyboardChange: (Boolean) -> Unit,
     onConfigChange: (ScrcpyConfig) -> Unit
 ) {
     Text(stringResource(R.string.section_display), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -2207,6 +2279,40 @@ private fun DisplaySettings(
         Switch(
             checked = config.clipboardSync,
             onCheckedChange = { onConfigChange(config.copy(clipboardSync = it)) }
+        )
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.display_touchpad_title), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.display_touchpad_subtitle), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(
+            checked = showTouchpadOverlay,
+            onCheckedChange = { onShowTouchpadChange(it) }
+        )
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.display_keyboard_title), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.display_keyboard_subtitle), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(
+            checked = showKeyboard,
+            onCheckedChange = { onShowKeyboardChange(it) }
         )
     }
 }
@@ -2287,6 +2393,11 @@ private fun ScrcpyVideoPlayer(
     videoHeight: Int?,
     isFullScreen: Boolean,
     showFloatingNav: Boolean,
+    onToggleFloatingNav: () -> Unit = {},
+    showTouchpadOverlay: Boolean = false,
+    onToggleTouchpadOverlay: () -> Unit = {},
+    showKeyboard: Boolean = false,
+    onToggleKeyboard: (Boolean) -> Unit = {},
     bindVolumeKeys: Boolean,
     videoSourceIsCamera: Boolean,
     torchOn: Boolean,
@@ -2313,13 +2424,36 @@ private fun ScrcpyVideoPlayer(
     var imeBuffer by remember { mutableStateOf(TextFieldValue("  ", selection = TextRange(2))) }
 
     var controlsExpanded by remember { mutableStateOf(false) }
-    var showTouchpadOverlay by rememberSaveable { mutableStateOf(false) }
     var overlayRectInRoot by remember { mutableStateOf(Rect.Zero) }
     var videoPositionInRoot by remember { mutableStateOf(Offset.Zero) }
 
     LaunchedEffect(showTouchpadOverlay) {
-        if (!showTouchpadOverlay) {
+        if (showTouchpadOverlay) {
+            session?.ensureUhidDevices()
+        } else {
             overlayRectInRoot = Rect.Zero
+        }
+    }
+
+    var imeWasVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(isImeVisible) {
+        if (isImeVisible) {
+            imeWasVisible = true
+        } else if (imeWasVisible) {
+            imeWasVisible = false
+            if (showKeyboard) {
+                onToggleKeyboard(false)
+            }
+        }
+    }
+
+    LaunchedEffect(showKeyboard) {
+        if (showKeyboard) {
+            session?.ensureUhidDevices()
+            runCatching { keyboardFocusRequester.requestFocus() }
+            keyboardController?.show()
+        } else {
+            keyboardController?.hide()
         }
     }
 
@@ -2573,10 +2707,16 @@ private fun ScrcpyVideoPlayer(
             ControlSide.RIGHT -> if (controlsExpanded) Icons.AutoMirrored.Filled.KeyboardArrowRight else Icons.AutoMirrored.Filled.KeyboardArrowLeft
         }
 
+        val maxItems = if (maxWidth >= 540.dp) 8 else 4
+        val isAlignedEnd = side == ControlSide.RIGHT || (animNormX.value > 0.5f && (side == ControlSide.TOP || side == ControlSide.BOTTOM))
+        val flowArrangement = Arrangement.spacedBy(8.dp, if (isAlignedEnd) Alignment.End else Alignment.Start)
+
         val actionButtons = @Composable {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            FlowRow(
+                modifier = Modifier.widthIn(max = (maxWidth - 80.dp).coerceAtLeast(180.dp)),
+                maxItemsInEachRow = maxItems,
+                horizontalArrangement = flowArrangement,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (canRecord) {
                     IconButton(
@@ -2628,10 +2768,23 @@ private fun ScrcpyVideoPlayer(
                         }
                     }
                     IconButton(
-                        onClick = {
-                            if (!showTouchpadOverlay) session?.ensureUhidDevices()
-                            showTouchpadOverlay = !showTouchpadOverlay
-                        },
+                        onClick = onToggleFloatingNav,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (showFloatingNav) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                            } else {
+                                Color.Black.copy(alpha = 0.6f)
+                            }
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.Navigation,
+                            contentDescription = stringResource(R.string.display_floating_nav_title),
+                            tint = if (showFloatingNav) MaterialTheme.colorScheme.onPrimary else Color.White
+                        )
+                    }
+                    IconButton(
+                        onClick = onToggleTouchpadOverlay,
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = if (showTouchpadOverlay) {
                                 MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
@@ -2648,16 +2801,10 @@ private fun ScrcpyVideoPlayer(
                     }
                     IconButton(
                         onClick = {
-                            if (isImeVisible) {
-                                keyboardController?.hide()
-                            } else {
-                                session?.ensureUhidDevices()
-                                runCatching { keyboardFocusRequester.requestFocus() }
-                                keyboardController?.show()
-                            }
+                            onToggleKeyboard(!showKeyboard)
                         },
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = if (isImeVisible) {
+                            containerColor = if (showKeyboard || isImeVisible) {
                                 MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                             } else {
                                 Color.Black.copy(alpha = 0.6f)
@@ -2667,7 +2814,7 @@ private fun ScrcpyVideoPlayer(
                         Icon(
                             Icons.Filled.Keyboard,
                             contentDescription = stringResource(R.string.tab_keyboard),
-                            tint = if (isImeVisible) MaterialTheme.colorScheme.onPrimary else Color.White
+                            tint = if (showKeyboard || isImeVisible) MaterialTheme.colorScheme.onPrimary else Color.White
                         )
                     }
                 }
@@ -2850,8 +2997,8 @@ private fun ScrcpyVideoPlayer(
                         arrowButton()
                         AnimatedVisibility(
                             visible = controlsExpanded,
-                            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
-                            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start)
+                            enter = fadeIn() + expandIn(expandFrom = Alignment.CenterStart),
+                            exit = fadeOut() + shrinkOut(shrinkTowards = Alignment.CenterStart)
                         ) {
                             actionButtons()
                         }
@@ -2864,8 +3011,8 @@ private fun ScrcpyVideoPlayer(
                     ) {
                         AnimatedVisibility(
                             visible = controlsExpanded,
-                            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
-                            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End)
+                            enter = fadeIn() + expandIn(expandFrom = Alignment.CenterEnd),
+                            exit = fadeOut() + shrinkOut(shrinkTowards = Alignment.CenterEnd)
                         ) {
                             actionButtons()
                         }
@@ -2874,14 +3021,14 @@ private fun ScrcpyVideoPlayer(
                 }
                 ControlSide.TOP -> {
                     Column(
-                        horizontalAlignment = Alignment.Start,
+                        horizontalAlignment = if (animNormX.value > 0.5f) Alignment.End else Alignment.Start,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         arrowButton()
                         AnimatedVisibility(
                             visible = controlsExpanded,
-                            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-                            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top)
+                            enter = fadeIn() + expandIn(expandFrom = if (animNormX.value > 0.5f) Alignment.TopEnd else Alignment.TopStart),
+                            exit = fadeOut() + shrinkOut(shrinkTowards = if (animNormX.value > 0.5f) Alignment.TopEnd else Alignment.TopStart)
                         ) {
                             actionButtons()
                         }
@@ -2889,13 +3036,13 @@ private fun ScrcpyVideoPlayer(
                 }
                 ControlSide.BOTTOM -> {
                     Column(
-                        horizontalAlignment = Alignment.Start,
+                        horizontalAlignment = if (animNormX.value > 0.5f) Alignment.End else Alignment.Start,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         AnimatedVisibility(
                             visible = controlsExpanded,
-                            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
-                            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom)
+                            enter = fadeIn() + expandIn(expandFrom = if (animNormX.value > 0.5f) Alignment.BottomEnd else Alignment.BottomStart),
+                            exit = fadeOut() + shrinkOut(shrinkTowards = if (animNormX.value > 0.5f) Alignment.BottomEnd else Alignment.BottomStart)
                         ) {
                             actionButtons()
                         }
@@ -2985,7 +3132,7 @@ private fun ScrcpyVideoPlayer(
                         ScrcpyTouchpadOverlay(
                             session = session,
                             onClose = {
-                                showTouchpadOverlay = false
+                                if (showTouchpadOverlay) onToggleTouchpadOverlay()
                                 overlayRectInRoot = Rect.Zero
                             },
                             isFullScreen = isFullScreen,

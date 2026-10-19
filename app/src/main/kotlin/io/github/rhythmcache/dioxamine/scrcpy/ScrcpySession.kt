@@ -17,7 +17,7 @@ import java.util.concurrent.CancellationException
 class ScrcpySession(
     private val context: Context,
     private val client: AdbClient,
-    private val config: ScrcpyConfig,
+    val config: ScrcpyConfig,
     private val onDimensions: (Int, Int) -> Unit,
     private val onError: (String) -> Unit,
     private val onRecordingStateChanged: (Boolean) -> Unit = {},

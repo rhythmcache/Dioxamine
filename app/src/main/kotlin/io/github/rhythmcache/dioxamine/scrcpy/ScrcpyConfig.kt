@@ -15,6 +15,9 @@ data class ScrcpyConfig(
     val bindVolumeKeys: Boolean = false,
     val controlEnabled: Boolean = true, // Enabled for touch control
     val clipboardSync: Boolean = false, // Bidirectional clipboard sync between host and device
+    val showFloatingNav: Boolean = false,
+    val showTouchpad: Boolean = false,
+    val showKeyboard: Boolean = false,
 
     // --- Video source: display (default), camera, or virtual ---
     val videoSource: String = "display", // "display", "camera", or "virtual"
@@ -163,6 +166,9 @@ data class ScrcpyConfig(
         json.put("bindVolumeKeys", bindVolumeKeys)
         json.put("controlEnabled", controlEnabled)
         json.put("clipboardSync", clipboardSync)
+        json.put("showFloatingNav", showFloatingNav)
+        json.put("showTouchpad", showTouchpad)
+        json.put("showKeyboard", showKeyboard)
         json.put("videoSource", videoSource)
         cameraId?.let { json.put("cameraId", it) }
         cameraFacing?.let { json.put("cameraFacing", it) }
@@ -197,6 +203,9 @@ data class ScrcpyConfig(
                     bindVolumeKeys = json.optBoolean("bindVolumeKeys", false),
                     controlEnabled = json.optBoolean("controlEnabled", true),
                     clipboardSync = json.optBoolean("clipboardSync", false),
+                    showFloatingNav = json.optBoolean("showFloatingNav", false),
+                    showTouchpad = json.optBoolean("showTouchpad", false),
+                    showKeyboard = json.optBoolean("showKeyboard", false),
                     videoSource = json.optString("videoSource", "display"),
                     cameraId = json.optString("cameraId").takeIf { it.isNotEmpty() && it != "null" },
                     cameraFacing = json.optString("cameraFacing").takeIf { it.isNotEmpty() && it != "null" },

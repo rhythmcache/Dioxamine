@@ -14,6 +14,9 @@ class ScrcpyViewModel : ViewModel() {
     var isRecording: Boolean by mutableStateOf(false)
     var errorMessage: String? by mutableStateOf(null)
     var torchOn: Boolean by mutableStateOf(false)
+    var showFloatingNav: Boolean by mutableStateOf(false)
+    var showTouchpadOverlay: Boolean by mutableStateOf(false)
+    var showKeyboard: Boolean by mutableStateOf(false)
 
     @Volatile private var previousTeardownJob: Job? = null
 
@@ -25,6 +28,7 @@ class ScrcpyViewModel : ViewModel() {
         videoWidth = null
         videoHeight = null
         torchOn = false
+        showKeyboard = false
     }
 
     suspend fun awaitPreviousTeardown() {
