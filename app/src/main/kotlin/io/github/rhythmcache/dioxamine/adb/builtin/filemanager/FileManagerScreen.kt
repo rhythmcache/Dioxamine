@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -89,6 +90,10 @@ fun FileManagerScreen(
     var dialogInputValue by remember { mutableStateOf("") }
     var isOperating by remember { mutableStateOf(false) }
     var dxlsDaemonStarted by remember { mutableStateOf(false) }
+
+    // Fresh list state per folder, so the scroll position
+    // resets to the top on navigation instead of leaking across folders.
+    val listState = remember(currentPath) { LazyListState() }
 
 
     var pendingDownloadFile by remember { mutableStateOf<RemoteFileItem?>(null) }
@@ -563,7 +568,7 @@ fun FileManagerScreen(
                     Text(stringResource(R.string.file_manager_empty), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     items(filteredList, key = { it.path }) { item ->
                         FileItemRow(
                             item = item,
