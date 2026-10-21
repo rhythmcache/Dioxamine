@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -89,6 +90,11 @@ fun FileManagerScreen(
     var dialogInputValue by remember { mutableStateOf("") }
     var isOperating by remember { mutableStateOf(false) }
     var dxlsDaemonStarted by remember { mutableStateOf(false) }
+
+    // Fresh list state per folder, so the scroll position
+    // resets to the top on navigation instead of leaking across folders.
+    val listState = remember(currentPath) { LazyListState() }
+
 
     var pendingDownloadFile by remember { mutableStateOf<RemoteFileItem?>(null) }
 
@@ -176,6 +182,48 @@ fun FileManagerScreen(
             }
         }
     }
+
+    // Single-quote a value so paths containing spaces or
+    // quotes survive interpolation into a shell command.
+    fun shellQuote(value: String): String = "'" + value.replace("'", "'\\''") + "'"
+
+    // Run a shell command to completion and check its result.
+    // Returns null on success, or a human-readable error otherwise. Previously
+    // the code opened the stream and closed it immediately without reading output
+    // or the exit code, so failures were silent and commands could be killed
+    // mid-run. This appends an exit-code marker and reads until it arrives.
+    suspend fun runShellChecked(command: String): String? {
+        val activeClient = client ?: return "Not connected"
+        return try {
+            val stream = activeClient.open("shell:$command; echo __DX_DONE:\$?")
+            val buf = ByteArray(4096)
+            val sb = StringBuilder()
+            while (true) {
+                val n = stream.read(buf)
+                if (n == -1) break
+                sb.append(String(buf, 0, n, Charsets.UTF_8))
+                if (sb.contains("__DX_DONE:")) break
+            }
+            stream.close()
+            val out = sb.toString()
+            val markerIdx = out.lastIndexOf("__DX_DONE:")
+            if (markerIdx < 0) {
+                "No result from device shell"
+            } else {
+                val codeText = out.substring(markerIdx + "__DX_DONE:".length).trim()
+                val code = codeText.toIntOrNull()
+                when {
+                    code == 0 -> null
+                    code == null -> "Could not read command result"
+                    else -> out.substring(0, markerIdx).trim()
+                        .ifEmpty { "Command failed (exit code $code)" }
+                }
+            }
+        } catch (e: Exception) {
+            e.message ?: "Command failed"
+        }
+    }
+
 
     fun loadDirectory(targetPath: String) {
         if (client == null) return
@@ -520,7 +568,7 @@ fun FileManagerScreen(
                     Text(stringResource(R.string.file_manager_empty), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     items(filteredList, key = { it.path }) { item ->
                         FileItemRow(
                             item = item,
@@ -616,14 +664,15 @@ fun FileManagerScreen(
                             isOperating = true
                             coroutineScope.launch(Dispatchers.IO) {
                                 val target = if (currentPath == "/") "/$name" else "$currentPath/$name"
-                                runCatching {
-                                    val stream = client.open("shell:mkdir -p '$target'")
-                                    stream.close()
-                                }
+                                val err = runShellChecked("mkdir -p " + shellQuote(target))
                                 withContext(Dispatchers.Main) {
                                     isOperating = false
                                     activeDialog = ActiveDialog.NONE
-                                    loadDirectory(currentPath)
+                                    if (err != null) {
+                                        errorMessage = "Create folder failed: " + err
+                                    } else {
+                                        loadDirectory(currentPath)
+                                    }
                                 }
                             }
                         }
@@ -666,14 +715,15 @@ fun FileManagerScreen(
                         if (newPath.isNotEmpty() && client != null) {
                             isOperating = true
                             coroutineScope.launch(Dispatchers.IO) {
-                                runCatching {
-                                    val stream = client.open("shell:mv '${item.path}' '$newPath'")
-                                    stream.close()
-                                }
+                                val err = runShellChecked("mv " + shellQuote(item.path) + " " + shellQuote(newPath))
                                 withContext(Dispatchers.Main) {
                                     isOperating = false
                                     activeDialog = ActiveDialog.NONE
-                                    loadDirectory(currentPath)
+                                    if (err != null) {
+                                        errorMessage = "Rename failed: " + err
+                                    } else {
+                                        loadDirectory(currentPath)
+                                    }
                                 }
                             }
                         }
@@ -706,14 +756,15 @@ fun FileManagerScreen(
                         if (client != null) {
                             isOperating = true
                             coroutineScope.launch(Dispatchers.IO) {
-                                runCatching {
-                                    val stream = client.open("shell:rm -rf '${item.path}'")
-                                    stream.close()
-                                }
+                                val err = runShellChecked("rm -rf " + shellQuote(item.path))
                                 withContext(Dispatchers.Main) {
                                     isOperating = false
                                     activeDialog = ActiveDialog.NONE
-                                    loadDirectory(currentPath)
+                                    if (err != null) {
+                                        errorMessage = "Delete failed: " + err
+                                    } else {
+                                        loadDirectory(currentPath)
+                                    }
                                 }
                             }
                         }
