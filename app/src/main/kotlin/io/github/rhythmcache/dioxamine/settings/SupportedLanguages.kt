@@ -33,4 +33,5 @@ val supportedLanguages = listOf(
     LanguageOption(R.string.settings_language_hindi, "hi"),
     LanguageOption(R.string.settings_language_german, "de"),
     LanguageOption(R.string.settings_language_persian, "fa"),
+    LanguageOption(R.string.settings_language_portuguese_brazil, "pt-BR"),
 )

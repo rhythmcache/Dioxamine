@@ -135,6 +135,7 @@ We want Dioxamine to be accessible in as many languages as possible.
 - [x] Russian (`ru`) — [@LorianL98](https://github.com/LorianL98)
 - [x] German (`de`) — [@ctrl-mietze](https://github.com/ctrl-mietze)
 - [x] Persian (`fa`) — [@MrMR-711](https://github.com/MrMR-711)
+- [x] Brazilian Portuguese (`pt-BR`) — [@OYukihiro](https://github.com/OYukihiro)
 
 ![Translation Coverage](badges/coverage.svg)
 
