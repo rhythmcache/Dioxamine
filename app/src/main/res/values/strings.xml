@@ -335,6 +335,7 @@
     <string name="settings_language_german" translatable="false">Deutsch</string>
     <string name="settings_language_persian" translatable="false">فارسی</string>
     <string name="settings_language_portuguese_brazil" translatable="false">Português (Brasil)</string>
+    <string name="settings_language_spanish" translatable="false">Español</string>
     <string name="settings_language_contribute">Contribute to translation</string>
 
     <string name="settings_theme_title">Theme</string>
